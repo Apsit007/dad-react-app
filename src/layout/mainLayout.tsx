@@ -16,25 +16,24 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     };
 
     return (
-        // 1. Container หลัก: สร้างระยะห่างจากขอบจอ
-        <div className="bg-gray-100 min-h-screen p-5">
-            {/* 2. Flex Container: จัดวาง Sidebar และ Content */}
-            <div className="flex gap-8">
+        <div className="bg-gray-100 min-h-screen p-6">
+            <div className="flex gap-6 items-start">
 
-                {/* Sidebar */}
-                <Sidebar isCollapsed={isCollapsed} className="sticky top-8 h-[calc(100vh-3rem)]" />
+                <Sidebar
+                    isCollapsed={isCollapsed}
+                    className="sticky top-6 h-[calc(100vh-3rem)]"
+                />
 
-                {/* 3. Right Section: จัดวาง Navbar และ Content แนวตั้ง */}
-                <div className="flex-1 flex flex-col gap-8 h-[calc(100vh-4rem)] ">
+                {/* ✨ 1. เอา h-[...] และ overflow-y-auto ออกจาก div นี้ */}
+                <div className="flex-1 flex flex-col gap-6">
 
-                    {/* Navbar */}
                     <Navbar toggleSidebar={toggleSidebar} />
 
-                    {/* Main Content */}
-                    <main className="flex-1">
-                        <div className="bg-white p-4 rounded-lg shadow-md   ">
+                    {/* ✨ 2. เพิ่ม h-0 และ overflow-y-auto เข้าไปที่ <main> */}
+                    <main className="flex-1 h-0 overflow-y-auto">
+                        <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
                             {children}
-                        </div>
+                        </Paper>
                     </main>
                 </div>
             </div>
