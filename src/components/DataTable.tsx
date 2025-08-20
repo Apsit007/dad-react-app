@@ -27,7 +27,7 @@ function CustomFooter() {
 const CustomDataGrid = (props: DataGridProps) => {
     return (
         <Box sx={{
-            height: 'calc(100vh - 10rem)',
+            height: '100%',
             width: '100%',
             '& .highlight-row': {
                 bgcolor: 'rgba(255, 0, 0, 0.08) !important',

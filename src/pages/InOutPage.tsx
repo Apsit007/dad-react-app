@@ -87,9 +87,9 @@ const getRowClassName = (params: GridRowClassNameParams) => {
 
 const InOutPage = () => {
     return (
-        <div className="flex gap-8">
+        <div className="flex gap-8 h-full">
             <InOutDashboard />
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col">
                 <DataTable
                     rows={rows}
                     columns={columns}
