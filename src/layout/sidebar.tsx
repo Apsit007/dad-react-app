@@ -24,10 +24,9 @@ const menuItems = [
 
 interface SidebarProps {
     isCollapsed: boolean;
-    className?: string;
 }
 
-const Sidebar = ({ isCollapsed, className = '' }: SidebarProps) => {
+const Sidebar = ({ isCollapsed }: SidebarProps) => {
     const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
 
     const handleSubMenuToggle = (name: string) => {
@@ -35,8 +34,7 @@ const Sidebar = ({ isCollapsed, className = '' }: SidebarProps) => {
     };
 
     return (
-        <aside className={`relative bg-sidebar-gradient rounded-md text-white  ${isCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 ease-in-out flex flex-col ${className}`}>
-
+        <aside className={`fixed top-6 left-6 bg-sidebar-gradient rounded-md text-white transition-all duration-300 ease-in-out flex flex-col h-[calc(100vh-3rem)] ${isCollapsed ? 'w-20' : 'w-64'}`}>
 
             {/* Logo and Title */}
             <div className="flex items-center p-4 h-16 ">

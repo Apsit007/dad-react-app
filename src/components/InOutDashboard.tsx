@@ -1,5 +1,5 @@
 // src/components/InOutDashboard.tsx
-import { Paper, Typography, Box, Grid, Divider } from '@mui/material';
+import { Paper, Typography, Box, Divider } from '@mui/material';
 
 // ... (ส่วน data structure เหมือนเดิม)
 const summaryData = {

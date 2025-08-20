@@ -76,6 +76,20 @@ const rows = [
     { id: 2, time: '10/10/2569 10:29:15', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/8A2u5vA.png', tags: [{ label: 'Member', color: 'orange' }, { label: 'Visitor', color: 'blue' }] }, licensePlate: { number: '3กน 1776', province: 'กรุงเทพมหานคร' }, brand: 'Honda', color: 'ขาว', name: 'นายอนงค์ อารมณ์ดี', department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ', isBlacklist: false },
     { id: 3, time: '10/10/2569 10:25:10', eventType: 'ขาเข้า', images: { carUrl: 'https://i.imgur.com/hI2CMpE.png', tags: [{ label: 'Member', color: 'orange' }, { label: 'Member', color: 'orange' }] }, licensePlate: { number: '66 4578', province: 'กรุงเทพมหานคร' }, brand: 'Toyota', color: 'ส้ม', name: 'นางสาวสายชล สายแก้ว', department: '-', isBlacklist: false },
     { id: 4, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 5, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 6, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 7, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 8, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 9, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 10, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 11, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 12, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 13, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 14, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 15, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 16, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 17, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
+    { id: 18, time: '10/10/2569 10:19:45', eventType: 'ขาออก', images: { carUrl: 'https://i.imgur.com/1o2aY2V.png', tags: [{ label: 'Blacklist', color: 'red' }, { label: 'Blacklist', color: 'red' }] }, licensePlate: { number: 'ขพ 9227', province: 'อุดรธานี' }, brand: 'Isuzu', color: 'แดง', name: 'นายบุญเลิศ ค้าสารเสพสุข', department: '-', isBlacklist: true },
     // ... เพิ่มข้อมูลแถวอื่นๆ ตามต้องการ
 ];
 
@@ -89,10 +103,11 @@ const InOutPage = () => {
     return (
         <div className="flex gap-8 h-full">
             <InOutDashboard />
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-w-0">
                 <DataTable
                     rows={rows}
                     columns={columns}
+                    getRowClassName={getRowClassName}
                 />
             </div>
         </div>
