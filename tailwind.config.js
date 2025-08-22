@@ -7,6 +7,9 @@ export default {
         primary: "#1A486C",
         "primary-light": "#2E6E9E",
         "primary-dark": "#0f2a40",
+        gold: "#F3B741",
+        "gold-light": "#ffcd6b",
+        "gold-dark": "#cc9427",
       },
       backgroundImage: {
         "sidebar-gradient":

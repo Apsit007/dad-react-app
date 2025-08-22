@@ -12,9 +12,10 @@ const columns: GridColDef[] = [
         headerName: 'ประเภท',
         flex: 2,
         headerAlign: 'center',
-        renderCell: (params) => (
-            <Typography variant="body2">{params.value}</Typography>
-        ),
+        align: 'center',
+        // renderCell: (params) => (
+        //     <Typography variant="body2">{params.value}</Typography>
+        // ),
     },
     {
         field: 'images',
@@ -44,30 +45,35 @@ const columns: GridColDef[] = [
         flex: 2,
         headerAlign: 'center',
         renderCell: (params) => (
-            <Box>
-                <Typography variant="body2" sx={{ color: params.row.isBlacklist ? 'red' : 'inherit', fontWeight: 'bold' }}>
-                    {params.value.number}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                    {params.value.province}
-                </Typography>
-            </Box>
+            <div className='flex justify-center items-center h-full'>
+                <div className='flex flex-col items-center'>
+                    <Typography variant="body2" sx={{ color: params.row.isBlacklist ? 'red' : 'inherit', fontWeight: 'bold' }}>
+                        {params.value.number}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        {params.value.province}
+                    </Typography>
+
+                </div>
+            </div>
         )
     },
-    { field: 'brand', headerName: 'ยี่ห้อ', flex: 2, headerAlign: 'center', },
-    { field: 'color', headerName: 'สี', flex: 2, headerAlign: 'center', },
+    { field: 'brand', headerName: 'ยี่ห้อ', flex: 2, headerAlign: 'center', align: 'center' },
+    { field: 'color', headerName: 'สี', flex: 2, headerAlign: 'center', align: 'center' },
     {
         field: 'name',
         headerName: 'ชื่อ-นามสกุล',
         flex: 2,
         headerAlign: 'center',
         renderCell: (params) => (
-            <Typography variant="body2" sx={{ color: params.row.isBlacklist ? 'red' : 'inherit' }}>
-                {params.value}
-            </Typography>
+            <div className='flex justify-start items-center h-full'>
+                <Typography variant="body2" sx={{ color: params.row.isBlacklist ? 'red' : 'inherit' }}>
+                    {params.value}
+                </Typography>
+            </div>
         )
     },
-    { field: 'department', headerName: 'หน่วยงาน', flex: 2, headerAlign: 'center', },
+    { field: 'department', headerName: 'หน่วยงาน', flex: 2, headerAlign: 'center', align: 'left' },
 ];
 
 // 2. สร้างข้อมูลตัวอย่าง (Rows)
@@ -101,14 +107,17 @@ const getRowClassName = (params: GridRowClassNameParams) => {
 
 const InOutPage = () => {
     return (
-        <div className="flex gap-8 h-full">
-            <InOutDashboard />
-            <div className="flex-1 flex flex-col min-w-0">
-                <DataTable
-                    rows={rows}
-                    columns={columns}
-                    getRowClassName={getRowClassName}
-                />
+        <div className='flex flex-col  gap-4 h-full'>
+            <Typography variant='h5' className='text-primary-dark '>ข้อมูลการเข้า-ออกพื้นที่ ณ ปัจจุบัน</Typography>
+            <div className="flex gap-8">
+                <InOutDashboard />
+                <div className="flex-1 flex flex-col min-w-0">
+                    <DataTable
+                        rows={rows}
+                        columns={columns}
+                        getRowClassName={getRowClassName}
+                    />
+                </div>
             </div>
         </div>
     );

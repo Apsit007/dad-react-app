@@ -25,13 +25,13 @@ const InOutDashboard = () => {
                     <Typography variant="subtitle1" gutterBottom>รถเข้า-ออกในพื้นที่</Typography>
                     <Box className="flex items-center text-center">
                         <Box className="flex-1">
-                            <Typography variant="h4" className="font-bold">{summaryData.totalInOut.in}</Typography>
-                            <Typography variant="caption">จำนวนรถเข้าทั้งหมด</Typography>
+                            <Typography variant="h4" className="!font-bold text-gold">{summaryData.totalInOut.in}</Typography>
+                            <Typography variant="caption">จำนวน<span className='text-gold'>รถเข้า</span>ทั้งหมด</Typography>
                         </Box>
                         <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255, 255, 255, 0.3)', mx: 1 }} />
                         <Box className="flex-1">
-                            <Typography variant="h4" className="font-bold">{summaryData.totalInOut.out}</Typography>
-                            <Typography variant="caption">จำนวนรถออกทั้งหมด</Typography>
+                            <Typography variant="h4" className="!font-bold text-gold">{summaryData.totalInOut.out}</Typography>
+                            <Typography variant="caption">จำนวน<span className='text-gold'>รถออก</span>ทั้งหมด</Typography>
                         </Box>
                     </Box>
                 </Paper>
@@ -39,8 +39,8 @@ const InOutDashboard = () => {
                 {/* Still Inside Card */}
                 <Paper elevation={2} sx={{ p: 2, textAlign: 'center', bgcolor: '#1A486C', color: 'white' }}>
                     <Typography variant="subtitle1" gutterBottom>รถยังอยู่ในพื้นที่</Typography>
-                    <Typography variant="h3" className="font-bold">{summaryData.stillInside}</Typography>
-                    <Typography variant="caption">จำนวนรถที่ยังอยู่ภายในพื้นที่</Typography>
+                    <Typography variant="h3" className="!font-bold text-gold">{summaryData.stillInside}</Typography>
+                    <Typography variant="caption">จำนวน<span className='text-gold'>รถที่ยังอยู่ภายในพื้นที่ </span></Typography>
                 </Paper>
 
 
@@ -50,23 +50,35 @@ const InOutDashboard = () => {
                 {categoryData.map((item) => {
                     const isBlacklist = item.title === 'Blacklist';
                     return (
-                        <Paper elevation={2} sx={{ p: 2, bgcolor: '#C5C8CB', color: 'white' }}>
-                            <Typography sx={{ fontWeight: 'bold', color: isBlacklist ? '#f44336' : 'text.primary' }}>
+                        <Paper key={item.title} elevation={2} sx={{ p: 2, bgcolor: '#C5C8CB' }}>
+                            <Typography sx={{ fontWeight: 'bold' }} className={isBlacklist ? 'text-red-500' : 'text-primary-dark'}>
                                 {item.title}
                             </Typography>
                             <Box className="flex items-center text-center">
                                 <Box className="flex-1">
-                                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: isBlacklist ? '#f44336' : 'text.primary' }}>
+                                    <Typography variant="h5" sx={{ fontWeight: 'bold' }} className={isBlacklist ? 'text-red-500' : 'text-primary-dark'}>
                                         {item.in}
                                     </Typography>
-                                    <Typography variant="caption" color="text.secondary">{item.inLabel}</Typography>
+                                    {
+                                        isBlacklist ?
+                                            (<><Typography variant="caption" color="text.secondary">จำนวน<span className='text-red-500'>รถ Blacklist </span></Typography></>)
+                                            :
+                                            (<><Typography variant="caption" color="text.secondary">{item.inLabel}</Typography></>)
+                                    }
+
                                 </Box>
-                                <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255, 255, 255, 0.3)', mx: 1 }} />
+                                <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(0, 0, 0, 0.12)', mx: 1, height: '3rem', alignSelf: 'center' }} />
                                 <Box className="flex-1">
-                                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: isBlacklist ? '#f44336' : 'text.primary' }}>
+                                    <Typography variant="h5" sx={{ fontWeight: 'bold' }} className={isBlacklist ? 'text-red-500' : 'text-primary-dark'}>
                                         {item.out}
                                     </Typography>
-                                    <Typography variant="caption" color="text.secondary">{item.outLabel}</Typography>
+                                    {
+                                        isBlacklist ?
+                                            (<><Typography variant="caption" color="text.secondary">จำนวน<span className='text-red-500'>บุคคล Blacklist </span></Typography></>)
+                                            :
+                                            (<><Typography variant="caption" color="text.secondary">{item.outLabel}</Typography></>)
+                                    }
+
                                 </Box>
                             </Box>
                         </Paper>
@@ -74,7 +86,7 @@ const InOutDashboard = () => {
                     );
                 })}
             </div>
-        </Box>
+        </Box >
     );
 };
 

@@ -1,0 +1,40 @@
+[
+    {
+        "name": "Dashboard",
+        "icon": "DashboardIcon",
+        "path": "/"
+    },
+    {
+        "name": "ค้นหา",
+        "icon": "SearchIcon",
+        "subMenus": [
+            {
+                "name": "ค้นหาบุคคล",
+                "path": "#"
+            },
+            {
+                "name": "ค้นหารถ",
+                "path": "#"
+            }
+        ]
+    },
+    {
+        "name": "ข้อมูลพื้นฐาน",
+        "icon": "StorageIcon",
+        "subMenus": [
+            {
+                "name": "หมวดหมู่",
+                "path": "#"
+            },
+            {
+                "name": "ประเภท",
+                "path": "#"
+            }
+        ]
+    },
+    {
+        "name": "จัดการผู้ใช้งาน",
+        "icon": "SettingsIcon",
+        "path": "#"
+    }
+]

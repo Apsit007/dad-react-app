@@ -9,7 +9,7 @@ interface NavbarProps {
 
 const Navbar = ({ toggleSidebar }: NavbarProps) => {
     return (
-        <header className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between sticky top-6 z-10">
+        <header className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between sticky top-0 z-10">
             {/* Left Side: Toggle Button & Breadcrumb */}
             <div className="flex items-center gap-4">
                 <button onClick={toggleSidebar} className="text-gray-600 hover:text-gray-900">
