@@ -1,7 +1,7 @@
 
 
 import MainLayout from "./layout/mainLayout";
-import InOutPage from "./pages/InOutPage";
+import InOutPage from "./pages/DashBoard";
 
 
 
