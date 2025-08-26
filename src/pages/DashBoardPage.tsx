@@ -105,7 +105,7 @@ const getRowClassName = (params: GridRowClassNameParams) => {
     return params.row.isBlacklist ? 'highlight-row' : '';
 };
 
-const InOutPage = () => {
+const DashBoardPage = () => {
     return (
         <div className='flex flex-col  gap-4 h-full'>
             <Typography variant='h5' className='text-primary-dark '>ข้อมูลการเข้า-ออกพื้นที่ ณ ปัจจุบัน</Typography>
@@ -123,4 +123,4 @@ const InOutPage = () => {
     );
 };
 
-export default InOutPage;
+export default DashBoardPage;

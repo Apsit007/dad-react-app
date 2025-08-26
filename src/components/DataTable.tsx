@@ -4,29 +4,29 @@ import {
     type DataGridProps,
     type GridRowClassNameParams,
     GridFooterContainer,
-    GridPagination,
+    gridPageCountSelector,
+    gridPageSelector,
+    useGridApiContext,
+    useGridSelector,
 } from '@mui/x-data-grid';
-import { Box } from '@mui/material';
+import { Box, Pagination } from '@mui/material';
 
 // ฟังก์ชันนี้จะเป็นค่า default ถ้าไม่มีการส่ง prop getRowClassName เข้ามา
 const defaultGetRowClassName = (params: GridRowClassNameParams) => {
     return params.row.isBlacklist ? 'highlight-row' : '';
 };
 
-// สร้าง Custom Footer Component ของเราเอง
-function CustomFooter() {
-    return (
-        <GridFooterContainer>
-            <GridPagination />
-        </GridFooterContainer>
-    );
-}
-
-
 const CustomDataGrid = (props: DataGridProps) => {
     return (
         // 2. เพิ่ม Wrapper Box เพื่อควบคุมขนาด
-        <Box sx={{ height: '100%', width: '100%' }}>
+        // <Box sx={{ height: '100%', width: '100%' }}>
+        <Box sx={{
+            height: '100%',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            border: 0,
+        }}>
             <DataGrid
                 // รับ props ทั้งหมดที่ส่งเข้ามา
                 {...props}
@@ -48,17 +48,18 @@ const CustomDataGrid = (props: DataGridProps) => {
                 sx={{
                     // 1. นำสไตล์หัวตารางกลับมา
                     '&& .MuiDataGrid-columnHeaders': {
-                        backgroundColor: '#1A486C',
+                        backgroundColor: '#36746F',
                         color: 'white',
                         fontWeight: 'bold',
                     },
                     '&& .MuiDataGrid-columnHeader': {
-                        backgroundColor: '#1A486C',
+                        backgroundColor: '#36746F',
                     },
                     // สไตล์สำหรับแถวไฮไลท์
                     '&& .highlight-row': {
                         bgcolor: 'rgba(255, 0, 0, 0.08) !important',
                     },
+                    flex: 1,
                     ...props.sx,
                 }}
             />
@@ -67,3 +68,29 @@ const CustomDataGrid = (props: DataGridProps) => {
 };
 
 export default CustomDataGrid;
+
+// ✨ 1. Create a new, fully custom pagination component
+function CustomPagination() {
+    const apiRef = useGridApiContext();
+    const page = useGridSelector(apiRef, gridPageSelector);
+    const pageCount = useGridSelector(apiRef, gridPageCountSelector);
+
+    return (
+        <Pagination
+            color="primary"
+            count={pageCount}
+            page={page + 1} // MUI Pagination is 1-based, DataGrid is 0-based
+            onChange={(event, value) => apiRef.current.setPage(value - 1)}
+        />
+    );
+}
+
+
+// ✨ 2. Update the CustomFooter to use the new pagination
+function CustomFooter() {
+    return (
+        <GridFooterContainer sx={{ justifyContent: 'flex-end' }}>
+            <CustomPagination />
+        </GridFooterContainer>
+    );
+}

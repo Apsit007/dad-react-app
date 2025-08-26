@@ -1,13 +1,12 @@
 // src/layout/MainLayout.tsx
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import Sidebar from './sidebar';
 import Navbar from './navbar';
+import { Outlet } from 'react-router-dom';
 
-interface MainLayoutProps {
-    children: ReactNode;
-}
 
-const MainLayout = ({ children }: MainLayoutProps) => {
+
+const MainLayout = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const toggleSidebar = () => {
@@ -24,10 +23,10 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                     <div className="flex flex-col gap-6 h-[calc(100vh-3rem)]">
                         <Navbar toggleSidebar={toggleSidebar} />
 
-                        <main className="flex-1 flex flex-col">
+                        <main className="flex-1 flex flex-col pb-4">
                             <div className='h-full flex flex-col bg-white p-4 rounded-lg shadow-md'>
                                 <div className="flex-1 overflow-y-auto overflow-x-auto">
-                                    {children}
+                                    <Outlet />
                                 </div>
                             </div>
                         </main>

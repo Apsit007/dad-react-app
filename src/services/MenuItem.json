@@ -2,7 +2,7 @@
     {
         "name": "Dashboard",
         "icon": "DashboardIcon",
-        "path": "/"
+        "path": "/dashboard"
     },
     {
         "name": "ค้นหา",
@@ -10,11 +10,11 @@
         "subMenus": [
             {
                 "name": "ค้นหาบุคคล",
-                "path": "#"
+                "path": "search/person"
             },
             {
                 "name": "ค้นหารถ",
-                "path": "#"
+                "path": "search/car"
             }
         ]
     },
@@ -23,11 +23,11 @@
         "icon": "StorageIcon",
         "subMenus": [
             {
-                "name": "หมวดหมู่",
-                "path": "#"
+                "name": "ข้อมูลบุคคล",
+                "path": "info/person"
             },
             {
-                "name": "ประเภท",
+                "name": "ข้อมูลรถ",
                 "path": "#"
             }
         ]

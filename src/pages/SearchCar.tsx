@@ -1,0 +1,130 @@
+// src/pages/SearchCar.tsx
+import { useState } from 'react';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Avatar, Chip, Stack, InputLabel } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SearchIcon from '@mui/icons-material/Search';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import DataTable from '../components/DataTable';
+import { type GridColDef } from '@mui/x-data-grid';
+
+// --- 1. อัปเดต Columns ของตาราง ---
+const columns: GridColDef[] = [
+    { field: 'id', headerName: 'ลำดับ', width: 70, headerAlign: 'center', align: 'center' },
+    {
+        field: 'image', headerName: 'ภาพ', width: 150, headerAlign: 'center', align: 'center', sortable: false,
+        renderCell: (params) => (
+            <Box sx={{ position: 'relative' }}>
+                <Avatar variant="rounded" src={params.value} sx={{ width: 70, height: 50 }} />
+                <Chip label="Member" size="small" color="warning" sx={{ position: 'absolute', bottom: 4, right: 4, height: '16px', fontSize: '0.65rem' }} />
+            </Box>
+        )
+    },
+    { field: 'plate', headerName: 'ทะเบียน', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
+    { field: 'brand', headerName: 'ยี่ห้อ', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
+    { field: 'color', headerName: 'สี', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
+    { field: 'name', headerName: 'ชื่อ-นามสกุล', flex: 1.5, minWidth: 200, headerAlign: 'center' },
+    { field: 'department', headerName: 'หน่วยงาน', flex: 1.5, minWidth: 250, headerAlign: 'center' },
+    { field: 'in_time', headerName: 'วันเวลาเข้า', flex: 1, minWidth: 180, headerAlign: 'center', align: 'center' },
+    { field: 'out_time', headerName: 'เวลาออก', flex: 1, minWidth: 180, headerAlign: 'center', align: 'center' },
+];
+
+// --- 2. ทำให้ข้อมูลเริ่มต้นเป็นค่าว่างเพื่อให้ตารางแสดง "ไม่มีข้อมูล" ---
+const rows = [];
+
+const SearchCar = () => {
+    return (
+        <Box>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }}>
+                ค้นหารถ
+            </Typography>
+
+            <Accordion defaultExpanded>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                    <Typography>Search</Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ bgcolor: 'white' }}>
+                    {/* --- 3. อัปเดต Layout ของฟอร์มค้นหา --- */}
+                    <div className="flex flex-col gap-4">
+                        {/* Row 1 */}
+                        <div className="flex flex-wrap -m-2">
+                            <div className="w-full sm:w-1/2 md:w-1/5 p-2">
+                                <InputLabel shrink>เลขทะเบียน</InputLabel>
+                                <div className='flex flex-row gap-2'>
+                                    <div className='md:!w-2/5'>
+                                        <TextField />
+                                    </div>
+                                    <div className='md:!w-3/5'>
+                                        <TextField />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="w-full sm:w-1/2 md:w-1/5 p-2">
+                                <InputLabel shrink>หมวดจังหวัด</InputLabel>
+                                <Select defaultValue="bkk">
+                                    <MenuItem value="bkk">กรุงเทพมหานคร</MenuItem>
+                                </Select>
+                            </div>
+                            <div className="w-full sm:w-1/2 md:w-1/5 p-2">
+                                <InputLabel shrink>ยี่ห้อ</InputLabel>
+                                <Select defaultValue="">
+                                    <MenuItem value=""><em>ทุกยี่ห้อ</em></MenuItem>
+                                </Select>
+                            </div>
+                            <div className="w-full sm:w-1/2 md:w-1/5 p-2">
+                                <InputLabel shrink>สี</InputLabel>
+                                <Select defaultValue="">
+                                    <MenuItem value=""><em>ทุกสี</em></MenuItem>
+                                </Select>
+                            </div>
+                            <div className="w-full sm:w-1/2 md:w-1/5 p-2">
+                                <InputLabel shrink>ประเภทรถ</InputLabel>
+                                <Select defaultValue="">
+                                    <MenuItem value=""><em>ทุกประเภท</em></MenuItem>
+                                </Select>
+                            </div>
+                        </div>
+                        {/* Row 2 */}
+                        <div className="flex flex-wrap -m-2">
+                            <div className="w-full sm:w-1/2 md:w-1/5 p-2">
+                                <InputLabel shrink>รูปแบบการค้นหา</InputLabel>
+                                <Select defaultValue="all">
+                                    <MenuItem value="all">ทั้งหมด</MenuItem>
+                                </Select>
+                            </div>
+                            <div className="w-full sm:w-1/2 md:w-1/5 p-2">
+                                <InputLabel shrink>วันที่เริ่มต้น</InputLabel>
+                                <DateTimePicker />
+                            </div>
+                            <div className="w-full sm:w-1/2 md:w-1/5 p-2">
+                                <InputLabel shrink>วันที่สิ้นสุด</InputLabel>
+                                <DateTimePicker />
+                            </div>
+
+                        </div>
+                        <div className="w-full flex justify-end p-2">
+                            <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark'>
+                                ค้นหา
+                            </Button>
+                        </div>
+                    </div>
+                </AccordionDetails>
+            </Accordion>
+
+            <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/txt-file.png' />}>TXT</Button>
+                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/xls-file.png' />}>XLS</Button>
+                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/csv-file.png' />}>CSV</Button>
+                <Box sx={{ flexGrow: 1 }} />
+                <Typography variant="body2" sx={{ alignSelf: 'center' }}>ผลการค้นหา : 10 รายการ</Typography>
+            </Stack>
+
+            <DataTable
+                rows={rows}
+                columns={columns}
+            />
+        </Box>
+    );
+};
+
+export default SearchCar;

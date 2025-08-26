@@ -1,17 +1,50 @@
+// src/App.tsx
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import MainLayout from './layout/mainLayout';
+import DashBoardPage from './pages/DashBoardPage';
+import SearchPerson from './pages/SearchPerson';
+import SearchCar from './pages/SearchCar';
+import PersonInfoList from './pages/PersonInfo/PersonInfoList';
+import PersonInfoForm from './pages/PersonInfo/PersonInfoForm';
 
+// 1. Create the router configuration
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <MainLayout />,
+    children: [
+      {
+        index: true, // This makes it the default child route
+        element: <Navigate to="/dashboard" replace />, // Redirect from "/" to "/dashboard"
+      },
+      {
+        path: "dashboard",
+        element: <DashBoardPage />,
+      },
+      {
+        path: "search/person",
+        element: <SearchPerson />,
+      },
+      {
+        path: "search/car",
+        element: <SearchCar />,
+      },
+      {
+        path: "info/person",
+        element: <PersonInfoList />,
+      },
+      {
+        path: "info/person/form",
+        element: <PersonInfoForm />,
+      },
 
-import MainLayout from "./layout/mainLayout";
-import InOutPage from "./pages/DashBoard";
+    ],
+  },
+]);
 
-
-
+// 2. Create the App component to provide the router
 function App() {
-  return (
-    <MainLayout>
-      {/* เนื้อหาของหน้าเพจจะถูกแสดงตรงนี้ */}
-      <InOutPage />
-    </MainLayout>
-  )
+  return <RouterProvider router={router} />;
 }
 
 export default App;

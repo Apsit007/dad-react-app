@@ -7,6 +7,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import menuItemsData from '../services/MenuItem.json';
+import { NavLink } from 'react-router-dom';
 
 const iconMap = {
     DashboardIcon: DashboardIcon,
@@ -34,7 +35,9 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
     const handleSubMenuToggle = (name: string) => {
         setOpenSubMenu(openSubMenu === name ? null : name);
     };
-
+    const activeLinkStyle = {
+        backgroundColor: '#2E514E', // Uses your primary-dark color
+    };
     return (
         <aside className={`fixed top-6 left-6 pt-2 bg-sidebar-gradient rounded-md text-white transition-all duration-300 ease-in-out flex flex-col h-[calc(100vh-3rem)] ${isCollapsed ? 'w-20' : 'w-64'}`}>
 
@@ -55,9 +58,10 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
 
                         return (
                             <li key={item.name} className="px-4 mb-2">
-                                <a
-                                    href={item.path || '#'}
+                                <NavLink
+                                    to={item.path || '#'}
                                     onClick={() => item.subMenus && handleSubMenuToggle(item.name)}
+                                    style={({ isActive }) => isActive ? activeLinkStyle : undefined}
                                     className="flex items-center p-2 rounded-md hover:bg-primary-dark transition-colors"
                                 >
                                     {/* 4. Render the found icon component */}
@@ -67,16 +71,18 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
                                     {!isCollapsed && item.subMenus && (
                                         <KeyboardArrowDownIcon className={`transition-transform ${openSubMenu === item.name ? 'rotate-180' : ''}`} />
                                     )}
-                                </a>
+                                </NavLink>
                                 {/* Sub Menu */}
                                 {!isCollapsed && openSubMenu === item.name && item.subMenus && (
                                     <ul className="pl-8 pt-2">
                                         {item.subMenus.map((subItem) => (
-                                            <li key={subItem.name} className="mb-2">
-                                                <a href={subItem.path} className="block p-2 rounded-md hover:bg-primary-dark transition-colors text-sm">
-                                                    {subItem.name}
-                                                </a>
-                                            </li>
+                                            <NavLink
+                                                to={subItem.path}
+                                                style={({ isActive }) => isActive ? activeLinkStyle : undefined}
+                                                className="block p-2 rounded-md hover:bg-primary-dark transition-colors text-sm"
+                                            >
+                                                {subItem.name}
+                                            </NavLink>
                                         ))}
                                     </ul>
                                 )}
