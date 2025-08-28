@@ -6,6 +6,7 @@ import SearchPerson from './pages/SearchPerson';
 import SearchCar from './pages/SearchCar';
 import PersonInfoList from './pages/PersonInfo/PersonInfoList';
 import PersonInfoForm from './pages/PersonInfo/PersonInfoForm';
+import CarInfoList from './pages/CarInfo/CarInfoList';
 
 // 1. Create the router configuration
 const router = createBrowserRouter([
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
       {
         path: "info/person/form",
         element: <PersonInfoForm />,
+      },
+      {
+        path: "info/car",
+        element: <CarInfoList />,
       },
 
     ],

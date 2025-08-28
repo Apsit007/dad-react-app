@@ -4,3 +4,6 @@
 body {
   @apply bg-gray-300;
 }
+.card {
+  @apply bg-white rounded-lg shadow-md p-6;
+}

@@ -60,7 +60,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
                 <button onClick={toggleSidebar} className="text-gray-600 hover:text-gray-900">
                     <MenuIcon />
                 </button>
-                <span className="text-gray-500 font-semibold">Feed-Extend Menu</span>
+                <span className="text-primary-dark font-semibold">ระบบบริหารลานจอดรถ อาคาร C ศูนย์ราชการเฉลิมพระเกียรติ 80 พรรษา</span>
             </div>
 
             {/* Right Side: Notifications & User Profile */}

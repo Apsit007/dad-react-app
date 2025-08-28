@@ -36,8 +36,12 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
         setOpenSubMenu(openSubMenu === name ? null : name);
     };
     const activeLinkStyle = {
-        backgroundColor: '#2E514E', // Uses your primary-dark color
+        backgroundColor: '#2E514E',
+        borderLeft: '3px solid #C9EFA4',
+        // Use boxShadow to prevent content shift from the border
+        boxShadow: 'inset 3px 0 0 0 #C9EFA4',
     };
+
     return (
         <aside className={`fixed top-6 left-6 pt-2 bg-sidebar-gradient rounded-md text-white transition-all duration-300 ease-in-out flex flex-col h-[calc(100vh-3rem)] ${isCollapsed ? 'w-20' : 'w-64'}`}>
 

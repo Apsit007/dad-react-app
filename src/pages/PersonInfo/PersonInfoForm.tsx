@@ -1,13 +1,40 @@
 // src/pages/PersonInfo/PersonInfoForm.tsx
-import { Paper, Typography, Box, TextField, Select, MenuItem, Button, Avatar, FormControlLabel, Switch, InputLabel, Checkbox } from '@mui/material';
+import { Paper, Typography, Box, TextField, Select, MenuItem, Button, Avatar, FormControlLabel, Switch, InputLabel, Checkbox, Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import DataTable from '../../components/DataTable';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SearchIcon from '@mui/icons-material/Search';
+import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined"
 import { type GridColDef } from '@mui/x-data-grid';
 import EditSquareIcon from "@mui/icons-material/EditSquare"
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined"
+import { useState } from 'react';
+import Popup from '../../components/Popup';
+
+
+// --- Columns and Data for the Popup Car Table ---
+const popupCarColumns: GridColDef[] = [
+    {
+        field: 'select',
+        headerName: 'เลือก',
+        width: 70,
+        align: 'center', headerAlign: 'center',
+        renderCell: (params) => <Checkbox />,
+    },
+    { field: 'plate', headerName: 'ทะเบียนรถ', flex: 1 },
+    { field: 'province', headerName: 'หมวดจังหวัด', flex: 1 },
+    { field: 'brand', headerName: 'ยี่ห้อ', flex: 1 },
+    { field: 'color', headerName: 'สี', flex: 1 },
+];
+const popupCarRows = [
+    { id: 1, plate: 'กง 6677', province: 'กรุงเทพมหานคร', brand: 'Nissan', color: 'น้ำเงิน' },
+    { id: 2, plate: 'ซย 4335', province: 'กรุงเทพมหานคร', brand: 'Isuzu', color: 'ดำ' },
+    { id: 3, plate: '1กง 5577', province: 'พระนครศรีอยุธยา', brand: 'Volvo', color: 'ขาว' },
+    // ... more data
+];
 
 // --- Mock Data and Columns for the Car Table ---
 const carColumns: GridColDef[] = [
@@ -20,6 +47,15 @@ const carColumns: GridColDef[] = [
 const carRows = []; // Start with no cars
 
 const PersonInfoForm = () => {
+    const [isCarPopupOpen, setIsCarPopupOpen] = useState(false);
+
+    const handleOpenCarPopup = () => {
+        setIsCarPopupOpen(true);
+    };
+
+    const handleCloseCarPopup = () => {
+        setIsCarPopupOpen(false);
+    };
     return (
         // Main container using Tailwind flexbox for columns
         <div className='flex flex-col'>
@@ -169,7 +205,7 @@ const PersonInfoForm = () => {
                         <Box mt={3}>
                             <Box className=" flex flex-col gap-3 justify-start  mb-2">
                                 <Typography variant="h6">รายละเอียดรถ</Typography>
-                                <Button size="small" className='!bg-gold !text-primary w-[120px]' startIcon={<AddIcon />}>เพิ่มรถ</Button>
+                                <Button size="small" className='!bg-gold !text-primary w-[120px]' startIcon={<AddIcon />} onClick={handleOpenCarPopup}>เพิ่มรถ</Button>
                             </Box>
                             <Box sx={{ height: 300, width: '100%' }}>
                                 <DataTable
@@ -196,6 +232,70 @@ const PersonInfoForm = () => {
                 <Button variant="outlined" className='!border-primary !bg-white !text-primary' startIcon={<CloseIcon />}>ยกเลิก</Button>
                 <Button variant="contained" startIcon={<SaveIcon />} className="!bg-primary hover:!bg-primary-dark">บันทึก</Button>
             </div>
+
+            <Popup
+                title="เพิ่มข้อมูลรถ"
+                show={isCarPopupOpen}
+                onClose={handleCloseCarPopup}
+            >
+                <Accordion defaultExpanded>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                        <Typography>Search</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ bgcolor: 'white' }}>
+                        {/* --- 3. อัปเดต Layout ของฟอร์มค้นหา --- */}
+                        <div className="flex flex-col gap-4">
+                            {/* Row 1 */}
+                            <div className="flex flex-wrap -m-2">
+                                <div className="w-full sm:w-1/2 md:w-1/4 p-2">
+                                    <InputLabel shrink>เลขทะเบียน</InputLabel>
+                                    <div className='flex flex-row gap-2'>
+                                        <div className='md:!w-2/5'>
+                                            <TextField />
+                                        </div>
+                                        <div className='md:!w-3/5'>
+                                            <TextField />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="w-full sm:w-1/2 md:w-1/4 p-2">
+                                    <InputLabel shrink>หมวดจังหวัด</InputLabel>
+                                    <Select defaultValue="bkk">
+                                        <MenuItem value="bkk">กรุงเทพมหานคร</MenuItem>
+                                    </Select>
+                                </div>
+                                <div className="w-full sm:w-1/2 md:w-1/4 p-2">
+                                    <InputLabel shrink>ยี่ห้อ</InputLabel>
+                                    <Select defaultValue="">
+                                        <MenuItem value=""><em>ทุกยี่ห้อ</em></MenuItem>
+                                    </Select>
+                                </div>
+                                <div className="w-full sm:w-1/2 md:w-1/4 p-2">
+                                    <InputLabel shrink>สี</InputLabel>
+                                    <Select defaultValue="">
+                                        <MenuItem value=""><em>ทุกสี</em></MenuItem>
+                                    </Select>
+                                </div>
+
+                            </div>
+
+                            <div className="w-full flex justify-end p-2">
+                                <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark'>
+                                    ค้นหา
+                                </Button>
+                            </div>
+                        </div>
+                    </AccordionDetails>
+                </Accordion>
+                <Box sx={{ height: 400, width: '100%', marginTop: 3 }}>
+                    <DataTable columns={popupCarColumns} rows={popupCarRows} />
+                </Box>
+                <div className="w-full flex justify-end gap-2 mt-6">
+                    <Button variant="outlined" className='!border-primary !bg-white !text-primary' startIcon={<CloseIcon />}>ยกเลิก</Button>
+                    <Button variant="contained" startIcon={<CheckCircleOutlinedIcon fontWeight="small" />} className="!bg-primary hover:!bg-primary-dark">เลือก</Button>
+                </div>
+            </Popup>
         </div>
     );
 };

@@ -98,6 +98,9 @@ const theme = createTheme({
                 asterisk: {
                     color: '#d32f2f', // This is MUI's default error/red color
                 },
+                root: {
+                    fontSize: '18px',
+                }
             },
         },
     },
