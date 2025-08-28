@@ -1,10 +1,10 @@
 // src/pages/PersonInfo/PersonInfoForm.tsx
-import { Paper, Typography, Box, TextField, Select, MenuItem, Button, Avatar, FormControlLabel, Switch, InputLabel, Checkbox, Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
+import { Paper, Typography, Box, TextField, Select, MenuItem, Button, Avatar, FormControlLabel, InputLabel, Checkbox, Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
-import DataTable from '../../components/DataTable';
+import DataTable from '../../../components/DataTable';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined"
@@ -12,7 +12,7 @@ import { type GridColDef } from '@mui/x-data-grid';
 import EditSquareIcon from "@mui/icons-material/EditSquare"
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined"
 import { useState } from 'react';
-import Popup from '../../components/Popup';
+import Popup from '../../../components/Popup';
 
 
 // --- Columns and Data for the Popup Car Table ---

@@ -1,7 +1,8 @@
 // src/components/Popup.tsx
 import { Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+
 
 // Define the props for our component
 interface PopupProps {

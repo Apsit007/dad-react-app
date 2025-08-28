@@ -6,8 +6,9 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import DataTable from '../../components/DataTable';
+import DataTable from '../../../components/DataTable';
 import { type GridColDef } from '@mui/x-data-grid';
+import { useNavigate, NavLink } from 'react-router-dom';
 
 // --- Table Columns Definition ---
 const columns: GridColDef[] = [
@@ -39,7 +40,7 @@ const columns: GridColDef[] = [
         field: 'actions', headerName: '', width: 100, sortable: false, align: 'center',
         renderCell: () => (
             <Stack direction="row">
-                <IconButton size="small"><EditIcon fontSize="small" /></IconButton>
+                <IconButton size="small" component={NavLink} to="/info/person/form"><EditIcon fontSize="small" /></IconButton>
                 <IconButton size="small"><DeleteIcon fontSize="small" /></IconButton>
             </Stack>
         )
@@ -56,6 +57,7 @@ const rows = [
 ];
 
 const PersonInfoList = () => {
+    const navigate = useNavigate();
     return (
         <Box>
             <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }}>
@@ -98,7 +100,7 @@ const PersonInfoList = () => {
                             </div>
                         </div>
                         <div className="w-full flex justify-end p-2">
-                            <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark'>
+                            <Button variant="contained" startIcon={<SearchIcon />} className='!bg-gold hover:!bg-gold-dark'>
                                 ค้นหา
                             </Button>
                         </div>
@@ -107,7 +109,7 @@ const PersonInfoList = () => {
             </Accordion>
 
             <Stack direction="row" spacing={1} sx={{ my: 2 }}>
-                <Button variant="contained" size="small" startIcon={<AddIcon />} className='!bg-primary hover:!bg-primary-dark'>บุคคล</Button>
+                <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => navigate('/info/person/form')} className='!bg-gold hover:!bg-gold-dark'>บุคคล</Button>
                 <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/txt-file.png' />}>TXT</Button>
                 <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/xls-file.png' />}>XLS</Button>
                 <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/csv-file.png' />}>CSV</Button>
@@ -124,3 +126,4 @@ const PersonInfoList = () => {
 };
 
 export default PersonInfoList;
+

@@ -4,7 +4,7 @@ import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, S
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import DataTable from '../components/DataTable';
+import DataTable from '../../components/DataTable';
 import { type GridColDef } from '@mui/x-data-grid';
 
 // --- Data for Table ---

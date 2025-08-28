@@ -1,5 +1,5 @@
 // src/pages/CarInfo/CarInfoList.tsx
-import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Chip, Stack, InputLabel, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Checkbox, FormControlLabel } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Chip, Stack, InputLabel, IconButton, Dialog, DialogContent, DialogTitle, Checkbox, FormControlLabel } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
@@ -9,7 +9,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import DataTable from '../../components/DataTable';
+import DataTable from '../../../components/DataTable';
 import { type GridColDef } from '@mui/x-data-grid';
 import { useState } from 'react';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';

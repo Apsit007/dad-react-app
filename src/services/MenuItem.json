@@ -33,8 +33,18 @@
         ]
     },
     {
-        "name": "จัดการผู้ใช้งาน",
+        "name": "ตั้งค่า",
         "icon": "SettingsIcon",
-        "path": "#"
+        "path": "#",
+        "subMenus": [
+            {
+                "name": "ตั้งค่าระบบ",
+                "path": "settings/system"
+            },
+            {
+                "name": "จัดการสิทธิ์การใช้งาน",
+                "path": "settings/usermanage/userlist"
+            }
+        ]
     }
 ]

@@ -7,7 +7,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import menuItemsData from '../services/MenuItem.json';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
+import Collapse from '@mui/material/Collapse';
 
 const iconMap = {
     DashboardIcon: DashboardIcon,
@@ -31,6 +32,7 @@ interface SidebarProps {
 
 const Sidebar = ({ isCollapsed }: SidebarProps) => {
     const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
+    const location = useLocation();
     const menuItems: MenuItem[] = menuItemsData;
     const handleSubMenuToggle = (name: string) => {
         setOpenSubMenu(openSubMenu === name ? null : name);
@@ -59,13 +61,24 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
                     {menuItems.map((item) => {
                         // 3. Look up the icon component from the map
                         const IconComponent = iconMap[item.icon as keyof typeof iconMap];
+                        // Determine if any of this item's submenus is active
+                        const hasActiveSub = (item.subMenus || []).some(
+                            (sub) => location.pathname.startsWith(`/${sub.path}`)
+                        );
 
                         return (
                             <li key={item.name} className="px-4 mb-2">
                                 <NavLink
                                     to={item.path || '#'}
                                     onClick={() => item.subMenus && handleSubMenuToggle(item.name)}
-                                    style={({ isActive }) => isActive ? activeLinkStyle : undefined}
+                                    style={({ isActive }) => {
+                                        // If this item has submenus, rely only on submenu matching
+                                        if (item.subMenus && item.subMenus.length > 0) {
+                                            return hasActiveSub ? activeLinkStyle : undefined;
+                                        }
+                                        // Otherwise, rely on the link's active state
+                                        return isActive ? activeLinkStyle : undefined;
+                                    }}
                                     className="flex items-center p-2 rounded-md hover:bg-primary-dark transition-colors"
                                 >
                                     {/* 4. Render the found icon component */}
@@ -76,20 +89,23 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
                                         <KeyboardArrowDownIcon className={`transition-transform ${openSubMenu === item.name ? 'rotate-180' : ''}`} />
                                     )}
                                 </NavLink>
-                                {/* Sub Menu */}
-                                {!isCollapsed && openSubMenu === item.name && item.subMenus && (
-                                    <ul className="pl-8 pt-2">
-                                        {item.subMenus.map((subItem) => (
-                                            <NavLink
-                                                to={subItem.path}
-                                                style={({ isActive }) => isActive ? activeLinkStyle : undefined}
-                                                className="block p-2 rounded-md hover:bg-primary-dark transition-colors text-sm"
-                                            >
-                                                {subItem.name}
-                                            </NavLink>
-                                        ))}
-                                    </ul>
-                                )}
+                                {/* Sub Menu with animation */}
+                                <Collapse in={!isCollapsed && openSubMenu === item.name} timeout={200} unmountOnExit>
+                                    {item.subMenus && (
+                                        <ul className="pl-8 pt-2">
+                                            {item.subMenus.map((subItem) => (
+                                                <NavLink
+                                                    key={subItem.path}
+                                                    to={subItem.path}
+                                                    style={({ isActive }) => isActive ? activeLinkStyle : undefined}
+                                                    className="block p-2 rounded-md hover:bg-primary-dark transition-colors text-sm"
+                                                >
+                                                    {subItem.name}
+                                                </NavLink>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </Collapse>
                             </li>
                         );
                     })}

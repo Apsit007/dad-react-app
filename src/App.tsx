@@ -2,14 +2,24 @@
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import MainLayout from './layout/mainLayout';
 import DashBoardPage from './pages/DashBoardPage';
-import SearchPerson from './pages/SearchPerson';
-import SearchCar from './pages/SearchCar';
-import PersonInfoList from './pages/PersonInfo/PersonInfoList';
-import PersonInfoForm from './pages/PersonInfo/PersonInfoForm';
-import CarInfoList from './pages/CarInfo/CarInfoList';
+import SearchPerson from './pages/Search/SearchPerson';
+import SearchCar from './pages/Search/SearchCar';
+import PersonInfoList from './pages/Infos/PersonInfo/PersonInfoList';
+import PersonInfoForm from './pages/Infos/PersonInfo/PersonInfoForm';
+import CarInfoList from './pages/Infos/CarInfo/CarInfoList';
+import SystemSettings from './pages/Settings/System';
+import UserListPage from './pages/Settings/UserManage/UserList';
+import UserInfoPage from './pages/Settings/UserManage/UserInfo';
+import LoginPage from './pages/auth/Login';
 
 // 1. Create the router configuration
 const router = createBrowserRouter([
+  // Public routes
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  // App routes
   {
     path: "/",
     element: <MainLayout />,
@@ -17,6 +27,18 @@ const router = createBrowserRouter([
       {
         index: true, // This makes it the default child route
         element: <Navigate to="/dashboard" replace />, // Redirect from "/" to "/dashboard"
+      },
+      {
+        path: "settings/system",
+        element: <SystemSettings />,
+      },
+      {
+        path: "settings/usermanage/userlist",
+        element: <UserListPage />,
+      },
+      {
+        path: "settings/usermanage/userinfo",
+        element: <UserInfoPage />,
       },
       {
         path: "dashboard",

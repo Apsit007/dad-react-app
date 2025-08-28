@@ -15,6 +15,7 @@ const theme = createTheme({
                 },
                 root: {
                     border: 'none', // Removes the main outer border
+
                 },
                 // cell: {
                 //     borderBottom: 'none', // Removes the horizontal lines between rows
