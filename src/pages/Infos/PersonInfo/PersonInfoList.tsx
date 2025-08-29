@@ -1,5 +1,5 @@
 // src/pages/PersonInfo/PersonInfoList.tsx
-import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Avatar, Chip, Stack, InputLabel, IconButton } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Avatar, Stack, InputLabel, IconButton } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
@@ -9,6 +9,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import DataTable from '../../../components/DataTable';
 import { type GridColDef } from '@mui/x-data-grid';
 import { useNavigate, NavLink } from 'react-router-dom';
+import ChipTag from '../../../components/ChipTag';
 
 // --- Table Columns Definition ---
 const columns: GridColDef[] = [
@@ -17,7 +18,14 @@ const columns: GridColDef[] = [
     { field: 'cardCode', headerName: 'Card Code', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
     {
         field: 'image', headerName: 'ภาพใบหน้า', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center', sortable: false,
-        renderCell: (params) => <Avatar src={params.value} />
+        renderCell: (params) => (
+            <div className='w-full h-full flex justify-center items-center'>
+                <Avatar variant='square' src={params.value} className=' !h-[70%] !w-[70%]' />
+            </div>
+
+        )
+
+
     },
     { field: 'name', headerName: 'ชื่อ-นามสกุล', flex: 1.5, minWidth: 200, headerAlign: 'center' },
     { field: 'idCard', headerName: 'เลขบัตรประชาชน', flex: 1.5, minWidth: 200, headerAlign: 'center' },
@@ -25,16 +33,11 @@ const columns: GridColDef[] = [
     { field: 'createDate', headerName: 'วันที่สร้าง', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
     {
         field: 'personType', headerName: 'ประเภทบุคคล', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
-        renderCell: (params) => {
-            const typeMap = {
-                Visitor: { label: 'Visitor', color: 'info' as const },
-                Member: { label: 'Member', color: 'warning' as const },
-                Blacklist: { label: 'Blacklist', color: 'error' as const },
-                VIP: { label: 'VIP', color: 'success' as const }
-            };
-            const type = typeMap[params.value as keyof typeof typeMap] || { label: params.value, color: 'default' as const };
-            return <Chip label={type.label} size="small" color={type.color} />;
-        }
+        renderCell: (params) => (
+            <div className='w-full h-full flex justify-center items-center'>
+                <ChipTag tag={params.value} />
+            </div>
+        )
     },
     {
         field: 'actions', headerName: '', width: 100, sortable: false, align: 'center',
@@ -60,7 +63,7 @@ const PersonInfoList = () => {
     const navigate = useNavigate();
     return (
         <Box>
-            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }}>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
                 ข้อมูลบุคคล
             </Typography>
 

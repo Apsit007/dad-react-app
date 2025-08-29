@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react'; // 1. Import hooks
 import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
-import { Avatar } from '@mui/material';
+import { Avatar, Typography } from '@mui/material';
 
 interface NavbarProps {
     toggleSidebar: () => void;
@@ -60,7 +60,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
                 <button onClick={toggleSidebar} className="text-gray-600 hover:text-gray-900">
                     <MenuIcon />
                 </button>
-                <span className="text-primary-dark font-semibold">ระบบบริหารลานจอดรถ อาคาร C ศูนย์ราชการเฉลิมพระเกียรติ 80 พรรษา</span>
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }} className='text-primary-dark'>ระบบบริหารลานจอดรถ อาคาร C ศูนย์ราชการเฉลิมพระเกียรติ 80 พรรษา</Typography>
             </div>
 
             {/* Right Side: Notifications & User Profile */}

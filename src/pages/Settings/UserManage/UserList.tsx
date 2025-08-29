@@ -50,7 +50,7 @@ const UserListPage = () => {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }}>
+      <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
         จัดการสิทธิ์การใช้งาน
       </Typography>
 

@@ -1,23 +1,22 @@
 // src/pages/SearchCar.tsx
-
-import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Stack, InputLabel } from '@mui/material';
+import { useState } from 'react';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Avatar, Chip, Stack, InputLabel } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import DataTable from '../../components/DataTable';
 import { type GridColDef } from '@mui/x-data-grid';
-import ImageTag from '../../components/ImageTag';
 
 // --- 1. อัปเดต Columns ของตาราง ---
 const columns: GridColDef[] = [
     { field: 'id', headerName: 'ลำดับ', width: 70, headerAlign: 'center', align: 'center' },
     {
-        field: 'image', headerName: 'ภาพ', width: 250, headerAlign: 'center', align: 'center', sortable: false,
+        field: 'image', headerName: 'ภาพ', width: 150, headerAlign: 'center', align: 'center', sortable: false,
         renderCell: (params) => (
-            <div className='flex w-full gap-2 h-full'>
-                <ImageTag tag={params.row.car_tag} img={params.value} />
-                <ImageTag tag={params.row.person_tag} img={params.value} />
-            </div>
+            <Box sx={{ position: 'relative' }}>
+                <Avatar variant="rounded" src={params.value} sx={{ width: 70, height: 50 }} />
+                <Chip label="Member" size="small" color="warning" sx={{ position: 'absolute', bottom: 4, right: 4, height: '16px', fontSize: '0.65rem' }} />
+            </Box>
         )
     },
     { field: 'plate', headerName: 'ทะเบียน', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
@@ -30,23 +29,12 @@ const columns: GridColDef[] = [
 ];
 
 // --- 2. ทำให้ข้อมูลเริ่มต้นเป็นค่าว่างเพื่อให้ตารางแสดง "ไม่มีข้อมูล" ---
-//todo mockupdata match coolumns 10 rows
-const rows = [
-    { id: 1, image: 'https://i.imgur.com/8A2u5vA.png', car_tag: 'member', person_tag: 'member', plate: 'ABC-1234', brand: 'Toyota', color: 'White', name: 'John Doe', department: 'Engineering', in_time: '2025-08-25 08:15', out_time: '2025-08-25 17:30' },
-    { id: 2, image: 'https://i.imgur.com/hI2CMpE.png', car_tag: 'member', person_tag: 'member', plate: 'XYZ-5678', brand: 'Honda', color: 'Black', name: 'Jane Smith', department: 'HR', in_time: '2025-08-25 08:25', out_time: '2025-08-25 17:10' },
-    { id: 3, image: 'https://i.imgur.com/uP42D4I.png', car_tag: 'member', person_tag: 'member', plate: 'JKL-9101', brand: 'Ford', color: 'Blue', name: 'Michael Lee', department: 'Finance', in_time: '2025-08-25 09:00', out_time: '2025-08-25 18:00' },
-    { id: 4, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'member', person_tag: 'member', plate: 'MNO-1121', brand: 'Nissan', color: 'Red', name: 'Emily Clark', department: 'Marketing', in_time: '2025-08-25 07:55', out_time: '2025-08-25 16:45' },
-    { id: 5, image: 'https://i.imgur.com/8A2u5vA.png', car_tag: 'member', person_tag: 'member', plate: 'PQR-3141', brand: 'Mazda', color: 'Gray', name: 'David Kim', department: 'Operations', in_time: '2025-08-25 08:05', out_time: '2025-08-25 17:20' },
-    { id: 6, image: 'https://i.imgur.com/hI2CMpE.png', car_tag: 'member', person_tag: 'member', plate: 'STU-5161', brand: 'BMW', color: 'Silver', name: 'Sophia Nguyen', department: 'Sales', in_time: '2025-08-25 09:10', out_time: '2025-08-25 18:05' },
-    { id: 7, image: 'https://i.imgur.com/uP42D4I.png', car_tag: 'member', person_tag: 'member', plate: 'VWX-7181', brand: 'Mercedes', color: 'White', name: 'Liam Patel', department: 'Support', in_time: '2025-08-25 08:40', out_time: '2025-08-25 17:35' },
-    { id: 8, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'member', person_tag: 'member', plate: 'YZA-9202', brand: 'Hyundai', color: 'Green', name: 'Olivia Brown', department: 'Legal', in_time: '2025-08-25 08:00', out_time: '2025-08-25 17:00' },
-    { id: 9, image: 'https://i.imgur.com/8A2u5vA.png', car_tag: 'member', person_tag: 'member', plate: 'BCD-2233', brand: 'Kia', color: 'Yellow', name: 'Noah Wilson', department: 'IT', in_time: '2025-08-25 09:20', out_time: '2025-08-25 18:15' },
-    { id: 10, image: 'https://i.imgur.com/hI2CMpE.png', car_tag: 'member', person_tag: 'member', plate: 'EFG-4455', brand: 'Audi', color: 'Black', name: 'Ava Martinez', department: 'Admin', in_time: '2025-08-25 08:10', out_time: '2025-08-25 17:25' },
-];
+const rows = [];
+
 const SearchCar = () => {
     return (
         <Box>
-            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }}>
                 ค้นหารถ
             </Typography>
 

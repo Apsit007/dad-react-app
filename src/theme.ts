@@ -15,7 +15,13 @@ const theme = createTheme({
                 },
                 root: {
                     border: 'none', // Removes the main outer border
-
+                    // Alternating row colors
+                    '& .MuiDataGrid-row:nth-of-type(odd)': {
+                        backgroundColor: '#FFFFFF',
+                    },
+                    '& .MuiDataGrid-row:nth-of-type(even)': {
+                        backgroundColor: '#e7e8e9',
+                    },
                 },
                 // cell: {
                 //     borderBottom: 'none', // Removes the horizontal lines between rows

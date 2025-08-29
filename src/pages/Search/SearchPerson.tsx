@@ -1,22 +1,23 @@
 // src/pages/SearchPerson.tsx
 
-import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Avatar, Chip, Stack } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Avatar, Stack } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import DataTable from '../../components/DataTable';
 import { type GridColDef } from '@mui/x-data-grid';
+import ImageTag from '../../components/ImageTag';
 
 // --- Data for Table ---
 const columns: GridColDef[] = [
     { field: 'id', headerName: 'ลำดับ', width: 70, headerAlign: 'center', align: 'center' },
     {
-        field: 'image', headerName: 'ภาพ', width: 150, headerAlign: 'center', align: 'center', sortable: false,
+        field: 'image', headerName: 'ภาพ', width: 250, headerAlign: 'center', align: 'center', sortable: false,
         renderCell: (params) => (
-            <Box sx={{ position: 'relative' }}>
-                <Avatar variant="rounded" src={params.value} sx={{ width: 70, height: 50 }} />
-                <Chip label="Member" size="small" color="warning" sx={{ position: 'absolute', bottom: 4, right: 4, height: '16px', fontSize: '0.65rem' }} />
-            </Box>
+            <div className='flex w-full gap-2 h-full'>
+                <ImageTag tag={params.row.car_tag} img={params.value} />
+                <ImageTag tag={params.row.person_tag} img={params.value} />
+            </div>
         )
     },
     { field: 'name', headerName: 'ชื่อ-นามสกุล', flex: 1, minWidth: 200, headerAlign: 'center' },
@@ -29,27 +30,27 @@ const columns: GridColDef[] = [
     { field: 'out_tiem', headerName: 'เวลาออก', flex: 1, minWidth: 250, headerAlign: 'center' },
 ];
 const rows = [
-    { id: 1, image: 'https://i.imgur.com/8A2u5vA.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 98, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 2, image: 'https://i.imgur.com/hI2CMpE.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 95, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 3, image: 'https://i.imgur.com/uP42D4I.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 97, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 4, image: 'https://i.imgur.com/1o2aY2V.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 5, image: 'https://i.imgur.com/1o2aY2V.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 6, image: 'https://i.imgur.com/1o2aY2V.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 7, image: 'https://i.imgur.com/1o2aY2V.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 8, image: 'https://i.imgur.com/1o2aY2V.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 9, image: 'https://i.imgur.com/1o2aY2V.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 10, image: 'https://i.imgur.com/1o2aY2V.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 11, image: 'https://i.imgur.com/1o2aY2V.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 12, image: 'https://i.imgur.com/1o2aY2V.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 13, image: 'https://i.imgur.com/1o2aY2V.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
-    { id: 14, image: 'https://i.imgur.com/1o2aY2V.png', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 1, image: 'https://i.imgur.com/8A2u5vA.png', car_tag: 'member', person_tag: 'member', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 98, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 2, image: 'https://i.imgur.com/hI2CMpE.png', car_tag: 'member', person_tag: 'member', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 95, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 3, image: 'https://i.imgur.com/uP42D4I.png', car_tag: 'member', person_tag: 'member', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 97, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 4, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'member', person_tag: 'member', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 5, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'blacklist', person_tag: 'blacklist', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 6, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'blacklist', person_tag: 'blacklist', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 7, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'blacklist', person_tag: 'blacklist', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 8, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'visitor', person_tag: 'visitor', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 9, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'visitor', person_tag: 'visitor', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 10, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'member', person_tag: 'member', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 11, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'member', person_tag: 'member', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 12, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: '', person_tag: '', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 13, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'member', person_tag: 'member', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
+    { id: 14, image: 'https://i.imgur.com/1o2aY2V.png', car_tag: 'member', person_tag: 'member', name: 'นายบุญเกียรติ ศิริสวัสดิ์สุข', similarity: 90, department: 'สำนักงานบริการวิเทศธนกิจและสังคมแห่งชาติ' },
 ];
 
 const SearchPerson = () => {
 
     return (
         <Box>
-            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }}>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
                 ค้นหาบุคคล
             </Typography>
 

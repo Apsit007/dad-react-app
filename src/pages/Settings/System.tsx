@@ -55,7 +55,7 @@ const SystemSettings = () => {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }}>
+      <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
         ตั้งค่าระบบ
       </Typography>
 

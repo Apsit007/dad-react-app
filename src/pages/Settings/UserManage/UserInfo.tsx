@@ -37,7 +37,9 @@ const UserInfoPage = () => {
         <div className="w-full lg:w-7/12 flex flex-col gap-6">
           {/* Person Info Card */}
           <Paper elevation={2} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>ข้อมูลบุคคล</Typography>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
+              ข้อมูลบุคคล
+            </Typography>
             <div className="flex flex-wrap -m-2">
               {/* Avatar */}
               <div className="w-full md:w-1/3 p-2">
@@ -146,13 +148,7 @@ const UserInfoPage = () => {
                   '&& .MuiDataGrid-columnHeader': {
                     backgroundColor: '#2E514E',
                   },
-                  // Alternating row colors
-                  '& .MuiDataGrid-row:nth-of-type(odd)': {
-                    backgroundColor: '#FFFFFF',
-                  },
-                  '& .MuiDataGrid-row:nth-of-type(even)': {
-                    backgroundColor: '#e7e8e9',
-                  },
+
                 }} />
             </Box>
           </div>

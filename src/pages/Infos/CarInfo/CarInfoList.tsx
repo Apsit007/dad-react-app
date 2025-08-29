@@ -13,6 +13,7 @@ import DataTable from '../../../components/DataTable';
 import { type GridColDef } from '@mui/x-data-grid';
 import { useState } from 'react';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import ChipTag from '../../../components/ChipTag';
 
 // --- Table Columns Definition ---
 const columns: GridColDef[] = [
@@ -30,16 +31,11 @@ const columns: GridColDef[] = [
         minWidth: 150,
         headerAlign: 'center',
         align: 'center',
-        renderCell: (params) => {
-            const typeMap = {
-                Visitor: { label: 'Visitor', color: 'info' as const },
-                Member: { label: 'Member', color: 'warning' as const },
-                Blacklist: { label: 'Blacklist', color: 'error' as const },
-                VIP: { label: 'VIP', color: 'success' as const }
-            };
-            const type = typeMap[params.value as keyof typeof typeMap] || { label: params.value, color: 'default' as const };
-            return <Chip label={type.label} size="medium" className='w-[100px]' color={type.color} />;
-        }
+        renderCell: (params) => (
+            <div className='w-full h-full flex justify-center items-center'>
+                <ChipTag tag={params.value} />
+            </div>
+        )
     },
     {
         field: 'actions',
@@ -77,6 +73,9 @@ const CarInfoList = () => {
 
     return (
         <Box>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
+                ข้อมูลรถ
+            </Typography>
             {/* The page title is now in the Navbar, so we can remove it from here */}
             <Accordion defaultExpanded>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
