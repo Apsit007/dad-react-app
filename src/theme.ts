@@ -2,6 +2,9 @@
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
+    typography: {
+        fontFamily: '"Sarabun", "Helvetica Neue", Arial, sans-serif',
+    },
     components: {
         MuiDataGrid: {
             styleOverrides: {
