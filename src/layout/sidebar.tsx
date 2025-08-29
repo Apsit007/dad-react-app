@@ -49,10 +49,11 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
 
             {/* Logo and Title */}
             <div className="flex items-center p-4 h-16 ">
-                <div className="bg-white p-1 rounded-full">
-                    <img src="/imgs/dad_logo_circle.png" alt="Logo" className="w-10 h-10" />
+                <div className="bg-white p-1 rounded-full w-fit">
+                    <img src="/imgs/dad_logo_circle.png" alt="Logo" className="!w-[65px] h-10" />
                 </div>
-                {!isCollapsed && <span className="ml-3 text-lg font-bold">License Plate</span>}
+                {!isCollapsed && <span className="ml-3 text-md font-bold">License Plate
+                    Recognition System</span>}
             </div>
 
             {/* Menu Items */}
@@ -114,7 +115,7 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
 
             {/* Logout Button */}
             <div className="p-4 ">
-                <a href="#" className="flex items-center p-2 rounded-md hover:bg-primary-dark transition-colors">
+                <a href="/login" className="flex items-center p-2 rounded-md hover:bg-primary-dark transition-colors">
                     <LogoutIcon />
                     {!isCollapsed && <span className="ml-4">ออกจากระบบ</span>}
                 </a>

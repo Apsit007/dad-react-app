@@ -72,7 +72,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
                     <Avatar sx={{ width: 32, height: 32 }}>J</Avatar>
                     <div>
                         <p className="font-semibold text-sm text-gray-800">Pawarisa Techakulwiset</p>
-                        <p className="text-xs text-gray-500">System Administrator</p>
+                        <p className="text-xs text-gold">System Administrator</p>
                     </div>
                 </div>
             </div>

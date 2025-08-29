@@ -45,7 +45,7 @@ const UserInfoPage = () => {
               <div className="w-full md:w-1/3 p-2">
                 <div className='relative'>
                   <Avatar sx={{ width: 170, height: 170, m: 'auto' }} className='border-[5px] border-gold-light' />
-                  <Typography variant="caption" display="block" align="center" className='absolute bottom-7 left-[75px]' mt={1}>ขนาดภาพ 50-100 kb</Typography>
+                  <Typography variant="caption" display="block" align="center" className='absolute bottom-7 left-[32%]' mt={1}>ขนาดภาพ 50-100 kb</Typography>
                 </div>
                 <div className="mt-2 text-center">
                   <FormControlLabel control={<Checkbox />} label="Inactive" />
