@@ -19,9 +19,9 @@ const InOutDashboard = () => {
     return (
         <Box className="w-80 flex-shrink-0 h-full flex flex-col">
             {/* ✨ 1. เปลี่ยน div ครอบการ์ดให้เป็น flex container แนวตั้ง */}
-            <div className="flex-1 h-full flex flex-col gap-2">
+            <div className="h-full flex flex-col gap-2">
                 {/* Total In-Out Card */}
-                <Paper elevation={2} sx={{ p: 2, bgcolor: '#36746F', color: 'white' }}>
+                <div className='p-2 bg-primary text-white  rounded-md shadow-md'>
                     <Typography variant="subtitle1" gutterBottom>รถเข้า-ออกในพื้นที่</Typography>
                     <Box className="flex items-center text-center">
                         <Box className="flex-1">
@@ -34,14 +34,14 @@ const InOutDashboard = () => {
                             <Typography variant="caption">จำนวน<span className='text-gold'>รถออก</span>ทั้งหมด</Typography>
                         </Box>
                     </Box>
-                </Paper>
+                </div>
 
                 {/* Still Inside Card */}
-                <Paper elevation={2} sx={{ p: 2, textAlign: 'center', bgcolor: '#36746F', color: 'white' }}>
+                <div className='p-2 bg-primary text-white text-center rounded-md shadow-md'>
                     <Typography variant="subtitle1" gutterBottom>รถยังอยู่ในพื้นที่</Typography>
                     <Typography variant="h3" className="!font-bold text-gold">{summaryData.stillInside}</Typography>
                     <Typography variant="caption">จำนวน<span className='text-gold'>รถที่ยังอยู่ภายในพื้นที่ </span></Typography>
-                </Paper>
+                </div>
 
 
 
@@ -50,7 +50,7 @@ const InOutDashboard = () => {
                 {categoryData.map((item) => {
                     const isBlacklist = item.title === 'Blacklist';
                     return (
-                        <Paper key={item.title} elevation={2} sx={{ p: 2, bgcolor: '#C5C8CB' }}>
+                        <div key={item.title} className='p-2 bg-[#C5C8CB] rounded-md shadow-md'>
                             <Typography sx={{ fontWeight: 'bold' }} className={isBlacklist ? 'text-red-500' : 'text-primary-dark'}>
                                 {item.title}
                             </Typography>
@@ -81,7 +81,7 @@ const InOutDashboard = () => {
 
                                 </Box>
                             </Box>
-                        </Paper>
+                        </div>
 
                     );
                 })}

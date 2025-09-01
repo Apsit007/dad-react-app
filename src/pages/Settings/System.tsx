@@ -27,7 +27,7 @@ const columns: GridColDef[] = [
     renderCell: () => (
       <Stack direction="row">
         <IconButton size="small"><EditIcon fontSize="small" /></IconButton>
-        <IconButton size="small"><DeleteIcon fontSize="small" /></IconButton>
+        {/* <IconButton size="small"><DeleteIcon fontSize="small" /></IconButton> */}
       </Stack>
     ),
   },
@@ -66,7 +66,7 @@ const SystemSettings = () => {
         </Typography>
         <FormGroup row>
           <FormControlLabel control={<Checkbox defaultChecked />} label="บัตร" />
-          <FormControlLabel control={<Checkbox defaultChecked />} label="ใบผ่านบุคคล" />
+          <FormControlLabel control={<Checkbox defaultChecked />} label="ใบหน้าบุคคล" />
           <FormControlLabel control={<Checkbox defaultChecked />} label="ป้ายทะเบียน" />
         </FormGroup>
       </Paper>
@@ -76,7 +76,7 @@ const SystemSettings = () => {
         <Typography variant="h6" sx={{ fontWeight: 600, flex: 1 }}>
           การตั้งค่ากล้อง
         </Typography>
-        <Button
+        {/* <Button
           variant="contained"
           size='small'
           startIcon={<AddIcon />}
@@ -85,7 +85,7 @@ const SystemSettings = () => {
           onClick={() => setShowCameraPopup(true)}
         >
           Camera
-        </Button>
+        </Button> */}
       </Stack>
 
       {/* Camera table */}

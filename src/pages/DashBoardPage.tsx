@@ -7,11 +7,20 @@ import ImageTag from '../components/ImageTag';
 
 // 1. กำหนดโครงสร้างคอลัมน์ (Columns)
 const columns: GridColDef[] = [
-    { field: 'time', headerName: 'เวลาเข้า', flex: 2, headerAlign: 'center', },
+    {
+        field: 'time',
+        headerName: 'เวลาเข้า',
+        flex: 2,
+        align: 'center',
+        headerAlign: 'center',
+        renderCell: (params) => (
+            <Typography variant="body2" className='flex'>{params.value}</Typography>
+        ),
+    },
     {
         field: 'eventType',
         headerName: 'ประเภท',
-        flex: 2,
+        flex: 1,
         headerAlign: 'center',
         align: 'center',
         // renderCell: (params) => (
@@ -63,8 +72,8 @@ const columns: GridColDef[] = [
             </div>
         )
     },
-    { field: 'brand', headerName: 'ยี่ห้อ', flex: 2, headerAlign: 'center', align: 'center' },
-    { field: 'color', headerName: 'สี', flex: 2, headerAlign: 'center', align: 'center' },
+    { field: 'brand', headerName: 'ยี่ห้อ', flex: 1, headerAlign: 'center', align: 'center' },
+    { field: 'color', headerName: 'สี', flex: 1, headerAlign: 'center', align: 'center' },
     {
         field: 'name',
         headerName: 'ชื่อ-นามสกุล',
@@ -113,13 +122,20 @@ const DashBoardPage = () => {
     return (
         <div className='flex flex-col  gap-4 h-full'>
             <Typography variant='h5' className='text-primary-dark '>ข้อมูลการเข้า-ออกพื้นที่ ณ ปัจจุบัน</Typography>
-            <div className="flex gap-8">
+            <div className="flex gap-4">
                 <InOutDashboard />
                 <div className="flex-1 flex flex-col min-w-0">
                     <DataTable
                         rows={rows}
                         columns={columns}
                         getRowClassName={getRowClassName}
+                        sx={{
+                            '& .MuiDataGrid-cell': {
+                                whiteSpace: 'normal !important',
+                                wordBreak: 'break-word !important',
+                                lineHeight: '1.3em',
+                            },
+                        }}
                     />
                 </div>
             </div>

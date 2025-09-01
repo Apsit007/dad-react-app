@@ -13,15 +13,15 @@ const LoginPage = () => {
 
   return (
     <Box className="min-h-screen" sx={{ bgcolor: '#2E6F69' }} display="flex" alignItems="center" justifyContent="center" p={2}>
-      <Paper elevation={6} sx={{ width: 420, borderRadius: 2, p: 4, pt: 2 }}>
-        <div className='flex w-full h-32 items-center justify-center gap-2'>
-          <img src="/imgs/dad_logo_circle.png" alt="Logo" style={{ width: 64, height: 64, margin: '10px 0 0 0' }} />
-          <Typography variant="h6" sx={{ mt: 1 }}>
-            <span className="bg-gradient-to-t from-[#79C350] to-[#d9e9bd] bg-clip-text text-transparent font-bold">
-              License Plate
+      <Paper elevation={6} sx={{ width: 420, borderRadius: 2, p: 4, pt: 0 }}>
+        <div className='flex flex-col w-full h-52 items-center justify-center gap-2'>
+          <img src="/imgs/dad_logo_circle.png" alt="Logo" style={{ width: 64, height: 64 }} />
+          <Typography variant="h6" align='center'>
+            <span className="bg-gradient-to-t from-[#79C350] to-[#d9e9bd] bg-clip-text text-transparent font-bold ">
+              ระบบบริหารลานจอดรถอาคาร C
             </span>
             <br />
-            <span style={{ color: '#2E6F69', fontWeight: 700 }}>Recognition System</span>
+            <span style={{ color: '#2E6F69', fontWeight: 700 }}>ศูนย์ราชการเฉลิมพระเกียรติ 80 พรรษา</span>
           </Typography>
         </div>
 

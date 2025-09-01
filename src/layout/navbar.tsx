@@ -65,9 +65,9 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
 
             {/* Right Side: Notifications & User Profile */}
             <div className="flex items-center gap-6">
-                <button className="text-gray-600 hover:text-gray-900">
+                {/* <button className="text-gray-600 hover:text-gray-900">
                     <NotificationsNoneOutlinedIcon />
-                </button>
+                </button> */}
                 <div className="flex items-center gap-3">
                     <Avatar sx={{ width: 32, height: 32 }}>J</Avatar>
                     <div>

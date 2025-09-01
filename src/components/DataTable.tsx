@@ -32,7 +32,7 @@ const CustomDataGrid = (props: DataGridProps) => {
                 {...props}
 
                 // --- ค่า Default ที่เรากำหนดเอง ---
-                rowHeight={70}
+                rowHeight={63}
                 getRowClassName={props.getRowClassName || defaultGetRowClassName} // 3. ทำให้ยืดหยุ่น
                 initialState={{
                     pagination: {

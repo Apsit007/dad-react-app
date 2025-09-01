@@ -103,7 +103,7 @@ const PersonInfoList = () => {
                             </div>
                         </div>
                         <div className="w-full flex justify-end p-2">
-                            <Button variant="contained" startIcon={<SearchIcon />} className='!bg-gold hover:!bg-gold-dark'>
+                            <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark'>
                                 ค้นหา
                             </Button>
                         </div>
