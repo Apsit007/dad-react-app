@@ -1,5 +1,5 @@
 // src/pages/Settings/UserManage/UserList.tsx
-import { Box, Typography, Accordion, AccordionSummary, AccordionDetails, TextField, Select, MenuItem, Button, Stack, Chip, IconButton, InputLabel } from '@mui/material';
+import { Box, Typography, Accordion, AccordionSummary, AccordionDetails, TextField, Select, MenuItem, Button, Stack, IconButton, InputLabel } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
@@ -8,6 +8,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DataTable from '../../../components/DataTable';
 import { type GridColDef } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
+import ChipTag from '../../../components/ChipTag';
 
 // Mock data
 const rows = [
@@ -29,21 +30,18 @@ const UserListPage = () => {
     {
       field: 'status', headerName: 'สถานะการใช้งาน', width: 160, headerAlign: 'center', align: 'center',
       renderCell: (params) => (
-        <Chip
-          label={params.value}
-          size="small"
-          color={params.value === 'Active' ? 'success' : 'default'}
-          variant={params.value === 'Active' ? 'filled' : 'outlined'}
-        />
+        <div className='flex justify-center items-center h-full w-full'>
+          <ChipTag tag={params.value} />
+        </div>
       ),
     },
     {
       field: 'actions', headerName: '', width: 100, sortable: false, align: 'center',
       renderCell: () => (
-        <Stack direction="row">
+        <div className='flex w-full h-full items-center justify-center gap-1'>
           <IconButton size="small" onClick={() => navigate('/settings/usermanage/userinfo')}><EditIcon fontSize="small" /></IconButton>
           <IconButton size="small"><DeleteIcon fontSize="small" /></IconButton>
-        </Stack>
+        </div>
       ),
     },
   ];

@@ -42,10 +42,10 @@ const columns: GridColDef[] = [
     {
         field: 'actions', headerName: '', width: 100, sortable: false, align: 'center',
         renderCell: () => (
-            <Stack direction="row">
+            <div className='flex w-full h-full items-center justify-center gap-1'>
                 <IconButton size="small" component={NavLink} to="/info/person/form"><EditIcon fontSize="small" /></IconButton>
                 <IconButton size="small"><DeleteIcon fontSize="small" /></IconButton>
-            </Stack>
+            </div>
         )
     }
 ];

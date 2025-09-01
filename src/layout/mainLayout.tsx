@@ -20,7 +20,7 @@ const MainLayout = () => {
 
                 {/* ✨margin-left แบบไดนามิกตามสถานะของ Sidebar */}
                 <div className={`transition-all duration-300 ease-in-out ${isCollapsed ? 'ml-28' : 'ml-72'}`}>
-                    <div className="flex flex-col gap-6 h-[calc(100vh-3rem)]">
+                    <div className="flex flex-col gap-4 h-[calc(100vh-3rem)]">
                         <Navbar toggleSidebar={toggleSidebar} />
 
                         <main className="flex-1 flex flex-col pb-4">

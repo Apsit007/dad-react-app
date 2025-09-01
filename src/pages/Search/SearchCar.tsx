@@ -12,7 +12,7 @@ import ImageTag from '../../components/ImageTag';
 const columns: GridColDef[] = [
     { field: 'id', headerName: 'ลำดับ', width: 70, headerAlign: 'center', align: 'center' },
     {
-        field: 'image', headerName: 'ภาพ', width: 250, headerAlign: 'center', align: 'center', sortable: false,
+        field: 'image', headerName: 'ภาพ', width: 200, headerAlign: 'center', align: 'center', sortable: false,
         renderCell: (params) => (
             <div className='flex w-full gap-2 h-full'>
                 <ImageTag tag={params.row.car_tag} img={params.value} />

@@ -2,10 +2,31 @@
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
+    palette: {
+        primary: {
+            main: '#36746F',
+            dark: '#2f625d',
+            contrastText: '#ffffff',
+        },
+    },
     typography: {
         fontFamily: '"Sarabun", "Helvetica Neue", Arial, sans-serif',
     },
     components: {
+        MuiPaginationItem: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 8,
+                    minWidth: 36,
+                    height: 36,
+                    marginLeft: 4,
+                    marginRight: 4,
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #E0E3E7',
+                    color: '#424242',
+                },
+            },
+        },
         MuiDataGrid: {
             styleOverrides: {
                 columnHeaders: {

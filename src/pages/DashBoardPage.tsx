@@ -10,11 +10,25 @@ const columns: GridColDef[] = [
     {
         field: 'time',
         headerName: 'เวลาเข้า',
-        flex: 2,
-        align: 'center',
+        flex: 1,
         headerAlign: 'center',
         renderCell: (params) => (
-            <Typography variant="body2" className='flex'>{params.value}</Typography>
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',     // กลางแนวตั้ง
+                    justifyContent: 'center', // กลางแนวนอน
+                    height: '100%',
+                    width: '100%',
+                    textAlign: 'center',
+                    whiteSpace: 'normal',
+                    wordBreak: 'break-word',
+                }}
+            >
+                <Typography variant="body2" sx={{ lineHeight: 1.3 }}>
+                    {params.value}
+                </Typography>
+            </div>
         ),
     },
     {
@@ -30,23 +44,10 @@ const columns: GridColDef[] = [
     {
         field: 'images',
         headerName: 'ภาพ',
-        flex: 3,
+        flex: 2,
         sortable: false,
         headerAlign: 'center',
         renderCell: (params) => (
-            // <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            //     <Avatar variant="rounded" src={params.value.carUrl} sx={{ width: 70, height: 50 }} />
-            //     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            //         {params.value.tags.map((tag: { label: string, color: string }, index: number) => (
-            //             <Chip key={index} label={tag.label} size="small" sx={{
-            //                 bgcolor: tag.color === 'blue' ? '#2196f3' : tag.color === 'orange' ? '#ff9800' : '#f44336',
-            //                 color: 'white',
-            //                 height: '20px',
-            //                 fontSize: '0.7rem'
-            //             }} />
-            //         ))}
-            //     </Box>
-            // </Box>
             <div className='flex w-full gap-2 h-full'>
                 <ImageTag tag={params.row.car_tag} img={params.value} />
                 <ImageTag tag={params.row.person_tag} img={params.value} />
@@ -87,7 +88,30 @@ const columns: GridColDef[] = [
             </div>
         )
     },
-    { field: 'department', headerName: 'หน่วยงาน', flex: 2, headerAlign: 'center', align: 'left' },
+    {
+        field: 'department',
+        headerName: 'หน่วยงาน',
+        flex: 2,
+        headerAlign: 'center',
+        renderCell: (params) => (
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    width: '100%',
+                    textAlign: 'center',
+                    whiteSpace: 'normal',
+                    wordBreak: 'break-word',
+                }}
+            >
+                <Typography variant="body2" sx={{ lineHeight: 1.3 }}>
+                    {params.value}
+                </Typography>
+            </div>
+        ),
+    },
 ];
 
 // 2. สร้างข้อมูลตัวอย่าง (Rows)
@@ -129,13 +153,7 @@ const DashBoardPage = () => {
                         rows={rows}
                         columns={columns}
                         getRowClassName={getRowClassName}
-                        sx={{
-                            '& .MuiDataGrid-cell': {
-                                whiteSpace: 'normal !important',
-                                wordBreak: 'break-word !important',
-                                lineHeight: '1.3em',
-                            },
-                        }}
+
                     />
                 </div>
             </div>
