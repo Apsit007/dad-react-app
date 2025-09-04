@@ -15,6 +15,10 @@
             {
                 "name": "ค้นหารถ",
                 "path": "search/car"
+            },
+            {
+                "name": "ค้นหาVDO",
+                "path": "search/video"
             }
         ]
     },
