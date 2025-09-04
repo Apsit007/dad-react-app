@@ -1,11 +1,14 @@
 // src/pages/Settings/UserManage/UserInfo.tsx
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Paper, Typography, Box, TextField, Select, MenuItem, Button, Avatar, FormControlLabel, InputLabel, Checkbox, Stack } from '@mui/material';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
+import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { type GridColDef } from '@mui/x-data-grid';
 import DataTable from '../../../components/DataTable';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dialog from '../../../service/dialog.service';
 
 // Permissions table
 const permColumns: GridColDef[] = [
@@ -28,6 +31,28 @@ const permRows = [
 
 const UserInfoPage = () => {
   const [inactive, setInactive] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const onPickFile = () => fileInputRef.current?.click();
+
+
+  const validateFile = (file: File) => {
+    const isValidType = ['image/png', 'image/jpeg'].includes(file.type);
+    const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB
+    if (!isValidType) { dialog.warning('อนุญาตเฉพาะไฟล์ PNG หรือ JPEG'); return false; }
+    if (!isValidSize) { dialog.warning('ขนาดไฟล์ต้องไม่เกิน 5MB'); return false; }
+    return true;
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!validateFile(file)) return;
+    const previewUrl = URL.createObjectURL(file);
+    setSelectedImage(previewUrl);
+
+  };
 
   return (
     <div className='flex flex-col'>
@@ -44,8 +69,19 @@ const UserInfoPage = () => {
               {/* Avatar */}
               <div className="w-full md:w-1/3 p-2">
                 <div className='relative'>
-                  <Avatar sx={{ width: 170, height: 170, m: 'auto' }} className='border-[5px] border-gold-light' />
-                  <Typography variant="caption" display="block" align="center" className='absolute bottom-7 left-[32%]' mt={1}>ขนาดภาพ 50-100 kb</Typography>
+                  <input ref={fileInputRef} type='file' accept='image/png,image/jpeg' className='hidden' onChange={handleFileChange} />
+                  <Box sx={{ position: 'relative', width: 220, height: 220 }} className='rounded-full border-[8px] border-gold' style={{ borderColor: '#E7B13A' }}>
+                    {selectedImage ? (
+                      <Avatar variant='circular' src={selectedImage} onClick={onPickFile} sx={{ width: '100%', height: '100%', cursor: 'pointer' }} />
+                    ) : (
+                      <Box role='button' onClick={onPickFile} className='flex flex-col items-center justify-center cursor-pointer bg-white rounded-full hover:bg-gray-50' sx={{ width: '100%', height: '100%' }}>
+                        <CloudUploadOutlinedIcon sx={{ color: 'text.disabled', fontSize: 42, mb: 1 }} />
+                        <Typography variant='body2' color='text.secondary'>ขนาดภาพ 50-100 Kb</Typography>
+                      </Box>
+                    )}
+
+                  </Box>
+                  {/* helper moved inside circle */}
                 </div>
                 <div className="mt-2 text-center">
                   <FormControlLabel control={<Checkbox />} label="Inactive" />
@@ -166,4 +202,3 @@ const UserInfoPage = () => {
 };
 
 export default UserInfoPage;
-

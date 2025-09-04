@@ -3,10 +3,14 @@
 import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Avatar, Stack } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
+import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import DataTable from '../../components/DataTable';
 import { type GridColDef } from '@mui/x-data-grid';
 import ImageTag from '../../components/ImageTag';
+import { useRef, useState } from 'react';
+import dialog from '../../service/dialog.service';
 
 // --- Data for Table ---
 const columns: GridColDef[] = [
@@ -47,6 +51,44 @@ const rows = [
 ];
 
 const SearchPerson = () => {
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const clearImage = () => {
+        if (selectedImage) {
+            URL.revokeObjectURL(selectedImage);
+        }
+        setSelectedImage(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const onPickFile = () => {
+        fileInputRef.current?.click();
+    };
+
+    const validateFile = (file: File) => {
+        const isValidType = ['image/png', 'image/jpeg'].includes(file.type);
+        const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB
+        if (!isValidType) {
+            dialog.warning('อนุญาตเฉพาะไฟล์ PNG หรือ JPEG');
+            return false;
+        }
+        if (!isValidSize) {
+            dialog.warning('ขนาดไฟล์ต้องไม่เกิน 5MB');
+            return false;
+        }
+        return true;
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!validateFile(file)) return;
+
+        const previewUrl = URL.createObjectURL(file);
+        setSelectedImage(previewUrl);
+
+
+    };
 
     return (
         <Box>
@@ -63,7 +105,45 @@ const SearchPerson = () => {
                     {/* 👇 Grid is replaced with div and Tailwind classes 👇 */}
                     <div className="flex flex-wrap">
                         <div className="w-full md:w-1/6 p-2 text-center">
-                            <Avatar variant="rounded" sx={{ width: 120, height: 150, m: 'auto' }} />
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/png,image/jpeg"
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
+                            <Box sx={{ position: 'relative', width: 120, height: 150, m: 'auto' }}>
+                                {selectedImage ? (
+                                    <Avatar
+                                        variant="rounded"
+                                        src={selectedImage}
+                                        onClick={onPickFile}
+                                        sx={{ width: '100%', height: '100%', cursor: 'pointer' }}
+                                    />
+                                ) : (
+                                    <Box
+                                        role="button"
+                                        onClick={onPickFile}
+                                        className="flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 hover:bg-gray-50"
+                                        sx={{ width: '100%', height: '100%', borderRadius: 1 }}
+                                    >
+                                        <CloudUploadOutlinedIcon sx={{ color: 'text.secondary', mb: 1 }} />
+                                        <Typography variant="caption" color="text.secondary">Upload รูปภาพ</Typography>
+                                    </Box>
+                                )}
+                                {selectedImage && (
+                                    <button
+                                        type="button"
+                                        onClick={clearImage}
+                                        title="ล้างรูป"
+                                        className="absolute top-1 right-1 bg-white/90 hover:bg-white rounded-full shadow p-1"
+                                        style={{ lineHeight: 0 }}
+                                    >
+                                        <CloseRoundedIcon fontSize="small" />
+                                    </button>
+                                )}
+                            </Box>
+                            {/* Message and loading are now handled via dialog service */}
                         </div>
                         <div className="w-full md:w-5/6 p-2">
                             <div className="flex flex-wrap -m-2">
