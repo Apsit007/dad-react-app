@@ -4,7 +4,8 @@ import MainLayout from './layout/mainLayout';
 import DashBoardPage from './pages/DashBoardPage';
 import SearchPerson from './pages/Search/SearchPerson';
 import SearchCar from './pages/Search/SearchCar';
-import SerachVideo from './pages/Search/SerachVideo';
+import SerachVideo from './pages/Search/Video/SerachVideo';
+import VideoResultPage from './pages/Search/Video/videoresult';
 import PersonInfoList from './pages/Infos/PersonInfo/PersonInfoList';
 import PersonInfoForm from './pages/Infos/PersonInfo/PersonInfoForm';
 import CarInfoList from './pages/Infos/CarInfo/CarInfoList';
@@ -56,6 +57,10 @@ const router = createBrowserRouter([
       {
         path: "search/video",
         element: <SerachVideo />,
+      },
+      {
+        path: "search/video/videoresult",
+        element: <VideoResultPage />,
       },
       {
         path: "info/person",

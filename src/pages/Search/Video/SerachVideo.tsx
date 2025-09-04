@@ -1,18 +1,30 @@
 // src/pages/Search/SerachVideo.tsx
 import { useRef, useState } from 'react';
 import dayjs, { type Dayjs } from 'dayjs';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Button, Box, Stack } from '@mui/material';
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Stack,
+  IconButton,
+} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
+import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
 import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { type GridColDef } from '@mui/x-data-grid';
-import DataTable from '../../components/DataTable';
-import dialog from '../../service/dialog.service';
-import Popup from '../../components/Popup';
+import DataTable from '../../../components/DataTable';
+import dialog from '../../../service/dialog.service';
+import Popup from '../../../components/Popup';
+import { useNavigate } from 'react-router-dom';
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ลำดับ', width: 90, headerAlign: 'center', align: 'center' },
@@ -26,6 +38,7 @@ const columns: GridColDef[] = [
 const rows: any[] = [];
 
 const SerachVideo = () => {
+  const navigate = useNavigate();
   const [videoName, setVideoName] = useState('');
   const [startDate, setStartDate] = useState<Dayjs | null>(dayjs());
   const [endDate, setEndDate] = useState<Dayjs | null>(dayjs());
@@ -37,8 +50,10 @@ const SerachVideo = () => {
 
   const validateFile = (file: File) => {
     const isVideo = file.type.startsWith('video/');
-    if (!isVideo) { dialog.warning('อนุญาตเฉพาะไฟล์วิดีโอเท่านั้น'); return false; }
-    // ไม่กำหนดขนาดสูงสุด ณ ตอนนี้ หากต้องการเพิ่ม แจ้งได้
+    if (!isVideo) {
+      dialog.warning('อนุญาตเฉพาะไฟล์วิดีโอเท่านั้น');
+      return false;
+    }
     return true;
   };
 
@@ -47,11 +62,13 @@ const SerachVideo = () => {
     if (!file) return;
     if (!validateFile(file)) return;
     setSelectedVideo(file);
-
   };
-  const handleUpload = async () => {
-    if (!selectedVideo) { dialog.warning('โปรดเลือกไฟล์วิดีโอ'); return; }
 
+  const handleUpload = async () => {
+    if (!selectedVideo) {
+      dialog.warning('โปรดเลือกไฟล์วิดีโอ');
+      return;
+    }
   };
 
   return (
@@ -67,6 +84,7 @@ const SerachVideo = () => {
         </AccordionSummary>
         <AccordionDetails sx={{ bgcolor: 'white' }}>
           <div className="flex flex-wrap">
+            {/* Upload Box */}
             <div className="w-full md:w-1/6 p-2 text-center">
               <input ref={fileInputRef} type='file' accept='video/*' className='hidden' onChange={handleFileChange} />
               <Box
@@ -84,11 +102,13 @@ const SerachVideo = () => {
                 )}
               </Box>
             </div>
+
+            {/* Search Fields */}
             <div className="w-full md:w-5/6 p-2">
               <div className="flex flex-wrap -m-2">
                 <div className="w-full sm:w-1/3 p-2">
                   <Typography variant='caption'>ชื่อวิดีโอ</Typography>
-                  <TextField placeholder='ชื่อวิดีโอ' value={videoName} onChange={(e) => setVideoName(e.target.value)} />
+                  <TextField placeholder='ชื่อวิดีโอ' fullWidth value={videoName} onChange={(e) => setVideoName(e.target.value)} />
                 </div>
                 <div className="w-full sm:w-1/3 p-2">
                   <Typography variant='caption'>วันที่เริ่มต้น</Typography>
@@ -99,24 +119,31 @@ const SerachVideo = () => {
                   <DatePicker value={endDate} onChange={(d) => setEndDate(d)} />
                 </div>
               </div>
-            </div>
-            <div className="w-full flex justify-end p-2">
-              <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark'>ค้นหา</Button>
+              <div className="w-full flex justify-end p-2">
+                <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark'>ค้นหา</Button>
+              </div>
             </div>
           </div>
         </AccordionDetails>
       </Accordion>
 
       <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+        <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/txt-file.png' />}>TXT</Button>
+        <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/xls-file.png' />}>XLS</Button>
+        <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/csv-file.png' />}>CSV</Button>
+        <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/pdf-file.png' />}>PDF</Button>
         <Box sx={{ flexGrow: 1 }} />
-        <Typography variant="body2" sx={{ alignSelf: 'center' }}>ผลการค้นหา : 0 รายการ</Typography>
+        <Typography variant="body2" sx={{ alignSelf: 'center' }}>
+          ผลการค้นหา : {rows.length} รายการ
+        </Typography>
       </Stack>
 
       <div className="flex-1 flex flex-col ">
-        <DataTable rows={rows} columns={columns} />
+        <DataTable rows={rows} columns={columns} onRowClick={() => navigate('/search/video/videoresult')} />
       </div>
-      <Popup title="อัพโหลดวิดีโอ" show={showUploadPopup} onClose={() => setShowUploadPopup(false)}>
-        <Box sx={{ minWidth: 520 }}>
+
+      <Popup title="อัพไฟล์วิดีโอ" show={showUploadPopup} onClose={() => setShowUploadPopup(false)}>
+        <Box sx={{ minWidth: 420 }}>
           <div className="flex flex-col gap-5">
             <div>
               <Typography variant='body2' className='!text-primary !mb-3'>อัพโหลดวิดีโอ</Typography>
