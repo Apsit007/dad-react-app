@@ -8,7 +8,7 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { type GridColDef } from '@mui/x-data-grid';
 import DataTable from '../../../components/DataTable';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dialog from '../../../service/dialog.service';
+import dialog from '../../../services/dialog.service';
 
 // Permissions table
 const permColumns: GridColDef[] = [

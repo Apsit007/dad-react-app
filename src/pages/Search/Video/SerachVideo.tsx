@@ -20,7 +20,7 @@ import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { type GridColDef } from '@mui/x-data-grid';
 import DataTable from '../../../components/DataTable';
-import dialog from '../../../service/dialog.service';
+import dialog from '../../../services/dialog.service';
 import Popup from '../../../components/Popup';
 import { useNavigate } from 'react-router-dom';
 

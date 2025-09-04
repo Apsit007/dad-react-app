@@ -14,7 +14,7 @@ import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined"
 import { useRef, useState } from 'react';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import dialog from '../../../service/dialog.service';
+import dialog from '../../../services/dialog.service';
 import Popup from '../../../components/Popup';
 
 

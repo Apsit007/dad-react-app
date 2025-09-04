@@ -10,7 +10,7 @@ import DataTable from '../../components/DataTable';
 import { type GridColDef } from '@mui/x-data-grid';
 import ImageTag from '../../components/ImageTag';
 import { useRef, useState } from 'react';
-import dialog from '../../service/dialog.service';
+import dialog from '../../services/dialog.service';
 
 // --- Data for Table ---
 const columns: GridColDef[] = [
