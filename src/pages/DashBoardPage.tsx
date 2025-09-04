@@ -114,6 +114,18 @@ const columns: GridColDef[] = [
             </div>
         ),
     },
+    {
+        field: 'exp_date',
+        renderHeader: () => (
+            <div style={{ textAlign: 'center', whiteSpace: 'normal', lineHeight: 1.2 }}>
+                <span>จำนวนวัน</span><br />
+                <span>หมดอายุ</span>
+            </div>
+        ),
+        flex: 1,
+        headerAlign: 'center',
+
+    },
 ];
 
 // 2. สร้างข้อมูลตัวอย่าง (Rows)
@@ -201,3 +213,4 @@ const DashBoardPage = () => {
 };
 
 export default DashBoardPage;
+

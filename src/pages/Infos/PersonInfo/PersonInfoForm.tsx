@@ -87,7 +87,7 @@ const PersonInfoForm = () => {
             <div className="flex flex-wrap lg:flex-nowrap gap-6">
 
                 {/* Left Column */}
-                <div className="w-full lg:w-7/12 flex flex-col gap-6">
+                <div className="w-full lg:w-6/12 flex flex-col gap-6">
                     {/* Person Info Card */}
                     <Paper elevation={2} sx={{ p: 3 }}>
                         <Typography variant="h6" gutterBottom>ข้อมูลบุคคล</Typography>
@@ -215,9 +215,9 @@ const PersonInfoForm = () => {
                 </div>
 
                 {/* Right Column */}
-                <div className="w-full lg:w-5/12 flex flex-col gap-6">
+                <div className="w-full lg:w-6/12 flex flex-col gap-6">
                     {/* Additional Info Card */}
-                    <div className='py-2 px-4 bg-primary text-white'>
+                    <div className='py-2 px-4 bg-primary h-full text-white'>
                         <Typography variant="h6" gutterBottom>รายละเอียดเพิ่มเติม</Typography>
                         <div className="flex flex-wrap -m-2 mt-3 ">
                             <div className="w-full sm:w-1/2 p-2">
@@ -236,17 +236,17 @@ const PersonInfoForm = () => {
                             </div>
                             <div className="w-full sm:w-1/2 flex">
                                 <div className='w-1/2 p-2 '>
-                                    <InputLabel shrink className='!text-white'>วันเริ่มต้น</InputLabel>
+                                    <InputLabel shrink required className='!text-white'>วันเริ่มต้น</InputLabel>
                                     <DatePicker />
                                 </div>
                                 <div className='w-1/2 p-2 '>
-                                    <InputLabel shrink className='!text-white'>วันสิ้นสุด</InputLabel>
+                                    <InputLabel shrink required className='!text-white'>วันสิ้นสุด</InputLabel>
                                     <DatePicker />
                                 </div>
                             </div>
                             <div className="w-full flex gap-2 justify-end p-2 mt-auto">
                                 <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<EditSquareIcon fontWeight="small" />}>
-                                    แก้ไขเลขบัตร
+                                    เปลี่ยนบัตร
                                 </Button>
                                 <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<CancelOutlinedIcon fontWeight="small" />}>
                                     ยกเลิกบัตร
@@ -263,7 +263,7 @@ const PersonInfoForm = () => {
                                 <Typography variant="h6">รายละเอียดรถ</Typography>
                                 <Button size="small" className='!bg-gold !text-primary w-[120px]' startIcon={<AddIcon />} onClick={handleOpenCarPopup}>เพิ่มรถ</Button>
                             </Box>
-                            <Box sx={{ height: 300, width: '100%' }}>
+                            <Box sx={{ height: '100%', width: '100%' }}>
                                 <DataTable
                                     columns={carColumns}
                                     rows={carRows}

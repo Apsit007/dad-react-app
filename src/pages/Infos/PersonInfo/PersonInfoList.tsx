@@ -31,6 +31,7 @@ const columns: GridColDef[] = [
     { field: 'idCard', headerName: 'เลขบัตรประชาชน', flex: 1.5, minWidth: 200, headerAlign: 'center' },
     { field: 'department', headerName: 'หน่วยงาน', flex: 1.5, minWidth: 250, headerAlign: 'center' },
     { field: 'createDate', headerName: 'วันที่สร้าง', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
+    { field: 'expDate', headerName: 'วันที่สิ้นสุด', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
     {
         field: 'personType', headerName: 'ประเภทบุคคล', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
         renderCell: (params) => (
