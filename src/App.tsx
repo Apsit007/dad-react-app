@@ -13,6 +13,7 @@ import SystemSettings from './pages/Settings/System';
 import UserListPage from './pages/Settings/UserManage/UserList';
 import UserInfoPage from './pages/Settings/UserManage/UserInfo';
 import LoginPage from './pages/auth/Login';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // 1. Create the router configuration
 const router = createBrowserRouter([
@@ -24,7 +25,7 @@ const router = createBrowserRouter([
   // App routes
   {
     path: "/",
-    element: <MainLayout />,
+    element: <ProtectedRoute> <MainLayout /></ProtectedRoute>,
     children: [
       {
         index: true, // This makes it the default child route
