@@ -1,9 +1,11 @@
 // src/pages/InOutPage.tsx
 import { type GridColDef, type GridRowClassNameParams } from '@mui/x-data-grid';
 import { Typography } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
 import DataTable from '../components/DataTable';
 import InOutDashboard from '../components/InOutDashboard';
 import ImageTag from '../components/ImageTag';
+import BlackListAlert from '../components/BlackListAlert';
 
 // 1. กำหนดโครงสร้างคอลัมน์ (Columns)
 const columns: GridColDef[] = [
@@ -143,6 +145,23 @@ const getRowClassName = (params: GridRowClassNameParams) => {
 };
 
 const DashBoardPage = () => {
+    // Popup state & detection (mock for new blacklist event)
+    const [openAlert, setOpenAlert] = useState(false);
+    const [alertIndex, setAlertIndex] = useState<number | null>(null);
+    const lastShownIdRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        const newest = rows[0];
+        if (newest && newest.isBlacklist && newest.id !== lastShownIdRef.current) {
+            lastShownIdRef.current = newest.id;
+            const index = rows.findIndex(r => r.id === newest.id);
+            setAlertIndex(index);
+            setOpenAlert(true);
+        }
+    }, []);
+
+    const alertData = alertIndex !== null ? rows[alertIndex] : null;
+
     return (
         <div className='flex flex-col  gap-4 h-full'>
             <Typography variant='h5' className='text-primary-dark '>ข้อมูลการเข้า-ออกพื้นที่ ณ ปัจจุบัน</Typography>
@@ -157,6 +176,26 @@ const DashBoardPage = () => {
                     />
                 </div>
             </div>
+            {alertData && (
+                <BlackListAlert
+                    open={openAlert}
+                    onClose={() => setOpenAlert(false)}
+                    typeText={`ประเภท : ${alertData.eventType ?? 'ขาเข้า'}`}
+                    dateTimeText={alertData.time}
+                    vehicle={{
+                        plate: alertData.licensePlate?.number ?? '-',
+                        province: alertData.licensePlate?.province,
+                        brand: alertData.brand,
+                        color: alertData.color,
+                        imageUrl: alertData.images,
+                    }}
+                    person={{
+                        fullName: alertData.name ?? '-',
+                        agency: alertData.department,
+                        imageUrl: alertData.images,
+                    }}
+                />
+            )}
         </div>
     );
 };

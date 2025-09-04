@@ -182,11 +182,21 @@ const PersonInfoForm = () => {
                             </div>
                             <div className="w-full sm:w-1/2 p-2">
                                 <InputLabel shrink className='!text-white'>Card Code</InputLabel>
-                                <TextField />
+                                <TextField disabled />
                             </div>
                             <div className="w-full sm:w-1/2 p-2">
                                 <InputLabel shrink className='!text-white'>Card Number (Hex)</InputLabel>
-                                <TextField />
+                                <TextField disabled />
+                            </div>
+                            <div className="w-full sm:w-1/2 flex">
+                                <div className='w-1/2 p-2 '>
+                                    <InputLabel shrink className='!text-white'>วันเริ่มต้น</InputLabel>
+                                    <DatePicker />
+                                </div>
+                                <div className='w-1/2 p-2 '>
+                                    <InputLabel shrink className='!text-white'>วันสิ้นสุด</InputLabel>
+                                    <DatePicker />
+                                </div>
                             </div>
                             <div className="w-full flex gap-2 justify-end p-2 mt-auto">
                                 <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<EditSquareIcon fontWeight="small" />}>
@@ -227,7 +237,9 @@ const PersonInfoForm = () => {
                 </div>
 
             </div>
+
             {/* Bottom Action Buttons */}
+
             <div className="w-full flex justify-end gap-2 mt-6">
                 <Button variant="outlined" className='!border-primary !bg-white !text-primary' startIcon={<CloseIcon />}>ยกเลิก</Button>
                 <Button variant="contained" startIcon={<SaveIcon />} className="!bg-primary hover:!bg-primary-dark">บันทึก</Button>

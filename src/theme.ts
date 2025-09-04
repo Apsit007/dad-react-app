@@ -55,12 +55,22 @@ const theme = createTheme({
                 // },
             },
         },
+        MuiInputBase: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#ffffff', // ทุก input ขาว
+                    '&.Mui-disabled': {
+                        backgroundColor: '#C5C8CB',
+                    },
+                },
+            },
+        },
         MuiOutlinedInput: {
             styleOverrides: {
                 root: {
                     backgroundColor: 'white',
                     '&.Mui-disabled': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.12)', // Standard MUI disabled gray
+                        backgroundColor: '#C5C8CB', // Standard MUI disabled gray
 
                     },
 
@@ -94,9 +104,13 @@ const theme = createTheme({
                     textField: {
                         size: 'small',
                         fullWidth: true,
+
                         sx: {
                             '& .MuiPickersOutlinedInput-root.Mui-disabled': {
-                                backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                                backgroundColor: '#C5C8CB',
+                            },
+                            '& .MuiPickersOutlinedInput-root': {
+                                backgroundColor: '#ffffff',
                             },
 
                         },
@@ -114,7 +128,10 @@ const theme = createTheme({
                         fullWidth: true,
                         sx: {
                             '& .MuiPickersOutlinedInput-root.Mui-disabled': {
-                                backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                                backgroundColor: '#C5C8CB',
+                            },
+                            '& .MuiPickersOutlinedInput-root': {
+                                backgroundColor: '#ffffff',
                             },
 
                         },
