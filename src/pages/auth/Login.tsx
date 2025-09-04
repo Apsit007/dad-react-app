@@ -5,28 +5,35 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../../store/slices/authSlice';
 import type { AppDispatch, RootState } from '../../store';
+import dialog from '../../services/dialog.service';
 
 const LoginPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  const { loading, error, accessToken } = useSelector((state: RootState) => state.auth);
+  const { loading } = useSelector((state: RootState) => state.auth);
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    dialog.loading('กำลังเข้าสู่ระบบ...'); // 🔹 show loading
+
     dispatch(login({ username, password }))
-      .unwrap() // ใช้ .unwrap() เพื่อ throw error ตรงๆ
+      .unwrap()
       .then(() => {
-        navigate('/dashboard'); // ถ้า login สำเร็จ → ไป dashboard
+        dialog.close();
+        dialog.success('เข้าสู่ระบบสำเร็จ').then(() => {
+          navigate('/dashboard');
+        });
       })
-      .catch(() => {
-        // error ถูกเก็บใน Redux อยู่แล้ว แต่ถ้าอยากโชว์เพิ่มก็ทำได้
+      .catch((err) => {
+        dialog.close();
+        dialog.error(err || 'ไม่สามารถเข้าสู่ระบบได้');
       });
   };
-
   return (
     <Box className="min-h-screen" sx={{ bgcolor: '#2E6F69' }} display="flex" alignItems="center" justifyContent="center" p={2}>
       <Paper elevation={6} sx={{ width: 420, borderRadius: 2, p: 4, pt: 0 }}>
@@ -70,12 +77,7 @@ const LoginPage = () => {
           </Stack>
         </Box>
 
-        {/* Error */}
-        {error && (
-          <Box mt={2}>
-            <Typography color="error" variant="body2">{error}</Typography>
-          </Box>
-        )}
+
 
         <Box mt={2}>
           <Link href="#" underline="hover" color="inherit" variant='subtitle2'>ลืมรหัสผ่านหรือไม่?</Link>
