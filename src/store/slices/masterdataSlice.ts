@@ -19,11 +19,9 @@ const initialState: MasterdataState = {
 
 export const fetchLprRegions = createAsyncThunk(
   'masterdata/fetchLprRegions',
-  async (_: void, { getState, rejectWithValue }) => {
+  async (_: void, { rejectWithValue }) => {
     try {
-      const state = getState() as RootState;
-      const token = state.auth?.accessToken ?? null;
-      const res = await getLprRegions(1000, token);
+      const res = await getLprRegions(1000);
       return res.data;
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || 'Fetch regions failed';
@@ -68,4 +66,3 @@ export default masterdataSlice.reducer;
 export const selectRegions = (state: RootState) => state.masterdata.regions;
 export const selectMasterdataLoading = (state: RootState) => state.masterdata.loading;
 export const selectMasterdataError = (state: RootState) => state.masterdata.error;
-
