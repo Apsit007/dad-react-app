@@ -9,10 +9,11 @@ type Props = {
 
 const ProtectedRoute: React.FC<Props> = ({ children }) => {
     const token = useSelector((state: RootState) => state.auth.accessToken);
+    console.log(token);
 
-    // if (!token) {
-    //     return <Navigate to="/login" replace />;
-    // }
+    if (!token) {
+        return <Navigate to="/login" replace />;
+    }
 
     return <>{children}</>;
 };

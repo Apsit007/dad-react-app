@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-
 import axios from 'axios';
 
 interface AuthState {
@@ -13,8 +12,11 @@ interface AuthState {
     };
 }
 
+// ✅ โหลด token จาก localStorage ทันที
+const tokenFromStorage = localStorage.getItem('accessToken');
+
 const initialState: AuthState = {
-    accessToken: null,
+    accessToken: tokenFromStorage,
     loading: false,
     error: null,
     user: {
@@ -26,7 +28,10 @@ const initialState: AuthState = {
 // 🔹 Async thunk: login
 export const login = createAsyncThunk(
     'auth/login',
-    async ({ username, password }: { username: string; password: string }, { rejectWithValue }) => {
+    async (
+        { username, password }: { username: string; password: string },
+        { rejectWithValue }
+    ) => {
         try {
             const res = await axios.post(
                 `${import.meta.env.VITE_API_URL}/smartgate-api/v0/users/login`,
@@ -48,12 +53,6 @@ const authSlice = createSlice({
             state.user = { username: null, email: null };
             localStorage.removeItem('accessToken');
         },
-        setTokenFromStorage: (state) => {
-            const token = localStorage.getItem('accessToken');
-            if (token) {
-                state.accessToken = token;
-            }
-        },
     },
     extraReducers: (builder) => {
         builder
@@ -68,6 +67,7 @@ const authSlice = createSlice({
                     username: action.payload.username ?? 'demo',
                     email: action.payload.email ?? '',
                 };
+                // ✅ เก็บ token ลง localStorage
                 localStorage.setItem('accessToken', action.payload.accessToken);
             })
             .addCase(login.rejected, (state, action) => {
@@ -77,5 +77,5 @@ const authSlice = createSlice({
     },
 });
 
-export const { logout, setTokenFromStorage } = authSlice.actions;
+export const { logout } = authSlice.actions;
 export default authSlice.reducer;
