@@ -1,17 +1,27 @@
 // src/layout/MainLayout.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Sidebar from './sidebar';
 import Navbar from './navbar';
 import { Outlet } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchLprRegions } from '../store/slices/masterdataSlice';
+import type { AppDispatch, RootState } from '../store';
 
 
 
 const MainLayout = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const dispatch = useDispatch<AppDispatch>();
+    const lastFetchedAt = useSelector((s: RootState) => s.masterdata.lastFetchedAt);
 
     const toggleSidebar = () => {
         setIsCollapsed(!isCollapsed);
     };
+
+    // Preload masterdata (LPR regions) once on first render
+    useEffect(() => {
+        if (!lastFetchedAt) dispatch(fetchLprRegions());
+    }, [dispatch, lastFetchedAt]);
 
     return (
         <div className=" min-h-screen p-6">

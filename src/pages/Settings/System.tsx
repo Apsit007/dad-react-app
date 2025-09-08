@@ -9,6 +9,8 @@ import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import { type GridColDef } from '@mui/x-data-grid';
 import DataTable from '../../components/DataTable';
 import Popup from '../../components/Popup';
+import SettingsIcon from "@mui/icons-material/Settings"
+import PolygonCanvas from '../../components/PolygonCanvas';
 
 // Mock camera list
 const rows = [
@@ -16,22 +18,6 @@ const rows = [
   { id: 2, order: 2, name: 'Camrea_102', ip: '192.168.1.100', gate: 'ประตูออก', location: '14.450688,105.154817' },
 ];
 
-const columns: GridColDef[] = [
-  { field: 'order', headerName: 'ลำดับ', width: 90, headerAlign: 'center', align: 'center' },
-  { field: 'name', headerName: 'ชื่อกล้อง', flex: 1, minWidth: 180, headerAlign: 'center' },
-  { field: 'ip', headerName: 'Camera IP', flex: 1, minWidth: 180, headerAlign: 'center', align: 'center' },
-  { field: 'gate', headerName: 'Gate Name', flex: 1, minWidth: 160, headerAlign: 'center', align: 'center' },
-  { field: 'location', headerName: 'Location', flex: 1.2, minWidth: 220, headerAlign: 'center', align: 'center' },
-  {
-    field: 'actions', headerName: '', width: 100, sortable: false, align: 'center',
-    renderCell: () => (
-      <div className='flex w-full h-full items-center justify-center gap-1'>
-        <IconButton size="small"><EditIcon fontSize="small" /></IconButton>
-        {/* <IconButton size="small"><DeleteIcon fontSize="small" /></IconButton> */}
-      </div>
-    ),
-  },
-];
 
 const SystemSettings = () => {
   const [showCameraPopup, setShowCameraPopup] = useState(false);
@@ -48,10 +34,50 @@ const SystemSettings = () => {
     liveServerUrl: '',
     liveStreamUrl: '',
   });
+  const [polygon, setPolygon] = useState<number[]>([]);
+  const [showSensorPopup, setShowSensorPopup] = useState(false);
+  const [selectedCamera, setSelectedCamera] = useState<any | null>(null);
+  const [drawing, setDrawing] = useState(false);
 
   const handleChange = (field: keyof typeof form) => (e: any) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }));
   };
+
+  const columns: GridColDef[] = [
+    { field: 'order', headerName: 'ลำดับ', width: 90, headerAlign: 'center', align: 'center' },
+    { field: 'name', headerName: 'ชื่อกล้อง', flex: 1, minWidth: 180, headerAlign: 'center' },
+    { field: 'ip', headerName: 'Camera IP', flex: 1, minWidth: 180, headerAlign: 'center', align: 'center' },
+    { field: 'gate', headerName: 'Gate Name', flex: 1, minWidth: 160, headerAlign: 'center', align: 'center' },
+    { field: 'location', headerName: 'Location', flex: 1.2, minWidth: 220, headerAlign: 'center', align: 'center' },
+    {
+      field: 'censor_action',
+      headerName: 'ตั้งค่าเซ็นเซอร์',
+      width: 120,
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => (
+        <IconButton
+          size="small"
+          onClick={() => {
+            setSelectedCamera(params.row);   // เก็บข้อมูลกล้อง
+            setShowSensorPopup(true);        // เปิด popup
+          }}
+        >
+          <SettingsIcon fontSize="small" />
+        </IconButton>
+      ),
+    },
+    {
+      field: 'actions', headerName: '', width: 100, sortable: false, align: 'center',
+      renderCell: () => (
+        <div className='flex w-full h-full items-center justify-center gap-1'>
+          <IconButton size="small"><EditIcon fontSize="small" /></IconButton>
+          {/* <IconButton size="small"><DeleteIcon fontSize="small" /></IconButton> */}
+        </div>
+      ),
+    },
+  ];
+
 
   return (
     <Box>
@@ -168,6 +194,88 @@ const SystemSettings = () => {
             </div>
           </div>
         </Box>
+      </Popup>
+
+      {/* Setting popup */}
+      <Popup
+        title="ตั้งค่าเซ็นเซอร์"
+        show={showSensorPopup}
+        onClose={() => setShowSensorPopup(false)}
+      >
+        {selectedCamera && (
+          <Box>
+            {/* กล้อง info */}
+            <div className='flex mb-6 gap-3'>
+              <div className='w-7/12'>
+                <InputLabel shrink>ชื่อกล้อง</InputLabel>
+                <TextField value={selectedCamera.name} InputProps={{ readOnly: true }} />
+              </div>
+              <div className='w-5/12'>
+                <InputLabel shrink>Camera IP</InputLabel>
+                <TextField value={selectedCamera.ip} InputProps={{ readOnly: true }} />
+              </div>
+            </div>
+
+            {/* ปุ่ม control */}
+            <Stack direction="row" spacing={1} mb={2} justifyContent="space-between">
+              <Button
+                variant="contained"
+                size="small"
+                className="!bg-yellow-500 hover:!bg-yellow-600"
+                startIcon={<span>☀️</span>}
+                onClick={() => {
+                  setPolygon([]);
+                  console.log("Restart clicked");
+                }}
+              >
+                Restart
+              </Button>
+
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setPolygon([])}
+                >
+                  Clear
+                </Button>
+                <Button
+                  variant="contained"
+                  size="small"
+                  className="!bg-primary hover:!bg-primary-dark"
+                  onClick={() => setDrawing(true)} // เปิดโหมด plot polygon
+                >
+                  Start Plot Sensor
+                </Button>
+              </Stack>
+            </Stack>
+
+            {/* canvas */}
+            <div className='flex justify-center w-full'>
+              <PolygonCanvas
+                imageUrl="/imgs/car_mock_img.png"   // TODO: RTSP snapshot
+                polygon={polygon}
+                setPolygon={setPolygon}
+                drawing={drawing}
+              />
+            </div>
+
+            {/* ปุ่มยกเลิก-บันทึก */}
+            <Stack direction="row" spacing={1} mt={3} justifyContent="flex-end">
+              <Button variant="outlined" onClick={() => setShowSensorPopup(false)}>ยกเลิก</Button>
+              <Button
+                variant="contained"
+                className="!bg-primary hover:!bg-primary-dark"
+                onClick={() => {
+                  console.log("Saved polygon:", polygon);
+                  setShowSensorPopup(false);
+                }}
+              >
+                บันทึก
+              </Button>
+            </Stack>
+          </Box>
+        )}
       </Popup>
     </Box>
   );
