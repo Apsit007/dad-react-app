@@ -2,13 +2,14 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../..';
-import { getGates, getLprRegions, getVehicleColors, getVehicleGroups, type Gate, type LprRegion, type VehicleColor, type VehicleGroup } from '../../services/masterdata.service';
+import { getGates, getLprRegions, getVehicleColors, getVehicleGroups, getVehicleMakes, type Gate, type LprRegion, type VehicleColor, type VehicleGroup, type VehicleMake } from '../../services/masterdata.service';
 
 interface MasterdataState {
   regions: LprRegion[];
   gates: Gate[];
   vehicleColors: VehicleColor[];
   vehicleGroups: VehicleGroup[];
+  vehicleMakes: VehicleMake[];
   loading: boolean;
   error: string | null;
   lastFetchedAt: number | null;
@@ -19,6 +20,7 @@ const initialState: MasterdataState = {
   gates: [],
   vehicleColors: [],
   vehicleGroups: [],
+  vehicleMakes: [],
   loading: false,
   error: null,
   lastFetchedAt: null,
@@ -69,6 +71,18 @@ export const fetchVehicleGroups = createAsyncThunk(
       return res.data;
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || 'Fetch vehicle groups failed';
+      return rejectWithValue(message);
+    }
+  },
+);
+export const fetchVehicleMakes = createAsyncThunk(
+  'masterdata/fetchVehicleMakes',
+  async (_: void, { rejectWithValue }) => {
+    try {
+      const res = await getVehicleMakes(1000);
+      return res.data;
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.message || 'Fetch vehicle makes failed';
       return rejectWithValue(message);
     }
   },
@@ -146,6 +160,22 @@ const masterdataSlice = createSlice({
         state.loading = false;
         state.error = (action.payload as string) || 'Fetch vehicle groups failed';
       });
+
+    // vehicle vehicleMakes
+    builder
+      .addCase(fetchVehicleMakes.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchVehicleMakes.fulfilled, (state, action: PayloadAction<VehicleMake[]>) => {
+        state.loading = false;
+        state.vehicleMakes = action.payload ?? [];
+        state.lastFetchedAt = Date.now();
+      })
+      .addCase(fetchVehicleMakes.rejected, (state, action) => {
+        state.loading = false;
+        state.error = (action.payload as string) || 'Fetch vehicle makes failed';
+      });
   },
 });
 
@@ -156,7 +186,8 @@ export default masterdataSlice.reducer;
 // Selectors
 export const selectRegions = (state: RootState) => state.masterdata.regions;
 export const selectGates = (state: RootState) => state.masterdata.gates;
-export const selectVehicleColors = (state: RootState) => state.masterdata.colors;
-export const selectVehicleGroups = (state: RootState) => state.masterdata.groups;
+export const selectVehicleColors = (state: RootState) => state.masterdata.vehicleColors;
+export const selectVehicleGroups = (state: RootState) => state.masterdata.vehicleGroups;
+export const selectVehicleMakes = (state: RootState) => state.masterdata.vehicleMakes;
 export const selectMasterdataLoading = (state: RootState) => state.masterdata.loading;
 export const selectMasterdataError = (state: RootState) => state.masterdata.error;

@@ -30,7 +30,7 @@ const CustomDataGrid = (props: DataGridProps) => {
             <DataGrid
                 // รับ props ทั้งหมดที่ส่งเข้ามา
                 {...props}
-
+                paginationMode="server"
                 // --- ค่า Default ที่เรากำหนดเอง ---
                 rowHeight={60}
                 getRowClassName={props.getRowClassName || defaultGetRowClassName} // 3. ทำให้ยืดหยุ่น
@@ -62,6 +62,10 @@ const CustomDataGrid = (props: DataGridProps) => {
                     flex: 1,
                     ...props.sx,
                 }}
+                onPaginationModelChange={(model, details) => {
+                    console.log('Page:', model.page, 'Limit:', model.pageSize);
+                    props.onPaginationModelChange?.(model, details);
+                }}
             />
         </Box>
     );
@@ -81,6 +85,7 @@ function CustomPagination() {
                 <Pagination
                     color="primary"
                     variant="outlined"
+
                     count={pageCount}
                     page={page + 1} // MUI Pagination is 1-based, DataGrid is 0-based
                     onChange={(event, value) => apiRef.current.setPage(value - 1)}

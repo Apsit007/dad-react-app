@@ -32,7 +32,23 @@ export interface VehicleGroup {
   active: boolean;
   visible: boolean;
 }
-
+export interface VehicleMake {
+  id: number;
+  make: string;
+  make_en: string;
+  make_th: string;
+  visible: boolean;
+  active: boolean;
+}
+export interface VehicleModel {
+  id: number;
+  make_id: number;
+  model: string;
+  model_en: string;
+  model_th: string;
+  visible: boolean;
+  active: boolean;
+}
 
 
 // Fetch LPR regions masterdata
@@ -67,9 +83,26 @@ export const getVehicleGroups = async (
   const res = await http.get(url);
   return res.data as ApiResponse<VehicleGroup[]>;
 };
+export const getVehicleMakes = async (
+  limit = 1000,
+): Promise<ApiResponse<VehicleMake[]>> => {
+  const url = `/smartgate-api/v0/vehicle-makes/get?limit=${limit}`;
+  const res = await http.get(url);
+  return res.data as ApiResponse<VehicleMake[]>;
+};
+
+export const getVehicleModels = async (
+  make_id: number,
+  limit = 1000,
+): Promise<ApiResponse<VehicleModel[]>> => {
+  const url = `/smartgate-api/v0/vehicle-models/get?limit=${limit}&filter=make_id%20%3D${make_id}`;
+  const res = await http.get(url);
+  return res.data as ApiResponse<VehicleModel[]>;
+};
 export default {
   getLprRegions,
   getGates,
   getVehicleColors,
-  getVehicleGroups
+  getVehicleGroups,
+  getVehicleMakes
 };
