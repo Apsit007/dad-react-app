@@ -64,8 +64,8 @@ export const VehicleApi = {
     },
 
     // 👉 Update
-    update: async (uid: string, payload: VehiclePayload): Promise<ApiResponse<Vehicle>> => {
-        const url = `/smartgate-api/v0/vehicles/update/${uid}`;
+    update: async (payload: VehiclePayload): Promise<ApiResponse<Vehicle>> => {
+        const url = `/smartgate-api/v0/vehicles/update/`;
         const res = await http.put<ApiResponse<Vehicle>>(url, payload);
         return res.data;
     },
@@ -112,7 +112,7 @@ export const VehicleApi = {
 
     // 👉 Delete
     delete: async (uid: string): Promise<ApiResponse<null>> => {
-        const url = `/smartgate-api/v0/vehicles/delete/${uid}`;
+        const url = `/smartgate-api/v0/vehicles/delete?uids=${uid}`;
         const res = await http.delete<ApiResponse<null>>(url);
         return res.data;
     },

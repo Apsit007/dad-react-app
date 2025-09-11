@@ -26,7 +26,7 @@ import { getVehicleModels, type VehicleModel } from '../../../services/masterdat
 import VehicleApi from '../../../services/VehicleApi.service';
 import dialog from '../../../services/dialog.service';
 import dayjs, { Dayjs } from 'dayjs';
-import type { Vehicle, VehicleListFilter } from '../../../services/VehicleApi.service';
+import type { Vehicle, VehicleListFilter, VehiclePayload } from '../../../services/VehicleApi.service';
 
 
 
@@ -62,14 +62,16 @@ const CarInfoList = () => {
     const [lastFilter, setLastFilter] = useState<VehicleListFilter>({});
 
     const [rows, setRows] = useState<Vehicle[]>([]);
+    // state เก็บรถที่กำลังแก้ไข
+    const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
 
     const [isCarFormOpen, setIsCarFormOpen] = useState(false);
     const handleOpenCarForm = () => setIsCarFormOpen(true);
     const handleCloseCarForm = () => {
         resetForm();
+        setEditingVehicle(null);
         setIsCarFormOpen(false);
     };
-
     const dispatch = useDispatch<AppDispatch>();
 
     // 🔹 ใช้ selectors
@@ -253,19 +255,20 @@ const CarInfoList = () => {
     // บันทึกฟอร์ม → สร้าง payload ตามสเปค
     // =========================
     const handleSubmit = async () => {
-        if (!validateRequired()) return; // ❌ ไม่ผ่านก็ไม่บันทึก
+        if (!validateRequired()) return;
+
         dialog.loading();
-        // แปลงค่าจาก UI เป็น payload
-        const payload = {
-            uid: '', // ใช้เฉพาะตอนอัปเดต (ตามที่เคยแจ้ง), ตอนสร้างปล่อยว่างหรือไม่ส่ง
+
+        const payload: VehiclePayload = {
+            uid: editingVehicle?.uid, // มี uid แสดงว่า update
             plate_prefix: platePrefix || '',
             plate_number: plateNumber || '',
-            region_code: regionCode || '', // NOTE: ถ้ามี code ที่แท้จริงควรใช้ code นั้น
-            vehicle_make: vehicleMakeText || '',   // ✅ เก็บเป็นข้อความ
-            vehicle_model: vehicleModelText || '', // ✅ เก็บเป็นข้อความ
+            region_code: regionCode || '',
+            vehicle_make: vehicleMakeText || '',
+            vehicle_model: vehicleModelText || '',
             vehicle_color_id: vehicleColorId === '' ? null : Number(vehicleColorId),
-            active: active,     // true = ใช้งานอยู่
-            visible: visible,   // ถ้าทำเป็น toggle ให้เพิ่ม UI
+            active,
+            visible,
             notes: notes || '',
             vehicle_group_id: vehicleGroupId === '' ? null : Number(vehicleGroupId),
             creator_uid: creatorUid,
@@ -273,24 +276,30 @@ const CarInfoList = () => {
         };
 
         try {
+            let res;
+            if (payload.uid) {
+                // ✅ Update
+                res = await VehicleApi.update(payload);
+            } else {
+                // ✅ Create
+                res = await VehicleApi.create(payload);
+            }
 
-            const res = await VehicleApi.create(payload);
             if (res.success) {
-                dialog.success('บันทึกสำเร็จ')
+                dialog.success(payload.uid ? 'อัปเดตสำเร็จ' : 'บันทึกสำเร็จ');
                 resetForm();
                 setIsCarFormOpen(false);
+                setEditingVehicle(null);
+                // reload data
+                fetchData(paginationModel.page, paginationModel.pageSize, lastFilter);
             } else {
-                console.error('⚠️ Create failed:', res.message);
+                console.error('⚠️ Save failed:', res.message);
                 dialog.close();
             }
         } catch (err: any) {
             dialog.close();
             console.error('❌ API error:', err.message || err);
         }
-
-        // ปิด dialog หลังบันทึกสำเร็จ
-        resetForm();
-        handleCloseCarForm();
     };
 
 
@@ -366,6 +375,44 @@ const CarInfoList = () => {
         return filter;
     };
 
+    const handleEdit = (vehicle: Vehicle) => {
+        setEditingVehicle(vehicle);
+        // map ค่าใส่ form state
+        setPlatePrefix(vehicle.plate_prefix);
+        setPlateNumber(vehicle.plate_number);
+        setRegionCode(vehicle.region_code);
+        setVehicleMakeText(vehicle.vehicle_make);
+        setVehicleModelText(vehicle.vehicle_model);
+        setVehicleColorId(vehicle.vehicle_color_id);
+        setVehicleGroupId(vehicle.vehicle_group_id);
+        setActive(vehicle.active);
+        setNotes(vehicle.notes);
+
+        setIsCarFormOpen(true); // เปิด dialog
+    };
+
+    const handleDelete = async (uid: string) => {
+        if (!uid) return;
+
+        const confirmed = await dialog.confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?');
+        if (!confirmed) return;
+
+        try {
+            dialog.loading();
+            const res = await VehicleApi.delete(uid);
+            if (res.success) {
+                dialog.success('ลบข้อมูลสำเร็จ');
+                // โหลดข้อมูลใหม่
+                fetchData(paginationModel.page, paginationModel.pageSize, lastFilter);
+            } else {
+                dialog.error(res.message || 'ลบข้อมูลไม่สำเร็จ');
+            }
+        } catch (err: any) {
+            console.error('❌ Delete error:', err.message || err);
+            dialog.error('เกิดข้อผิดพลาดในการลบข้อมูล');
+        }
+    };
+
     // --- Table Columns Definition ---
     const columns: GridColDef[] = [
         {
@@ -412,7 +459,7 @@ const CarInfoList = () => {
                 </div>
             )
         },
-        { field: 'createDate', headerName: 'วันที่สร้าง', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
+        { field: 'created_at', headerName: 'วันที่สร้าง', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
         {
             field: 'group',
             headerName: 'กลุ่มรถ',
@@ -422,7 +469,7 @@ const CarInfoList = () => {
             align: 'center',
             renderCell: (params) => (
                 <div className='w-full h-full flex justify-center items-center'>
-                    <ChipTag tag={params.row.vehicle_group.name_en ?? '-'} />
+                    <Typography>{dayjs(params.value).format('dd/mm/yyyy')}</Typography>
                 </div>
             )
         },
@@ -432,10 +479,14 @@ const CarInfoList = () => {
             width: 100,
             sortable: false,
             align: 'center',
-            renderCell: () => (
+            renderCell: (params) => (
                 <div className='flex w-full h-full items-center justify-center gap-1'>
-                    <IconButton size="small"><EditIcon fontSize="small" /></IconButton>
-                    <IconButton size="small"><DeleteIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" onClick={() => handleEdit(params.row)}>
+                        <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => handleDelete(params.row.uid)}>
+                        <DeleteIcon fontSize="small" />
+                    </IconButton>
                 </div>
             )
         }
