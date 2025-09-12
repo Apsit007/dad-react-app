@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../../store/slices/authSlice';
 import type { AppDispatch, RootState } from '../../store';
 import dialog from '../../services/dialog.service';
+import { fetchAllMasterdata } from '../../store/slices/masterdataSlice';
 
 const LoginPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -24,10 +25,15 @@ const LoginPage = () => {
     dispatch(login({ username, password }))
       .unwrap()
       .then(() => {
-        dialog.close();
-        dialog.success('เข้าสู่ระบบสำเร็จ').then(() => {
-          navigate('/dashboard');
-        });
+        // ✅ โหลด masterdata ทั้งหมดหลัง login สำเร็จ
+        dispatch(fetchAllMasterdata())
+          .unwrap()
+          .finally(() => {
+            dialog.close();
+            dialog.success('เข้าสู่ระบบสำเร็จ').then(() => {
+              navigate('/dashboard');
+            });
+          });
       })
       .catch((err) => {
         dialog.close();

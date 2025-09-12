@@ -51,8 +51,8 @@ export type VehicleListFilter = Partial<{
     vehicle_color_id: number;
     vehicle_group_id: number;
     // created_at ช่วงเวลา
-    created_at_gte: string; // ISO string (startOf day)
-    created_at_lte: string; // ISO string (endOf day)
+    created_at_start: string; // ISO string (startOf day)
+    created_at_end: string; // ISO string (endOf day)
 }>;
 
 export const VehicleApi = {
@@ -81,27 +81,37 @@ export const VehicleApi = {
     list: async (
         page: number = 1,
         limit: number = 20,
-        orderBy: string = 'uid.asc',
+        orderBy: string = "uid.asc",
         filter?: VehicleListFilter
     ): Promise<ApiResponse<Vehicle[]>> => {
         const params = new URLSearchParams();
-        params.set('orderBy', orderBy);
-        params.set('limit', String(limit));
-        params.set('page', String(page));
+        params.set("orderBy", orderBy);
+        params.set("limit", String(limit));
+        params.set("page", String(page));
 
         if (filter) {
             const clean: Record<string, any> = {};
             Object.entries(filter).forEach(([k, v]) => {
-                if (v !== null && v !== undefined && v !== '') clean[k] = v;
+                if (v !== null && v !== undefined && v !== "") clean[k] = v;
             });
 
             if (Object.keys(clean).length > 0) {
-                // ✅ แปลงเป็น "plate_prefix=df&&plate_number=545"
                 const filterStr = Object.entries(clean)
-                    .map(([key, value]) => `${key}=${value}`)
-                    .join('&&');
+                    .map(([key, value]) => {
+                        if (key === "plate_prefix" || key === "plate_number") {
+                            return `${key}~${value}*`; // ✅ ใช้ ~
+                        }
+                        if (key === "created_at_start") {
+                            return `created_at>=${value}`; // ✅ start
+                        }
+                        if (key === "created_at_end") {
+                            return `created_at<=${value}`; // ✅ end
+                        }
+                        return `${key}=${value}`; // ค่าอื่นใช้ =
+                    })
+                    .join("&&");
 
-                params.set('filter', filterStr);
+                params.set("filter", filterStr);
             }
         }
 
@@ -109,6 +119,7 @@ export const VehicleApi = {
         const res = await http.get<ApiResponse<Vehicle[]>>(url);
         return res.data;
     },
+
 
     // 👉 Delete
     delete: async (uid: string): Promise<ApiResponse<null>> => {

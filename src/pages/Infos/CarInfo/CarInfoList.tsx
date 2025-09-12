@@ -14,19 +14,19 @@ import { type GridColDef } from '@mui/x-data-grid';
 import { useEffect, useMemo, useState } from 'react';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import ChipTag from '../../../components/ChipTag';
-import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch } from '../../../store';
 import {
-    selectRegions, fetchLprRegions,
-    selectVehicleMakes, fetchVehicleMakes,
-    selectVehicleColors, fetchVehicleColors,
-    selectVehicleGroups, fetchVehicleGroups,
+    selectRegions,
+    selectVehicleMakes,
+    selectVehicleColors,
+    selectVehicleGroups,
 } from '../../../store/slices/masterdataSlice';
 import { getVehicleModels, type VehicleModel } from '../../../services/masterdata.service';
 import VehicleApi from '../../../services/VehicleApi.service';
 import dialog from '../../../services/dialog.service';
 import dayjs, { Dayjs } from 'dayjs';
 import type { Vehicle, VehicleListFilter, VehiclePayload } from '../../../services/VehicleApi.service';
+import { exportData } from '../../../services/Export.service';
+import { useSelector } from 'react-redux';
 
 
 
@@ -62,7 +62,9 @@ const CarInfoList = () => {
     const [lastFilter, setLastFilter] = useState<VehicleListFilter>({});
 
     const [rows, setRows] = useState<Vehicle[]>([]);
+
     // state เก็บรถที่กำลังแก้ไข
+
     const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
 
     const [isCarFormOpen, setIsCarFormOpen] = useState(false);
@@ -72,7 +74,7 @@ const CarInfoList = () => {
         setEditingVehicle(null);
         setIsCarFormOpen(false);
     };
-    const dispatch = useDispatch<AppDispatch>();
+    // const dispatch = useDispatch<AppDispatch>();
 
     // 🔹 ใช้ selectors
     const regions = useSelector(selectRegions);
@@ -80,13 +82,13 @@ const CarInfoList = () => {
     const colors = useSelector(selectVehicleColors);
     const groups = useSelector(selectVehicleGroups);
 
-    // 🔹 โหลด master data ตอนเข้า page
-    useEffect(() => {
-        dispatch(fetchLprRegions());
-        dispatch(fetchVehicleMakes());
-        dispatch(fetchVehicleColors());
-        dispatch(fetchVehicleGroups());
-    }, [dispatch]);
+    // // 🔹 โหลด master data ตอนเข้า page
+    // useEffect(() => {
+    //     dispatch(fetchLprRegions());
+    //     dispatch(fetchVehicleMakes());
+    //     dispatch(fetchVehicleColors());
+    //     dispatch(fetchVehicleGroups());
+    // }, [dispatch]);
 
 
     // =========================
@@ -351,6 +353,27 @@ const CarInfoList = () => {
         fetchData(newPagination.page, newPagination.pageSize, filter); // ⬅️ ยิง API
     };
 
+    // ✅ ฟังก์ชันเคลียร์ filter
+    const handleClearFilter = () => {
+        setSPlatePrefix('');
+        setSPlateNumber('');
+        setSRegionCode('');
+        setSVehicleMake('');
+        setSVehicleMakeInput('');
+        setSVehicleColorId('');
+        setSVehicleGroupId('');
+        setSStartDate(null);
+        setSEndDate(null);
+
+        const clearedFilter: VehicleListFilter = {};
+        setLastFilter(clearedFilter);
+
+        const newPagination = { page: 0, pageSize: paginationModel.pageSize };
+        setPaginationModel(newPagination);
+
+        fetchData(newPagination.page, newPagination.pageSize, clearedFilter);
+    };
+
     // ✅ pagination เปลี่ยน → ยิง API
     const handlePaginationChange = (model: { page: number; pageSize: number }) => {
         setPaginationModel(model);
@@ -369,8 +392,8 @@ const CarInfoList = () => {
         if (sVehicleGroupId !== '' && sVehicleGroupId !== null) filter.vehicle_group_id = Number(sVehicleGroupId);
 
         // created_at range: startOf day / endOf day
-        if (sStartDate) filter.created_at_gte = sStartDate.startOf('day').toISOString();
-        if (sEndDate) filter.created_at_lte = sEndDate.endOf('day').toISOString();
+        if (sStartDate) filter.created_at_start = sStartDate.startOf('day').toISOString();
+        if (sEndDate) filter.created_at_end = sEndDate.endOf('day').toISOString();
 
         return filter;
     };
@@ -441,27 +464,22 @@ const CarInfoList = () => {
                 </div>
             )
         },
-        {
-            field: 'province', headerName: 'หมวดจังหวัด', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
-            renderCell: (params) => (
-                <div className='w-full h-full flex justify-center items-center'>
-                    <Typography variant='caption'>{params.row.region ? params.row.region.name_th : '-'}</Typography>
-                </div>
-            )
-        },
+        { field: 'region_name_th', headerName: 'หมวดจังหวัด', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center', },
         { field: 'vehicle_make', headerName: 'ยี่ห้อ', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
         { field: 'vehicle_model', headerName: 'รุ่นรถ', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
+        { field: 'vehicle_color_name_th', headerName: 'สี', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center', },
         {
-            field: 'vehicle_color_id', headerName: 'สี', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center',
+            field: 'created_at', headerName: 'วันที่สร้าง', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
             renderCell: (params) => (
                 <div className='w-full h-full flex justify-center items-center'>
-                    <Typography variant='caption'>{params.row.vehicle_color.color_th ?? '-'}</Typography>
+                    <Typography>
+                        {params.value ? dayjs(params.value).format('DD/MM/YYYY') : '-'}
+                    </Typography>
                 </div>
             )
         },
-        { field: 'created_at', headerName: 'วันที่สร้าง', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
         {
-            field: 'group',
+            field: 'vehicle_group_name_en',
             headerName: 'กลุ่มรถ',
             flex: 1,
             minWidth: 150,
@@ -469,7 +487,7 @@ const CarInfoList = () => {
             align: 'center',
             renderCell: (params) => (
                 <div className='w-full h-full flex justify-center items-center'>
-                    <Typography>{dayjs(params.value).format('dd/mm/yyyy')}</Typography>
+                    <ChipTag tag={params.value} />
                 </div>
             )
         },
@@ -610,8 +628,17 @@ const CarInfoList = () => {
                                 <DatePicker value={sEndDate} onChange={setSEndDate} />
                             </div>
                         </div>
+
                         {/* ปุ่มค้นหา */}
-                        <div className="w-full flex justify-end p-2">
+                        <div className="w-full flex justify-end gap-2 p-2">
+                            <Button
+                                variant="outlined"
+                                startIcon={<CancelOutlinedIcon />}
+                                className="!border-gray-400 !text-gray-600 hover:!bg-gray-100"
+                                onClick={handleClearFilter}
+                            >
+                                Clear
+                            </Button>
                             <Button
                                 variant="contained"
                                 startIcon={<SearchIcon />}
@@ -626,12 +653,46 @@ const CarInfoList = () => {
             </Accordion>
 
             <Stack direction="row" spacing={1} sx={{ my: 2 }}>
-                <Button variant="contained" size="small" startIcon={<AddIcon />} className='!bg-gold hover:!bg-gold-dark' onClick={handleOpenCarForm}>ทะเบียนรถ</Button>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/txt-file.png' />}>TXT</Button>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/xls-file.png' />}>XLS</Button>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/csv-file.png' />}>CSV</Button>
+                <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<AddIcon />}
+                    className="!bg-gold hover:!bg-gold-dark"
+                    onClick={handleOpenCarForm}
+                >
+                    ทะเบียนรถ
+                </Button>
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/txt-file.png" />}
+                    onClick={() => exportData(rows, "txt", "vehicle_list")}
+                >
+                    TXT
+                </Button>
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/xls-file.png" />}
+                    onClick={() => exportData(rows, "xlsx", "vehicle_list")}
+                >
+                    XLS
+                </Button>
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/csv-file.png" />}
+                    onClick={() => exportData(rows, "csv", "vehicle_list")}
+                >
+                    CSV
+                </Button>
                 <Box sx={{ flexGrow: 1 }} />
-                <Typography variant="body2" sx={{ alignSelf: 'center' }}>ผลการค้นหา : 10 รายการ</Typography>
+                <Typography variant="body2" sx={{ alignSelf: "center" }}>
+                    ผลการค้นหา : {rowCount} รายการ
+                </Typography>
             </Stack>
 
             <DataTable

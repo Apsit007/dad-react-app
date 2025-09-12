@@ -14,6 +14,10 @@ import UserListPage from './pages/Settings/UserManage/UserList';
 import UserInfoPage from './pages/Settings/UserManage/UserInfo';
 import LoginPage from './pages/auth/Login';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from './store';
+import { useEffect } from 'react';
+import { fetchAllMasterdata } from './store/slices/masterdataSlice';
 
 // 1. Create the router configuration
 const router = createBrowserRouter([
@@ -82,6 +86,12 @@ const router = createBrowserRouter([
 
 // 2. Create the App component to provide the router
 function App() {
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    dispatch(fetchAllMasterdata()); // โหลดครั้งเดียว
+  }, [dispatch]);
+  
   return <RouterProvider router={router} />;
 }
 

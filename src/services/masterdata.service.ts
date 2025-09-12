@@ -50,6 +50,31 @@ export interface VehicleModel {
   active: boolean;
 }
 
+export interface MemberGroup {
+  id: number;
+  name_en: string;
+  name_th: string;
+  active: boolean;
+  visible: boolean;
+}
+
+export interface PersonTitle {
+  id: number;
+  title_group: string;
+  title_en: string;
+  title_th: string;
+  title_abbr_en: string;
+  title_abbr_th: string;
+  visible: boolean;
+  active: boolean;
+  remark: string;
+}
+export interface Gender {
+  id: number;
+  name_th: string;
+  name_en: string;
+}
+
 
 // Fetch LPR regions masterdata
 export const getLprRegions = async (
@@ -99,10 +124,29 @@ export const getVehicleModels = async (
   const res = await http.get(url);
   return res.data as ApiResponse<VehicleModel[]>;
 };
+
+export const getMemberGroups = async (
+  limit = 1000,
+): Promise<ApiResponse<MemberGroup[]>> => {
+  const url = `/smartgate-api/v0/member-groups/get?limit=${limit}`;
+  const res = await http.get(url);
+  return res.data as ApiResponse<MemberGroup[]>;
+};
+
+export const getPersonTitles = async (
+  limit = 1000,
+): Promise<ApiResponse<PersonTitle[]>> => {
+  const url = `/smartgate-api/v0/person-titles/get?limit=${limit}`;
+  const res = await http.get(url);
+  return res.data as ApiResponse<PersonTitle[]>;
+};
+
 export default {
   getLprRegions,
   getGates,
   getVehicleColors,
   getVehicleGroups,
-  getVehicleMakes
+  getVehicleMakes,
+  getMemberGroups,
+  getPersonTitles,
 };
