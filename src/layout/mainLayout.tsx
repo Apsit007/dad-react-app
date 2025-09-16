@@ -26,7 +26,6 @@ const MainLayout = () => {
     // ✅ Auto collapse on small screen
     useEffect(() => {
         const handleResize = () => {
-            console.log(window.innerWidth);
             if (window.innerWidth < 1630) {
                 setIsCollapsed(true);   // หุบอัตโนมัติ
             } else {

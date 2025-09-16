@@ -10,6 +10,8 @@ import DataTable from '../../../components/DataTable';
 import { type GridColDef } from '@mui/x-data-grid';
 import { useNavigate, NavLink } from 'react-router-dom';
 import ChipTag from '../../../components/ChipTag';
+import { useSelector } from 'react-redux';
+import { selectMemberGroups } from '../../../store/slices/masterdataSlice';
 
 // --- Table Columns Definition ---
 const columns: GridColDef[] = [
@@ -62,6 +64,7 @@ const rows = [
 
 const PersonInfoList = () => {
     const navigate = useNavigate();
+    const memberGroups = useSelector(selectMemberGroups);
     return (
         <Box>
             <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
@@ -91,7 +94,14 @@ const PersonInfoList = () => {
                             <div className="w-full sm:w-1/2 md:w-1/4 p-2">
                                 <InputLabel shrink>ประเภทบุคคล</InputLabel>
                                 <Select defaultValue="">
-                                    <MenuItem value=""><em>ทุกประเภท</em></MenuItem>
+                                    <MenuItem value="">
+                                        <em>ทุกประเภท</em>
+                                    </MenuItem>
+                                    {memberGroups.map((g) => (
+                                        <MenuItem key={g.id} value={g.id}>
+                                            {g.name_th}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </div>
                             <div className="w-full sm:w-1/2 md:w-1/4 p-2">

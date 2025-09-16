@@ -11,48 +11,160 @@ import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined"
 import { type GridColDef } from '@mui/x-data-grid';
 import EditSquareIcon from "@mui/icons-material/EditSquare"
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined"
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import dialog from '../../../services/dialog.service';
 import Popup from '../../../components/Popup';
+import { useSelector } from 'react-redux';
+import { selectGenders, selectMemberGroups, selectPersonTitles, selectRegions, selectVehicleColors, selectVehicleMakes } from '../../../store/slices/masterdataSlice';
+import { MemberApi, type MemberPayload } from '../../../services/Member.service';
+import dayjs from 'dayjs';
+import { VehicleApi, type Vehicle, type VehicleListFilter } from '../../../services/VehicleApi.service';
+import FileUploadApi from '../../../services/FileUpload.service';
 
 
-// --- Columns and Data for the Popup Car Table ---
-const popupCarColumns: GridColDef[] = [
-    {
-        field: 'select',
-        headerName: 'เลือก',
-        width: 70,
-        align: 'center', headerAlign: 'center',
-        renderCell: (params) => <Checkbox />,
-    },
-    { field: 'plate', headerName: 'ทะเบียนรถ', flex: 1 },
-    { field: 'province', headerName: 'หมวดจังหวัด', flex: 1 },
-    { field: 'brand', headerName: 'ยี่ห้อ', flex: 1 },
-    { field: 'color', headerName: 'สี', flex: 1 },
-];
-const popupCarRows = [
-    { id: 1, plate: 'กง 6677', province: 'กรุงเทพมหานคร', brand: 'Nissan', color: 'น้ำเงิน' },
-    { id: 2, plate: 'ซย 4335', province: 'กรุงเทพมหานคร', brand: 'Isuzu', color: 'ดำ' },
-    { id: 3, plate: '1กง 5577', province: 'พระนครศรีอยุธยา', brand: 'Volvo', color: 'ขาว' },
-    // ... more data
-];
 
-// --- Mock Data and Columns for the Car Table ---
+
 const carColumns: GridColDef[] = [
-    { field: 'id', headerName: 'ลำดับ', width: 70, align: 'center', headerAlign: 'center' },
-    { field: 'plate', headerName: 'ทะเบียน', flex: 1, headerAlign: 'center' },
-    { field: 'province', headerName: 'หมวดจังหวัด', flex: 1, headerAlign: 'center' },
-    { field: 'brand', headerName: 'ยี่ห้อ', flex: 1, headerAlign: 'center' },
-    { field: 'color', headerName: 'สี', flex: 1, headerAlign: 'center' },
+    {
+        field: 'rownumb',
+        headerName: 'ลำดับ',
+        width: 80,
+        align: 'center',
+        headerAlign: 'center',
+        sortable: false,
+        filterable: false,
+        renderCell: (params) => {
+            const rowIndex = params.api.getRowIndexRelativeToVisibleRows(params.id);
+            const pagination = params.api.state.pagination.paginationModel;
+            return (
+                <span>
+                    {pagination.page * pagination.pageSize + rowIndex + 1}
+                </span>
+            );
+        },
+    },
+    {
+        field: 'plate', headerName: 'ทะเบียนรถ', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
+        renderCell: (params) => (
+            <div className='w-full h-full flex justify-center items-center'>
+                <Typography variant='body2'>{params.row.plate_prefix}{params.row.plate_number}</Typography>
+            </div>
+        )
+    },
+    { field: 'region_name_th', headerName: 'หมวดจังหวัด', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center', },
+    { field: 'vehicle_make', headerName: 'ยี่ห้อ', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
+    { field: 'vehicle_color_name_th', headerName: 'สี', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center', },
 ];
-const carRows = []; // Start with no cars
 
 const PersonInfoForm = () => {
+    // state สำหรับ form
+    const [form, setForm] = useState<MemberPayload>({
+        title: "",
+        gender: "",
+        firstname: "",
+        lastname: "",
+        idcard: "",
+        dob: "",
+        phone: "",
+        email: "",
+        organization: "",
+        emp_card_id: "",
+        image_url: "",
+        member_status: "active",
+        notes: "",
+        recorder_uid: "83f04e2b-09c8-40c2-83d2-cafb57742e21", // mock
+        updater_uid: "83f04e2b-09c8-40c2-83d2-cafb57742e21", // mock
+        member_group_id: 0,
+        card_code: "",
+        card_number: "",
+        vehicle_uid_list: "",
+        active: true,
+        visible: true,
+        deleted: false,
+    });
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // --- table data ---
+    const [popupCarRows, setPopupCarRows] = useState<Vehicle[]>([]);
+    const [carRows, setCarRows] = useState<Vehicle[]>([]);
+    const [rowCount, setRowCount] = useState(0);
+
+    const [selectedCars, setSelectedCars] = useState<string[]>([]);
+
+    // state เก็บ filter
+    const [search, setSearch] = useState<VehicleListFilter>({
+        plate_prefix: "",
+        plate_number: "",
+        region_code: "",
+        vehicle_make: "",
+        vehicle_color_id: undefined,
+    });
+    // --- pagination state ---
+    const [paginationModel, setPaginationModel] = useState({
+        page: 0, // DataGrid ใช้ 0-based
+        pageSize: 10,
+    });
+
     const [isCarPopupOpen, setIsCarPopupOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    const personTitles = useSelector(selectPersonTitles);
+    const genders = useSelector(selectGenders);
+    const memberGroups = useSelector(selectMemberGroups);
+
+    const regions = useSelector(selectRegions);
+    const vehicleColors = useSelector(selectVehicleColors);
+    const vehicleMakes = useSelector(selectVehicleMakes);
+
+    // เมื่อเปิด popup ให้ sync กับ carRows
+    useEffect(() => {
+        if (isCarPopupOpen) {
+            setSelectedCars(carRows.map((c) => c.uid)); // uid ที่มีอยู่แล้วใน cartable
+        }
+    }, [isCarPopupOpen, carRows]);
+
+    // toggle checkbox
+    const handleToggleCar = (uid: string) => {
+        setSelectedCars((prev) =>
+            prev.includes(uid) ? prev.filter((id) => id !== uid) : [...prev, uid]
+        );
+    };
+
+    // เมื่อกดปุ่ม "เลือก"
+    const handleConfirmCars = () => {
+        const selectedRows = popupCarRows.filter((car) =>
+            selectedCars.includes(car.uid)
+        );
+
+        // รวมกับ carRows ที่มีอยู่ (กันซ้ำด้วย uid)
+        const merged = [...carRows];
+        selectedRows.forEach((row) => {
+            if (!merged.find((c) => c.uid === row.uid)) {
+                merged.push(row);
+            }
+        });
+        setCarRows(merged);
+        setIsCarPopupOpen(false);
+    };
+
+    // โหลดข้อมูล
+    const loadData = async (
+        page: number = paginationModel.page + 1,
+        pageSize: number = paginationModel.pageSize,
+        filter: VehicleListFilter = search
+    ) => {
+        try {
+            const res = await VehicleApi.list(page, pageSize, "uid.asc", filter);
+            setPopupCarRows(res.data || []);
+            setRowCount(res.pagination?.countAll ?? 0);
+        } catch (err) {
+            console.error("Load vehicle error:", err);
+        }
+    };
+
 
     const onPickFile = () => fileInputRef.current?.click();
 
@@ -69,6 +181,7 @@ const PersonInfoForm = () => {
         const file = e.target.files?.[0];
         if (!file) return;
         if (!validateFile(file)) return;
+        setSelectedFile(file);
         const previewUrl = URL.createObjectURL(file);
         setSelectedImage(previewUrl);
 
@@ -81,6 +194,95 @@ const PersonInfoForm = () => {
     const handleCloseCarPopup = () => {
         setIsCarPopupOpen(false);
     };
+
+    const handleChange = (field: keyof MemberPayload, value: any) => {
+        setForm((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+
+        if (!form.title) newErrors.title = "กรุณาเลือกคำนำหน้า";
+        if (!form.firstname) newErrors.firstname = "กรุณากรอกชื่อ";
+        if (!form.lastname) newErrors.lastname = "กรุณากรอกนามสกุล";
+        if (!form.gender) newErrors.gender = "กรุณาเลือกเพศ";
+        if (!form.idcard) newErrors.idcard = "กรุณากรอกเลขบัตรประชาชน";
+        if (!form.phone) newErrors.phone = "กรุณากรอกเบอร์โทร";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+
+    // เวลา save
+    const handleSave = async () => {
+        try {
+            if (!validateForm()) return; // ❌ ถ้าไม่ผ่าน หยุดเลย
+
+            // ✅ เตรียม vehicle_uid_list
+            const vehicle_uid_list =
+                carRows.length > 0 ? carRows.map((c) => c.uid).join(",") : "";
+
+            let imageUrl = form.image_url;
+
+            // ✅ อัปโหลดรูปถ้ามี
+            if (selectedFile) {
+                const uploadRes = await FileUploadApi.upload(selectedFile);
+                if (uploadRes.success) {
+                    imageUrl = uploadRes.data[0].url;
+                } else {
+                    dialog.error("อัปโหลดรูปภาพไม่สำเร็จ");
+                    return;
+                }
+            }
+
+            const payload = {
+                ...form,
+                image_url: imageUrl,
+                vehicle_uid_list,
+                creator_uid: '83f04e2b-09c8-40c2-83d2-cafb57742e21',
+                updater_uid: '83f04e2b-09c8-40c2-83d2-cafb57742e21',
+            };
+
+            console.log("👉 payload", payload);
+            const res = await MemberApi.create(payload);
+
+            if (res.success) {
+                dialog.success("บันทึกข้อมูลสำเร็จ");
+            } else {
+                dialog.error(res.message || "เกิดข้อผิดพลาด");
+            }
+        } catch (err) {
+            console.error("Save error:", err);
+            dialog.error("ไม่สามารถบันทึกข้อมูลได้");
+        }
+    };
+
+
+    const popupCarColumns: GridColDef[] = [
+        {
+            field: 'select',
+            headerName: 'เลือก',
+            width: 70,
+            align: 'center', headerAlign: 'center',
+            renderCell: (params) => <Checkbox
+                checked={selectedCars.includes(params.row.uid)}
+                onChange={() => handleToggleCar(params.row.uid)}
+            />,
+        },
+        {
+            field: 'plate', headerName: 'ทะเบียนรถ', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
+            renderCell: (params) => (
+                <div className='w-full h-full flex justify-center items-center'>
+                    <Typography variant='body2'>{params.row.plate_prefix}{params.row.plate_number}</Typography>
+                </div>
+            )
+        },
+        { field: 'region_name_th', headerName: 'หมวดจังหวัด', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center', },
+        { field: 'vehicle_make', headerName: 'ยี่ห้อ', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
+        { field: 'vehicle_color_name_th', headerName: 'สี', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center', },
+    ];
+
     return (
         // Main container using Tailwind flexbox for columns
         <div className='flex flex-col'>
@@ -127,46 +329,89 @@ const PersonInfoForm = () => {
                             {/* Form Fields */}
                             <div className="w-full md:w-2/3 p-2">
                                 <div className="flex flex-wrap -m-2">
+                                    {/* 🔹 คำนำหน้า */}
                                     <div className="w-full sm:w-[30%] p-2">
                                         <InputLabel shrink required>คำนำหน้า</InputLabel>
-                                        <Select defaultValue="mr">
-                                            <MenuItem value="mr">นาย</MenuItem>
-                                            <MenuItem value="mrs">นาง</MenuItem>
-                                            <MenuItem value="miss">นางสาว</MenuItem>
+                                        <Select
+                                            value={form.title}
+                                            onChange={(e) => handleChange("title", e.target.value)}
+                                            error={!!errors.title}
+                                        >
+                                            <MenuItem value=""><em>เลือกคำนำหน้า</em></MenuItem>
+                                            {personTitles.map((t) => (
+                                                <MenuItem key={t.id} value={t.title_th}>
+                                                    {t.title_th}
+                                                </MenuItem>
+                                            ))}
                                         </Select>
                                     </div>
                                     <div className="w-full sm:w-[35%] p-2">
                                         <InputLabel shrink required>ชื่อ</InputLabel>
-                                        <TextField />
+                                        <TextField
+                                            value={form.firstname}
+                                            onChange={(e) => handleChange("firstname", e.target.value)}
+                                            error={!!errors.firstname}
+                                            helperText={errors.firstname}
+                                        />
                                     </div>
                                     <div className="w-full sm:w-[35%] p-2">
                                         <InputLabel shrink required>นามสกุล</InputLabel>
-                                        <TextField />
+                                        <TextField
+                                            value={form.lastname}
+                                            onChange={(e) => handleChange("lastname", e.target.value)}
+                                            error={!!errors.lastname}
+                                            helperText={errors.lastname}
+                                        />
                                     </div>
 
+                                    {/* 🔹 เพศ */}
                                     <div className="w-full sm:w-[30%] p-2">
                                         <InputLabel shrink required>เพศ</InputLabel>
-                                        <Select defaultValue="male">
-                                            <MenuItem value="male">เลือกเพศ</MenuItem>
-                                            <MenuItem value="female">หญิง</MenuItem>
+                                        <Select
+                                            value={form.gender}
+                                            onChange={(e) => handleChange("gender", e.target.value)}
+                                            error={!!errors.gender}
+                                        >
+                                            <MenuItem value=""><em>เลือกเพศ</em></MenuItem>
+                                            {genders.map((g) => (
+                                                <MenuItem key={g.id} value={g.name_th}>
+                                                    {g.name_th}
+                                                </MenuItem>
+                                            ))}
                                         </Select>
                                     </div>
                                     <div className="w-full sm:w-[35%] p-2">
                                         <InputLabel shrink required>เลขที่บัตรประชาชน</InputLabel>
-                                        <TextField />
+                                        <TextField
+                                            value={form.idcard}
+                                            onChange={(e) => handleChange("idcard", e.target.value)}
+                                            error={!!errors.idcard}
+                                            helperText={errors.idcard}
+                                        />
                                     </div>
                                     <div className="w-full sm:w-[35%] p-2">
                                         <InputLabel shrink>วันเกิด</InputLabel>
-                                        <DatePicker />
+                                        <DatePicker
+                                            value={form.dob ? dayjs(form.dob) : null}
+                                            onChange={(date) =>
+                                                handleChange("dob", date ? dayjs(date).format("YYYY-MM-DD") : "")
+                                            }
+                                        />
                                     </div>
 
                                     <div className="w-full sm:w-1/3 p-2">
                                         <InputLabel shrink required>เบอร์โทร</InputLabel>
-                                        <TextField />
+                                        <TextField
+                                            value={form.phone}
+                                            onChange={(e) => handleChange("phone", e.target.value)}
+                                        />
                                     </div>
                                     <div className="w-full sm:w-2/3 p-2">
                                         <InputLabel shrink>Email</InputLabel>
-                                        <TextField />
+                                        <TextField
+                                            value={form.email}
+                                            onChange={(e) => handleChange("email", e.target.value)}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -176,16 +421,27 @@ const PersonInfoForm = () => {
 
                                 <div className="w-full p-2">
                                     <InputLabel shrink>สังกัดหน่วยงาน</InputLabel>
-                                    <TextField />
+                                    <TextField
+                                        value={form.organization}
+                                        onChange={(e) => handleChange("organization", e.target.value)}
+                                    />
                                 </div>
                                 <div className="w-full p-2">
                                     <InputLabel shrink>เลขบัตรพนักงาน</InputLabel>
-                                    <TextField />
+                                    <TextField
+                                        value={form.emp_card_id}
+                                        onChange={(e) => handleChange("emp_card_id", e.target.value)}
+                                    />
                                 </div>
                             </div>
                             <div className="w-full p-2">
                                 <InputLabel shrink>หมายเหตุ</InputLabel>
-                                <TextField multiline rows={2} />
+                                <TextField
+                                    multiline
+                                    rows={2}
+                                    value={form.notes}
+                                    onChange={(e) => handleChange("notes", e.target.value)}
+                                />
                             </div>
                         </div>
                     </Paper>
@@ -220,10 +476,19 @@ const PersonInfoForm = () => {
                     <div className='py-2 px-4 bg-primary h-full text-white'>
                         <Typography variant="h6" gutterBottom>รายละเอียดเพิ่มเติม</Typography>
                         <div className="flex flex-wrap -m-2 mt-3 ">
+                            {/* 🔹 ประเภทบุคคล */}
                             <div className="w-full sm:w-1/2 p-2">
-                                <InputLabel shrink className='!text-white'>ประเภทบุคคล</InputLabel>
-                                <Select defaultValue="">
-                                    <MenuItem value=""><em>ประเภทบุคคล</em></MenuItem>
+                                <InputLabel shrink className="!text-white">ประเภทบุคคล</InputLabel>
+                                <Select
+                                    value={form.member_group_id}
+                                    onChange={(e) => handleChange("member_group_id", Number(e.target.value))}
+                                >
+                                    <MenuItem value={0}><em>ทุกประเภท</em></MenuItem>
+                                    {memberGroups.map((mg) => (
+                                        <MenuItem key={mg.id} value={mg.id}>
+                                            {mg.name_th}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </div>
                             <div className="w-full sm:w-1/2 p-2">
@@ -265,6 +530,7 @@ const PersonInfoForm = () => {
                             </Box>
                             <Box sx={{ height: '100%', width: '100%' }}>
                                 <DataTable
+                                    getRowId={(row) => row.uid}
                                     columns={carColumns}
                                     rows={carRows}
                                     sx={{
@@ -288,7 +554,7 @@ const PersonInfoForm = () => {
 
             <div className="w-full flex justify-end gap-2 mt-6">
                 <Button variant="outlined" className='!border-primary !bg-white !text-primary' startIcon={<CloseIcon />}>ยกเลิก</Button>
-                <Button variant="contained" startIcon={<SaveIcon />} className="!bg-primary hover:!bg-primary-dark">บันทึก</Button>
+                <Button variant="contained" startIcon={<SaveIcon />} className="!bg-primary hover:!bg-primary-dark" onClick={() => handleSave()} >บันทึก</Button>
             </div>
 
             <Popup
@@ -306,40 +572,85 @@ const PersonInfoForm = () => {
                         <div className="flex flex-col gap-4">
                             {/* Row 1 */}
                             <div className="flex flex-wrap -m-2">
+                                {/* เลขทะเบียน */}
                                 <div className="w-full sm:w-1/2 md:w-1/4 p-2">
                                     <InputLabel shrink>เลขทะเบียน</InputLabel>
-                                    <div className='flex flex-row gap-2'>
-                                        <div className='md:!w-2/5'>
-                                            <TextField />
-                                        </div>
-                                        <div className='md:!w-3/5'>
-                                            <TextField />
-                                        </div>
+                                    <div className="flex flex-row gap-2">
+                                        <TextField
+                                            placeholder="หมวด"
+                                            value={search.plate_prefix || ""}
+                                            onChange={(e) =>
+                                                setSearch((prev) => ({ ...prev, plate_prefix: e.target.value }))
+                                            }
+                                        />
+                                        <TextField
+                                            placeholder="เลข"
+                                            value={search.plate_number || ""}
+                                            onChange={(e) =>
+                                                setSearch((prev) => ({ ...prev, plate_number: e.target.value }))
+                                            }
+                                        />
                                     </div>
                                 </div>
+                                {/* หมวดจังหวัด */}
                                 <div className="w-full sm:w-1/2 md:w-1/4 p-2">
                                     <InputLabel shrink>หมวดจังหวัด</InputLabel>
-                                    <Select defaultValue="bkk">
-                                        <MenuItem value="bkk">กรุงเทพมหานคร</MenuItem>
+                                    <Select
+                                        value={search.region_code || ""}
+                                        onChange={(e) => setSearch({ ...search, region_code: e.target.value })}
+                                    >
+                                        <MenuItem value=""><em>ทุกจังหวัด</em></MenuItem>
+                                        {regions.map((r) => (
+                                            <MenuItem key={r.region_code} value={r.region_code}>
+                                                {r.name_th}
+                                            </MenuItem>
+                                        ))}
                                     </Select>
                                 </div>
+                                {/* ยี่ห้อ */}
                                 <div className="w-full sm:w-1/2 md:w-1/4 p-2">
                                     <InputLabel shrink>ยี่ห้อ</InputLabel>
-                                    <Select defaultValue="">
+                                    <Select
+                                        value={search.vehicle_make || ""}
+                                        onChange={(e) => setSearch({ ...search, vehicle_make: e.target.value })}
+                                    >
                                         <MenuItem value=""><em>ทุกยี่ห้อ</em></MenuItem>
+                                        {vehicleMakes.map((m) => (
+                                            <MenuItem key={m.id} value={m.make_en}>
+                                                {m.make_en}
+                                            </MenuItem>
+                                        ))}
                                     </Select>
                                 </div>
+                                {/* สี */}
                                 <div className="w-full sm:w-1/2 md:w-1/4 p-2">
                                     <InputLabel shrink>สี</InputLabel>
-                                    <Select defaultValue="">
+                                    <Select
+                                        value={search.vehicle_color_id || ""}
+                                        onChange={(e) => setSearch({ ...search, vehicle_color_id: Number(e.target.value) })}
+                                    >
                                         <MenuItem value=""><em>ทุกสี</em></MenuItem>
+                                        {vehicleColors.map((c) => (
+                                            <MenuItem key={c.id} value={c.color_en}>
+                                                {c.color_th}
+                                            </MenuItem>
+                                        ))}
                                     </Select>
                                 </div>
 
                             </div>
 
                             <div className="w-full flex justify-end p-2">
-                                <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark'>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<SearchIcon />}
+                                    className="!bg-primary hover:!bg-primary-dark"
+                                    onClick={() => {
+                                        const resetPage = 0;
+                                        setPaginationModel((prev) => ({ ...prev, page: resetPage }));
+                                        loadData(resetPage + 1, paginationModel.pageSize, search); // ✅ ยิง API แค่ครั้งเดียว
+                                    }}
+                                >
                                     ค้นหา
                                 </Button>
                             </div>
@@ -347,11 +658,22 @@ const PersonInfoForm = () => {
                     </AccordionDetails>
                 </Accordion>
                 <Box sx={{ height: 400, width: '100%', marginTop: 3 }}>
-                    <DataTable columns={popupCarColumns} rows={popupCarRows} />
+                    <DataTable
+                        getRowId={(row) => row.uid}
+                        columns={popupCarColumns}
+                        rows={popupCarRows}
+                        paginationMode="server"
+                        paginationModel={paginationModel}
+                        onPaginationModelChange={(model) => {
+                            setPaginationModel(model);
+                            loadData(model.page + 1, model.pageSize, search); // ✅ ยิง API เมื่อเปลี่ยนหน้า
+                        }}
+                        rowCount={rowCount}
+                    />
                 </Box>
                 <div className="w-full flex justify-end gap-2 mt-6">
                     <Button variant="outlined" className='!border-primary !bg-white !text-primary' startIcon={<CloseIcon />}>ยกเลิก</Button>
-                    <Button variant="contained" startIcon={<CheckCircleOutlinedIcon fontWeight="small" />} className="!bg-primary hover:!bg-primary-dark">เลือก</Button>
+                    <Button variant="contained" startIcon={<CheckCircleOutlinedIcon fontWeight="small" />} className="!bg-primary hover:!bg-primary-dark" onClick={handleConfirmCars} >เลือก</Button>
                 </div>
             </Popup>
         </div>
