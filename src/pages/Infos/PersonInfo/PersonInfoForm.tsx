@@ -1,5 +1,5 @@
 // src/pages/PersonInfo/PersonInfoForm.tsx
-import { Paper, Typography, Box, TextField, Select, MenuItem, Button, Avatar, FormControlLabel, InputLabel, Checkbox, Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
+import { Paper, Typography, Box, TextField, Select, MenuItem, Button, Avatar, FormControlLabel, InputLabel, Checkbox, Accordion, AccordionDetails, AccordionSummary, Autocomplete } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
@@ -11,7 +11,7 @@ import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined"
 import { type GridColDef } from '@mui/x-data-grid';
 import EditSquareIcon from "@mui/icons-material/EditSquare"
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined"
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import dialog from '../../../services/dialog.service';
 import Popup from '../../../components/Popup';
@@ -21,6 +21,8 @@ import { MemberApi, type MemberPayload } from '../../../services/Member.service'
 import dayjs from 'dayjs';
 import { VehicleApi, type Vehicle, type VehicleListFilter } from '../../../services/VehicleApi.service';
 import FileUploadApi from '../../../services/FileUpload.service';
+import { DepartmentApi, type Department } from '../../../services/Department.service';
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -58,6 +60,7 @@ const carColumns: GridColDef[] = [
 ];
 
 const PersonInfoForm = () => {
+    const navigate = useNavigate();
     // state สำหรับ form
     const [form, setForm] = useState<MemberPayload>({
         title: "",
@@ -68,7 +71,7 @@ const PersonInfoForm = () => {
         dob: "",
         phone: "",
         email: "",
-        organization: "",
+        dep_uid: "",
         emp_card_id: "",
         image_url: "",
         member_status: "active",
@@ -119,12 +122,30 @@ const PersonInfoForm = () => {
     const vehicleColors = useSelector(selectVehicleColors);
     const vehicleMakes = useSelector(selectVehicleMakes);
 
+    const [departmentList, setDepartmentList] = useState<Department[]>([])
+
     // เมื่อเปิด popup ให้ sync กับ carRows
     useEffect(() => {
         if (isCarPopupOpen) {
             setSelectedCars(carRows.map((c) => c.uid)); // uid ที่มีอยู่แล้วใน cartable
         }
     }, [isCarPopupOpen, carRows]);
+
+    useEffect(() => {
+        const loadDepartments = async () => {
+            try {
+                const res = await DepartmentApi.list(
+                    paginationModel.page + 1, // ✅ API ใช้ 1-based
+                    paginationModel.pageSize
+                );
+                setDepartmentList(res.data);
+                setRowCount(res.pagination?.countAll || 0); // ✅ สมมติ API ส่ง count กลับมา
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        loadDepartments();
+    }, [])
 
     // toggle checkbox
     const handleToggleCar = (uid: string) => {
@@ -199,6 +220,25 @@ const PersonInfoForm = () => {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
 
+    // ฟังก์ชันตรวจสอบเลขบัตรประชาชน
+    const isValidThaiIdCard = (id: string): boolean => {
+        if (!/^\d{13}$/.test(id)) return false; // ต้องเป็นตัวเลข 13 หลัก
+        let sum = 0;
+        for (let i = 0; i < 12; i++) {
+            sum += Number(id.charAt(i)) * (13 - i);
+        }
+        const checkDigit = (11 - (sum % 11)) % 10;
+        return checkDigit === Number(id.charAt(12));
+    };
+
+    const isValidPhone = (phone: string): boolean => {
+        return /^0\d{9}$/.test(phone); // 0 ตามด้วยตัวเลข 9 หลัก = รวม 10 หลัก
+    };
+
+    const isValidEmail = (email: string): boolean => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
 
@@ -206,16 +246,42 @@ const PersonInfoForm = () => {
         if (!form.firstname) newErrors.firstname = "กรุณากรอกชื่อ";
         if (!form.lastname) newErrors.lastname = "กรุณากรอกนามสกุล";
         if (!form.gender) newErrors.gender = "กรุณาเลือกเพศ";
-        if (!form.idcard) newErrors.idcard = "กรุณากรอกเลขบัตรประชาชน";
-        if (!form.phone) newErrors.phone = "กรุณากรอกเบอร์โทร";
+
+        if (!form.idcard) {
+            newErrors.idcard = "กรุณากรอกเลขบัตรประชาชน";
+        } else if (!isValidThaiIdCard(form.idcard)) {
+            newErrors.idcard = "เลขบัตรประชาชนไม่ถูกต้อง";
+        }
+
+        if (!form.phone) {
+            newErrors.phone = "กรุณากรอกเบอร์โทร";
+        } else if (!isValidPhone(form.phone)) {
+            newErrors.phone = "เบอร์โทรต้องเป็นตัวเลข 10 หลัก และขึ้นต้นด้วย 0";
+        }
+
+        if (form.email && !isValidEmail(form.email)) {
+            newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
+        }
+
+        if (!form.start_date) newErrors.start_date = "กรุณาเลือกวันที่เริ่มต้น";
+        if (!form.end_date) newErrors.end_date = "กรุณาเลือกวันที่สิ้นสุด";
+        if (!form.dob) newErrors.dob = "กรุณาเลือกวันเกิด";
+
+        // ✅ ต้องมีรถอย่างน้อย 1 คัน
+        if (carRows.length === 0) {
+            newErrors.vehicle_uid_list = "ต้องเพิ่มรถอย่างน้อย 1 คัน";
+            dialog.error("เลือกรถอย่างน้อย 1 คัน")
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
 
+
     // เวลา save
     const handleSave = async () => {
+        dialog.loading();
         try {
             if (!validateForm()) return; // ❌ ถ้าไม่ผ่าน หยุดเลย
 
@@ -249,6 +315,7 @@ const PersonInfoForm = () => {
 
             if (res.success) {
                 dialog.success("บันทึกข้อมูลสำเร็จ");
+                navigate("/info/person"); // ✅ redirect ไปหน้า info/person
             } else {
                 dialog.error(res.message || "เกิดข้อผิดพลาด");
             }
@@ -282,6 +349,8 @@ const PersonInfoForm = () => {
         { field: 'vehicle_make', headerName: 'ยี่ห้อ', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
         { field: 'vehicle_color_name_th', headerName: 'สี', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center', },
     ];
+
+
 
     return (
         // Main container using Tailwind flexbox for columns
@@ -396,6 +465,13 @@ const PersonInfoForm = () => {
                                             onChange={(date) =>
                                                 handleChange("dob", date ? dayjs(date).format("YYYY-MM-DD") : "")
                                             }
+                                            slotProps={{
+                                                textField: {
+                                                    error: !!errors.dob,
+                                                    helperText: errors.dob,
+                                                },
+                                            }}
+
                                         />
                                     </div>
 
@@ -404,13 +480,19 @@ const PersonInfoForm = () => {
                                         <TextField
                                             value={form.phone}
                                             onChange={(e) => handleChange("phone", e.target.value)}
+                                            error={!!errors.phone}
+                                            helperText={errors.phone}
+                                            inputProps={{ maxLength: 10 }} // ❌ กันเกิน 10 หลัก
                                         />
                                     </div>
+                                    {/* Email */}
                                     <div className="w-full sm:w-2/3 p-2">
                                         <InputLabel shrink>Email</InputLabel>
                                         <TextField
                                             value={form.email}
                                             onChange={(e) => handleChange("email", e.target.value)}
+                                            error={!!errors.email}
+                                            helperText={errors.email}
                                         />
                                     </div>
                                 </div>
@@ -421,9 +503,27 @@ const PersonInfoForm = () => {
 
                                 <div className="w-full p-2">
                                     <InputLabel shrink>สังกัดหน่วยงาน</InputLabel>
-                                    <TextField
-                                        value={form.organization}
-                                        onChange={(e) => handleChange("organization", e.target.value)}
+                                    <Autocomplete
+                                        options={departmentList.map(d => ({
+                                            id: d.uid,           // ใช้ uid เก็บค่า
+                                            label: d.dep_name,   // ใช้ชื่อหน่วยงานแสดงผล
+                                        }))}
+                                        value={
+                                            departmentList
+                                                .map(d => ({ id: d.uid, label: d.dep_name }))
+                                                .find(opt => opt.id === form.dep_uid) || null
+                                        }
+                                        onChange={(_, newValue) => {
+                                            setForm(prev => ({ ...prev, dep_uid: newValue?.id ?? "" }));
+                                        }}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                placeholder="เลือกหน่วยงาน"
+                                            />
+                                        )}
+                                        getOptionLabel={(o) => (typeof o === "string" ? o : o?.label ?? "")}
+                                        isOptionEqualToValue={(a, b) => a.id === b.id}
                                     />
                                 </div>
                                 <div className="w-full p-2">
@@ -500,13 +600,35 @@ const PersonInfoForm = () => {
                                 <TextField disabled />
                             </div>
                             <div className="w-full sm:w-1/2 flex">
-                                <div className='w-1/2 p-2 '>
+                                <div className='w-1/2 p-2'>
                                     <InputLabel shrink required className='!text-white'>วันเริ่มต้น</InputLabel>
-                                    <DatePicker />
+                                    <DatePicker
+                                        value={form.start_date ? dayjs(form.start_date) : null}
+                                        onChange={(date) =>
+                                            handleChange("start_date", date ? dayjs(date).format("YYYY-MM-DD") : "")
+                                        }
+                                        slotProps={{
+                                            textField: {
+                                                error: !!errors.start_date,
+                                                helperText: errors.start_date,
+                                            },
+                                        }}
+                                    />
                                 </div>
-                                <div className='w-1/2 p-2 '>
+                                <div className='w-1/2 p-2'>
                                     <InputLabel shrink required className='!text-white'>วันสิ้นสุด</InputLabel>
-                                    <DatePicker />
+                                    <DatePicker
+                                        value={form.end_date ? dayjs(form.end_date) : null}
+                                        onChange={(date) =>
+                                            handleChange("end_date", date ? dayjs(date).format("YYYY-MM-DD") : "")
+                                        }
+                                        slotProps={{
+                                            textField: {
+                                                error: !!errors.end_date,
+                                                helperText: errors.end_date,
+                                            },
+                                        }}
+                                    />
                                 </div>
                             </div>
                             <div className="w-full flex gap-2 justify-end p-2 mt-auto">
@@ -544,6 +666,12 @@ const PersonInfoForm = () => {
                                         },
                                     }} />
                             </Box>
+                            {/* ✅ แสดงข้อความ error ถ้าไม่มีรถ */}
+                            {errors.vehicle_uid_list && (
+                                <Typography variant="body2" color="error" className="mt-2">
+                                    {errors.vehicle_uid_list}
+                                </Typography>
+                            )}
                         </Box>
                     </div>
                 </div>

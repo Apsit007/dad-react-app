@@ -13,7 +13,7 @@ export interface MemberPayload {
     dob: string;
     phone: string;
     email: string;
-    organization: string;
+    dep_uid: string;
     emp_card_id: string;
     image_url: string;
     member_status: string;
@@ -27,6 +27,8 @@ export interface MemberPayload {
     deleted: boolean;
     creator_uid: string;
     updater_uid: string;
+    start_date: string;
+    end_date: string;
 }
 
 // ✅ data object ของ Member

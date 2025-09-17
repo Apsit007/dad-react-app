@@ -48,6 +48,10 @@
             {
                 "name": "จัดการสิทธิ์การใช้งาน",
                 "path": "settings/usermanage/userlist"
+            },
+            {
+                "name": "จัดการข้อมูลหน่วยงาน",
+                "path": "settings/department"
             }
         ]
     }

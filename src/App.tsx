@@ -18,6 +18,7 @@ import { useDispatch } from 'react-redux';
 import type { AppDispatch } from './store';
 import { useEffect } from 'react';
 import { fetchAllMasterdata } from './store/slices/masterdataSlice';
+import DepartmentPage from './pages/Settings/Department';
 
 // 1. Create the router configuration
 const router = createBrowserRouter([
@@ -46,6 +47,10 @@ const router = createBrowserRouter([
       {
         path: "settings/usermanage/userinfo",
         element: <UserInfoPage />,
+      },
+      {
+        path: "settings/department",
+        element: <DepartmentPage />,
       },
       {
         path: "dashboard",
@@ -91,7 +96,7 @@ function App() {
   useEffect(() => {
     dispatch(fetchAllMasterdata()); // โหลดครั้งเดียว
   }, [dispatch]);
-  
+
   return <RouterProvider router={router} />;
 }
 
