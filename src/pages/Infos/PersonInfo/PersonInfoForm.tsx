@@ -915,7 +915,7 @@ const PersonInfoForm = () => {
                     />
                 </Box>
                 <div className="w-full flex justify-end gap-2 mt-6">
-                    <Button variant="outlined" className='!border-primary !bg-white !text-primary' startIcon={<CloseIcon />}>ยกเลิก</Button>
+                    <Button variant="outlined" className='!border-primary !bg-white !text-primary' startIcon={<CloseIcon />} onClick={navigate("/info/person")}>ยกเลิก</Button>
                     <Button variant="contained" startIcon={<CheckCircleOutlinedIcon fontWeight="small" />} className="!bg-primary hover:!bg-primary-dark" onClick={handleConfirmCars} >เลือก</Button>
                 </div>
             </Popup>

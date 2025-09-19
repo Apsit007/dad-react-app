@@ -17,6 +17,7 @@ const defaultGetRowClassName = (params: GridRowClassNameParams) => {
 };
 
 const CustomDataGrid = (props: DataGridProps) => {
+    const hasCustomRowClass = !!props.getRowClassName;
     return (
         // 2. เพิ่ม Wrapper Box เพื่อควบคุมขนาด
         // <Box sx={{ height: '100%', width: '100%' }}>
@@ -33,7 +34,7 @@ const CustomDataGrid = (props: DataGridProps) => {
                 paginationMode="server"
                 // --- ค่า Default ที่เรากำหนดเอง ---
                 rowHeight={60}
-                getRowClassName={props.getRowClassName || defaultGetRowClassName} // 3. ทำให้ยืดหยุ่น
+                getRowClassName={props.getRowClassName || defaultGetRowClassName}
                 initialState={{
                     pagination: {
                         paginationModel: { page: 0, pageSize: 10 },
@@ -55,20 +56,32 @@ const CustomDataGrid = (props: DataGridProps) => {
                     '&& .MuiDataGrid-columnHeader': {
                         backgroundColor: '#36746F',
                     },
-                    // สไตล์สำหรับแถวไฮไลท์
-                    '&& .highlight-row': {
-                        bgcolor: 'rgba(255, 0, 0, 0.08) !important',
-                    },
-                    '&& .expirewarning-row': {
-                        bgcolor: 'rgba(247, 223, 6, 0.08) !important',
-                    },
-                    '&& .expired-row': {
-                        bgcolor: 'rgba(255, 115, 0, 0.08) !important',
-                    },
-                    '&& .terminated-row': {
-                        bgcolor: 'rgba(255, 0, 0, 0.08) !important',
-                    },
-                   
+                    // ✅ ถ้าไม่มี getRowClassName → ใช้ alternating row colors
+                    ...(!hasCustomRowClass && {
+                        '& .MuiDataGrid-row:nth-of-type(odd)': {
+                            backgroundColor: '#FFFFFF',
+                        },
+                        '& .MuiDataGrid-row:nth-of-type(even)': {
+                            backgroundColor: '#e7e8e9',
+                        },
+                    }),
+
+                    // ✅ เฉพาะกรณีใช้ getRowClassName
+                    ...(hasCustomRowClass && {
+                        '&& .highlight-row': {
+                            bgcolor: 'rgba(255, 0, 0, 0.08) !important',
+                        },
+                        '&& .expirewarning-row': {
+                            bgcolor: 'rgba(247, 223, 6, 0.2) !important',
+                        },
+                        '&& .expired-row': {
+                            bgcolor: 'rgba(255, 115, 0, 0.2) !important',
+                        },
+                        '&& .terminated-row': {
+                            bgcolor: 'rgba(255, 0, 0, 0.2) !important',
+                        },
+                    }),
+
                     flex: 1,
                     ...props.sx,
                 }}

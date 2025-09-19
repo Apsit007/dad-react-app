@@ -215,27 +215,24 @@ const PersonInfoList = () => {
     const getRowClassName = (params: GridRowClassNameParams) => {
         const row = params.row;
 
-        // ✅ ถ้า member_status = terminate
+        // ✅ ใช้ member_status เป็นหลัก
         if (row.member_status === "terminated") {
             return "terminated-row";
         }
 
-        // ✅ ถ้า member_status = expired
         if (row.member_status === "expired") {
             return "expired-row";
         }
-
-        // ✅ ถ้า end_date <= 7 วันจากวันนี้
-        if (row.end_date) {
-            const endDate = dayjs(row.end_date);
-            const now = dayjs();
-            if (endDate.diff(now, "day") <= 7 && endDate.isAfter(now)) {
-                return "expirewarning-row";
-            }
+        if (row.member_status === "expiring") {
+            return "expirewarning-row";
         }
+
+
 
         return "";
     };
+
+
     return (
         <Box>
             <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
