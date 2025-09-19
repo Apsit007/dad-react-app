@@ -1,5 +1,5 @@
 // src/pages/PersonInfo/PersonInfoForm.tsx
-import { Paper, Typography, Box, TextField, Select, MenuItem, Button, Avatar, FormControlLabel, InputLabel, Checkbox, Accordion, AccordionDetails, AccordionSummary, Autocomplete } from '@mui/material';
+import { Paper, Typography, Box, TextField, Select, MenuItem, Button, Avatar, FormControlLabel, InputLabel, Checkbox, Accordion, AccordionDetails, AccordionSummary, Autocomplete, IconButton } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
@@ -22,44 +22,15 @@ import dayjs from 'dayjs';
 import { VehicleApi, type Vehicle, type VehicleListFilter } from '../../../services/VehicleApi.service';
 import FileUploadApi from '../../../services/FileUpload.service';
 import { DepartmentApi, type Department } from '../../../services/Department.service';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import DeleteIcon from "@mui/icons-material/Delete";
 
 
 
 
-const carColumns: GridColDef[] = [
-    {
-        field: 'rownumb',
-        headerName: 'ลำดับ',
-        width: 80,
-        align: 'center',
-        headerAlign: 'center',
-        sortable: false,
-        filterable: false,
-        renderCell: (params) => {
-            const rowIndex = params.api.getRowIndexRelativeToVisibleRows(params.id);
-            const pagination = params.api.state.pagination.paginationModel;
-            return (
-                <span>
-                    {pagination.page * pagination.pageSize + rowIndex + 1}
-                </span>
-            );
-        },
-    },
-    {
-        field: 'plate', headerName: 'ทะเบียนรถ', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
-        renderCell: (params) => (
-            <div className='w-full h-full flex justify-center items-center'>
-                <Typography variant='body2'>{params.row.plate_prefix}{params.row.plate_number}</Typography>
-            </div>
-        )
-    },
-    { field: 'region_name_th', headerName: 'หมวดจังหวัด', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center', },
-    { field: 'vehicle_make', headerName: 'ยี่ห้อ', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
-    { field: 'vehicle_color_name_th', headerName: 'สี', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center', },
-];
 
 const PersonInfoForm = () => {
+    const { uid } = useParams<{ uid: string }>();
     const navigate = useNavigate();
     // state สำหรับ form
     const [form, setForm] = useState<MemberPayload>({
@@ -76,7 +47,7 @@ const PersonInfoForm = () => {
         image_url: "",
         member_status: "active",
         notes: "",
-        recorder_uid: "83f04e2b-09c8-40c2-83d2-cafb57742e21", // mock
+        creator_uid: "83f04e2b-09c8-40c2-83d2-cafb57742e21", // mock
         updater_uid: "83f04e2b-09c8-40c2-83d2-cafb57742e21", // mock
         member_group_id: 0,
         card_code: "",
@@ -85,7 +56,12 @@ const PersonInfoForm = () => {
         active: true,
         visible: true,
         deleted: false,
+        start_date: "",
+        end_date: "",
     });
+
+    // ✅ เช็คสถานะ terminate
+    const isTerminated = form.member_status === "terminate";
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     // --- table data ---
@@ -124,6 +100,26 @@ const PersonInfoForm = () => {
 
     const [departmentList, setDepartmentList] = useState<Department[]>([])
 
+
+    // 👉 โหลดข้อมูลถ้าเป็นโหมดแก้ไข
+    useEffect(() => {
+        if (uid) {
+            console.log(uid);
+            MemberApi.getById(uid).then((res) => {
+                if (res.success && res.data) {
+                    const person = res.data[0];
+                    setForm(person);
+
+                    // ✅ ถ้ามี image_url ให้โชว์ที่ preview
+                    if (person.image_url) {
+                        setSelectedImage(person.image_url);
+                    }
+                    setCarRows(person.vehicles)
+                }
+            });
+        }
+    }, [uid]);
+
     // เมื่อเปิด popup ให้ sync กับ carRows
     useEffect(() => {
         if (isCarPopupOpen) {
@@ -135,11 +131,10 @@ const PersonInfoForm = () => {
         const loadDepartments = async () => {
             try {
                 const res = await DepartmentApi.list(
-                    paginationModel.page + 1, // ✅ API ใช้ 1-based
-                    paginationModel.pageSize
+                    1,
+                    1000
                 );
                 setDepartmentList(res.data);
-                setRowCount(res.pagination?.countAll || 0); // ✅ สมมติ API ส่ง count กลับมา
             } catch (err) {
                 console.error(err);
             }
@@ -283,7 +278,10 @@ const PersonInfoForm = () => {
     const handleSave = async () => {
         dialog.loading();
         try {
-            if (!validateForm()) return; // ❌ ถ้าไม่ผ่าน หยุดเลย
+            if (!validateForm()) {
+                dialog.close()
+                return; // ❌ ถ้าไม่ผ่าน หยุดเลย
+            }
 
             // ✅ เตรียม vehicle_uid_list
             const vehicle_uid_list =
@@ -302,8 +300,10 @@ const PersonInfoForm = () => {
                 }
             }
 
-            const payload = {
+
+            const payload: MemberPayload = {
                 ...form,
+                uid: uid || form.uid, // ✅ กรณี update ต้องมี uid
                 image_url: imageUrl,
                 vehicle_uid_list,
                 creator_uid: '83f04e2b-09c8-40c2-83d2-cafb57742e21',
@@ -311,7 +311,15 @@ const PersonInfoForm = () => {
             };
 
             console.log("👉 payload", payload);
-            const res = await MemberApi.create(payload);
+            let res;
+            if (uid) {
+                // ✅ update mode → uid อยู่ใน payload
+                res = await MemberApi.update(payload);
+            } else {
+                // ✅ create mode
+                res = await MemberApi.create(payload);
+            }
+
 
             if (res.success) {
                 dialog.success("บันทึกข้อมูลสำเร็จ");
@@ -324,6 +332,90 @@ const PersonInfoForm = () => {
             dialog.error("ไม่สามารถบันทึกข้อมูลได้");
         }
     };
+
+    const handleTerminateMember = async (uid: string) => {
+        dialog.loading();
+        try {
+            if (!uid) return;
+            const res = await MemberApi.terminate(uid);
+            if (res.success) {
+                dialog.success("บันทึกข้อมูลสำเร็จ");
+
+                // ✅ reload ข้อมูลใหม่จาก API
+                const reload = await MemberApi.getById(uid);
+                if (reload.success && reload.data) {
+                    const person = reload.data[0];
+                    setForm(person);
+
+                    // ✅ update preview image
+                    if (person.image_url) {
+                        setSelectedImage(person.image_url);
+                    }
+                    // ✅ update รถ
+                    setCarRows(person.vehicles || []);
+                }
+            } else {
+                dialog.error(res.message || "เกิดข้อผิดพลาด");
+            }
+        } catch (err) {
+            console.error("Terminate error:", err);
+            dialog.close();
+        }
+    };
+
+    const handleRemoveCar = (uid: string) => {
+        setCarRows((prev) => prev.filter((c) => c.uid !== uid));
+    };
+
+    const carColumns: GridColDef[] = [
+        {
+            field: 'rownumb',
+            headerName: 'ลำดับ',
+            width: 80,
+            align: 'center',
+            headerAlign: 'center',
+            sortable: false,
+            filterable: false,
+            renderCell: (params) => {
+                const rowIndex = params.api.getRowIndexRelativeToVisibleRows(params.id);
+                const pagination = params.api.state.pagination.paginationModel;
+                return (
+                    <span>
+                        {pagination.page * pagination.pageSize + rowIndex + 1}
+                    </span>
+                );
+            },
+        },
+        {
+            field: 'plate', headerName: 'ทะเบียนรถ', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
+            renderCell: (params) => (
+                <div className='w-full h-full flex justify-center items-center'>
+                    <Typography variant='body2'>{params.row.plate_prefix}{params.row.plate_number}</Typography>
+                </div>
+            )
+        },
+        { field: 'region_name_th', headerName: 'หมวดจังหวัด', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center', },
+        { field: 'vehicle_make', headerName: 'ยี่ห้อ', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
+        { field: 'vehicle_color_name_th', headerName: 'สี', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center', },
+        {
+            field: 'action',
+            headerName: 'จัดการ',
+            width: 100,
+            headerAlign: 'center',
+            align: 'center',
+            sortable: false,
+            filterable: false,
+            renderCell: (params) => (
+                <IconButton
+                    color="error"
+                    size="small"
+                    onClick={() => handleRemoveCar(params.row.uid)}
+                >
+                    <DeleteIcon fontSize="small" />
+                </IconButton>
+            )
+        }
+    ];
 
 
     const popupCarColumns: GridColDef[] = [
@@ -391,7 +483,8 @@ const PersonInfoForm = () => {
 
                                 </div>
                                 <div className="mt-2 text-center">
-                                    <FormControlLabel control={<Checkbox />} label="Inactive" />
+                                    {/* <FormControlLabel control={<Checkbox />} label="Inactive" /> */}
+                                    <Typography>สถานะ : <span className={`${form.member_status != 'active' ? '!text-red-600s' : ''}`}>{form.member_status}</span></Typography>
                                 </div>
                             </div>
 
@@ -405,6 +498,7 @@ const PersonInfoForm = () => {
                                             value={form.title}
                                             onChange={(e) => handleChange("title", e.target.value)}
                                             error={!!errors.title}
+                                            disabled={isTerminated}
                                         >
                                             <MenuItem value=""><em>เลือกคำนำหน้า</em></MenuItem>
                                             {personTitles.map((t) => (
@@ -421,6 +515,7 @@ const PersonInfoForm = () => {
                                             onChange={(e) => handleChange("firstname", e.target.value)}
                                             error={!!errors.firstname}
                                             helperText={errors.firstname}
+                                            disabled={isTerminated}
                                         />
                                     </div>
                                     <div className="w-full sm:w-[35%] p-2">
@@ -430,6 +525,7 @@ const PersonInfoForm = () => {
                                             onChange={(e) => handleChange("lastname", e.target.value)}
                                             error={!!errors.lastname}
                                             helperText={errors.lastname}
+                                            disabled={isTerminated}
                                         />
                                     </div>
 
@@ -440,6 +536,7 @@ const PersonInfoForm = () => {
                                             value={form.gender}
                                             onChange={(e) => handleChange("gender", e.target.value)}
                                             error={!!errors.gender}
+                                            disabled={isTerminated}
                                         >
                                             <MenuItem value=""><em>เลือกเพศ</em></MenuItem>
                                             {genders.map((g) => (
@@ -456,6 +553,7 @@ const PersonInfoForm = () => {
                                             onChange={(e) => handleChange("idcard", e.target.value)}
                                             error={!!errors.idcard}
                                             helperText={errors.idcard}
+                                            disabled={isTerminated}
                                         />
                                     </div>
                                     <div className="w-full sm:w-[35%] p-2">
@@ -465,6 +563,7 @@ const PersonInfoForm = () => {
                                             onChange={(date) =>
                                                 handleChange("dob", date ? dayjs(date).format("YYYY-MM-DD") : "")
                                             }
+                                            disabled={isTerminated}
                                             slotProps={{
                                                 textField: {
                                                     error: !!errors.dob,
@@ -483,6 +582,7 @@ const PersonInfoForm = () => {
                                             error={!!errors.phone}
                                             helperText={errors.phone}
                                             inputProps={{ maxLength: 10 }} // ❌ กันเกิน 10 หลัก
+                                            disabled={isTerminated}
                                         />
                                     </div>
                                     {/* Email */}
@@ -493,6 +593,7 @@ const PersonInfoForm = () => {
                                             onChange={(e) => handleChange("email", e.target.value)}
                                             error={!!errors.email}
                                             helperText={errors.email}
+                                            disabled={isTerminated}
                                         />
                                     </div>
                                 </div>
@@ -508,6 +609,7 @@ const PersonInfoForm = () => {
                                             id: d.uid,           // ใช้ uid เก็บค่า
                                             label: d.dep_name,   // ใช้ชื่อหน่วยงานแสดงผล
                                         }))}
+                                        disabled={isTerminated}
                                         value={
                                             departmentList
                                                 .map(d => ({ id: d.uid, label: d.dep_name }))
@@ -531,6 +633,7 @@ const PersonInfoForm = () => {
                                     <TextField
                                         value={form.emp_card_id}
                                         onChange={(e) => handleChange("emp_card_id", e.target.value)}
+                                        disabled={isTerminated}
                                     />
                                 </div>
                             </div>
@@ -541,6 +644,7 @@ const PersonInfoForm = () => {
                                     rows={2}
                                     value={form.notes}
                                     onChange={(e) => handleChange("notes", e.target.value)}
+                                    disabled={isTerminated}
                                 />
                             </div>
                         </div>
@@ -582,6 +686,7 @@ const PersonInfoForm = () => {
                                 <Select
                                     value={form.member_group_id}
                                     onChange={(e) => handleChange("member_group_id", Number(e.target.value))}
+                                    disabled={isTerminated}
                                 >
                                     <MenuItem value={0}><em>ทุกประเภท</em></MenuItem>
                                     {memberGroups.map((mg) => (
@@ -593,11 +698,11 @@ const PersonInfoForm = () => {
                             </div>
                             <div className="w-full sm:w-1/2 p-2">
                                 <InputLabel shrink className='!text-white'>Card Code</InputLabel>
-                                <TextField disabled />
+                                <TextField disabled value={form.card_code} />
                             </div>
                             <div className="w-full sm:w-1/2 p-2">
                                 <InputLabel shrink className='!text-white'>Card Number (Hex)</InputLabel>
-                                <TextField disabled />
+                                <TextField disabled value={form.card_number} />
                             </div>
                             <div className="w-full sm:w-1/2 flex">
                                 <div className='w-1/2 p-2'>
@@ -607,6 +712,7 @@ const PersonInfoForm = () => {
                                         onChange={(date) =>
                                             handleChange("start_date", date ? dayjs(date).format("YYYY-MM-DD") : "")
                                         }
+                                        disabled={isTerminated}
                                         slotProps={{
                                             textField: {
                                                 error: !!errors.start_date,
@@ -622,6 +728,7 @@ const PersonInfoForm = () => {
                                         onChange={(date) =>
                                             handleChange("end_date", date ? dayjs(date).format("YYYY-MM-DD") : "")
                                         }
+                                        disabled={isTerminated}
                                         slotProps={{
                                             textField: {
                                                 error: !!errors.end_date,
@@ -631,14 +738,19 @@ const PersonInfoForm = () => {
                                     />
                                 </div>
                             </div>
-                            <div className="w-full flex gap-2 justify-end p-2 mt-auto">
-                                <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<EditSquareIcon fontWeight="small" />}>
-                                    เปลี่ยนบัตร
-                                </Button>
-                                <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<CancelOutlinedIcon fontWeight="small" />}>
-                                    ยกเลิกบัตร
-                                </Button>
-                            </div>
+                            {uid && <>
+                                <div className="w-full flex gap-2 justify-end p-2 mt-auto">
+                                    <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<EditSquareIcon fontWeight="small" />}>
+                                        เปลี่ยนบัตร
+                                    </Button>
+                                    <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<CancelOutlinedIcon fontWeight="small" />}
+                                        onClick={() => handleTerminateMember(uid)}
+                                    >
+                                        ยกเลิกบัตร
+                                    </Button>
+                                </div>
+                            </>
+                            }
                         </div>
 
                         <hr className='mt-2' />
@@ -648,7 +760,7 @@ const PersonInfoForm = () => {
                         <Box mt={3}>
                             <Box className=" flex flex-col gap-3 justify-start  mb-2">
                                 <Typography variant="h6">รายละเอียดรถ</Typography>
-                                <Button size="small" className='!bg-gold !text-primary w-[120px]' startIcon={<AddIcon />} onClick={handleOpenCarPopup}>เพิ่มรถ</Button>
+                                <Button size="small" className='!bg-gold !text-primary w-[120px]' disabled={isTerminated} startIcon={<AddIcon />} onClick={handleOpenCarPopup}>เพิ่มรถ</Button>
                             </Box>
                             <Box sx={{ height: '100%', width: '100%' }}>
                                 <DataTable
@@ -726,6 +838,7 @@ const PersonInfoForm = () => {
                                     <Select
                                         value={search.region_code || ""}
                                         onChange={(e) => setSearch({ ...search, region_code: e.target.value })}
+                                        disabled={isTerminated}
                                     >
                                         <MenuItem value=""><em>ทุกจังหวัด</em></MenuItem>
                                         {regions.map((r) => (
@@ -741,6 +854,7 @@ const PersonInfoForm = () => {
                                     <Select
                                         value={search.vehicle_make || ""}
                                         onChange={(e) => setSearch({ ...search, vehicle_make: e.target.value })}
+                                        disabled={isTerminated}
                                     >
                                         <MenuItem value=""><em>ทุกยี่ห้อ</em></MenuItem>
                                         {vehicleMakes.map((m) => (
@@ -756,6 +870,7 @@ const PersonInfoForm = () => {
                                     <Select
                                         value={search.vehicle_color_id || ""}
                                         onChange={(e) => setSearch({ ...search, vehicle_color_id: Number(e.target.value) })}
+                                        disabled={isTerminated}
                                     >
                                         <MenuItem value=""><em>ทุกสี</em></MenuItem>
                                         {vehicleColors.map((c) => (

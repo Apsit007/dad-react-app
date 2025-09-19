@@ -1,6 +1,7 @@
 // src/services/Member.service.ts
 import type { ApiResponse } from "./ApiResponse";
 import http from "./http";
+import type { Vehicle } from "./VehicleApi.service";
 
 // ✅ payload ตอน create/update
 export interface MemberPayload {
@@ -36,6 +37,7 @@ export interface Member extends MemberPayload {
     uid: string;
     // 👉 ถ้ามี relation object เพิ่มตรงนี้
     // member_group?: MemberGroup
+    vehicles: Vehicle[];
 }
 
 // ✅ filter สำหรับ list
@@ -66,9 +68,9 @@ export const MemberApi = {
     },
 
     // 👉 Get by id
-    getById: async (uid: string): Promise<ApiResponse<Member>> => {
-        const url = `/smartgate-api/v0/members/${uid}`;
-        const res = await http.get<ApiResponse<Member>>(url);
+    getById: async (uid: string): Promise<ApiResponse<Member[]>> => {
+        const url = `/smartgate-api/v0/members/get?filter=uid%3D${uid}`;
+        const res = await http.get<ApiResponse<Member[]>>(url);
         return res.data;
     },
 
@@ -106,7 +108,9 @@ export const MemberApi = {
                     })
                     .join("&&");
 
-                params.set("filter", filterStr);
+                params.set("filter", `${filterStr}&&deleted=false`);
+            } else {
+                params.set("filter", `deleted=false`);
             }
         }
 
@@ -119,6 +123,11 @@ export const MemberApi = {
     delete: async (uid: string): Promise<ApiResponse<null>> => {
         const url = `/smartgate-api/v0/members/delete?uids=${uid}`;
         const res = await http.delete<ApiResponse<null>>(url);
+        return res.data;
+    },
+    terminate: async (uid: string): Promise<ApiResponse<null>> => {
+        const url = `/smartgate-api/v0/members/terminate?uids=${uid}`;
+        const res = await http.post<ApiResponse<null>>(url);
         return res.data;
     },
 };

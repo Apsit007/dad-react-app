@@ -77,6 +77,10 @@ const router = createBrowserRouter([
         element: <PersonInfoList />,
       },
       {
+        path: "info/person/form/:uid",
+        element: <PersonInfoForm />,
+      },
+      {
         path: "info/person/form",
         element: <PersonInfoForm />,
       },

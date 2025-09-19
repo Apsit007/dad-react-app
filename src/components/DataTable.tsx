@@ -59,6 +59,16 @@ const CustomDataGrid = (props: DataGridProps) => {
                     '&& .highlight-row': {
                         bgcolor: 'rgba(255, 0, 0, 0.08) !important',
                     },
+                    '&& .expirewarning-row': {
+                        bgcolor: 'rgba(247, 223, 6, 0.08) !important',
+                    },
+                    '&& .expired-row': {
+                        bgcolor: 'rgba(255, 115, 0, 0.08) !important',
+                    },
+                    '&& .terminated-row': {
+                        bgcolor: 'rgba(255, 0, 0, 0.08) !important',
+                    },
+                   
                     flex: 1,
                     ...props.sx,
                 }}
