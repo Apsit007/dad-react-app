@@ -61,7 +61,7 @@ const PersonInfoForm = () => {
     });
 
     // ✅ เช็คสถานะ terminate
-    const isTerminated = form.member_status === "terminate";
+    const isTerminated = form.member_status === "terminated";
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     // --- table data ---
@@ -332,6 +332,9 @@ const PersonInfoForm = () => {
             dialog.error("ไม่สามารถบันทึกข้อมูลได้");
         }
     };
+    const handleBlackBtn = () => {
+        navigate("/info/person");
+    }
 
     const handleTerminateMember = async (uid: string) => {
         dialog.loading();
@@ -410,6 +413,7 @@ const PersonInfoForm = () => {
                     color="error"
                     size="small"
                     onClick={() => handleRemoveCar(params.row.uid)}
+                    disabled={isTerminated}
                 >
                     <DeleteIcon fontSize="small" />
                 </IconButton>
@@ -458,7 +462,7 @@ const PersonInfoForm = () => {
                             {/* Avatar */}
                             <div className="w-full md:w-1/3 p-2">
                                 <div className='relative'>
-                                    <input ref={fileInputRef} type='file' accept='image/png,image/jpeg' className='hidden' onChange={handleFileChange} />
+                                    <input ref={fileInputRef} type='file' accept='image/png,image/jpeg' className='hidden' onChange={handleFileChange} disabled={isTerminated} />
                                     <Box sx={{ position: 'relative', width: 220, height: 220 }} className='rounded-full border-[8px] border-gold' style={{ borderColor: '#E7B13A' }}>
                                         {selectedImage ? (
                                             <Avatar
@@ -740,10 +744,10 @@ const PersonInfoForm = () => {
                             </div>
                             {uid && <>
                                 <div className="w-full flex gap-2 justify-end p-2 mt-auto">
-                                    <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<EditSquareIcon fontWeight="small" />}>
+                                    <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<EditSquareIcon fontWeight="small" />} disabled={isTerminated}>
                                         เปลี่ยนบัตร
                                     </Button>
-                                    <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<CancelOutlinedIcon fontWeight="small" />}
+                                    <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<CancelOutlinedIcon fontWeight="small" />} disabled={isTerminated}
                                         onClick={() => handleTerminateMember(uid)}
                                     >
                                         ยกเลิกบัตร
@@ -793,8 +797,8 @@ const PersonInfoForm = () => {
             {/* Bottom Action Buttons */}
 
             <div className="w-full flex justify-end gap-2 mt-6">
-                <Button variant="outlined" className='!border-primary !bg-white !text-primary' startIcon={<CloseIcon />}>ยกเลิก</Button>
-                <Button variant="contained" startIcon={<SaveIcon />} className="!bg-primary hover:!bg-primary-dark" onClick={() => handleSave()} >บันทึก</Button>
+                <Button variant="outlined" className='!border-primary !bg-white !text-primary' startIcon={<CloseIcon />} onClick={handleBlackBtn}>ยกเลิก</Button>
+                <Button variant="contained" startIcon={<SaveIcon />} className="!bg-primary hover:!bg-primary-dark" onClick={() => handleSave()} disabled={isTerminated}>บันทึก</Button>
             </div>
 
             <Popup
@@ -915,7 +919,7 @@ const PersonInfoForm = () => {
                     />
                 </Box>
                 <div className="w-full flex justify-end gap-2 mt-6">
-                    <Button variant="outlined" className='!border-primary !bg-white !text-primary' startIcon={<CloseIcon />} onClick={navigate("/info/person")}>ยกเลิก</Button>
+                    <Button variant="outlined" className='!border-primary !bg-white !text-primary' startIcon={<CloseIcon />} onClick={handleCloseCarPopup}>ยกเลิก</Button>
                     <Button variant="contained" startIcon={<CheckCircleOutlinedIcon fontWeight="small" />} className="!bg-primary hover:!bg-primary-dark" onClick={handleConfirmCars} >เลือก</Button>
                 </div>
             </Popup>

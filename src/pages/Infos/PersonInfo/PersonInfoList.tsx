@@ -19,6 +19,9 @@ import dayjs from 'dayjs';
 import { DepartmentApi, type Department } from '../../../services/Department.service';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import dialog from '../../../services/dialog.service';
+import Popup from '../../../components/Popup';
+import ManageSearchIcon from "@mui/icons-material/ManageSearch"
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined"
 
 
 const memberStatusList = [
@@ -34,6 +37,7 @@ const PersonInfoList = () => {
 
     // ✅ State
     const [rows, setRows] = useState<Member[]>([]);
+    const [historyRows, setHistoryRows] = useState<Member[]>([]);
     const [rowCount, setRowCount] = useState(0);
     const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
         page: 0,
@@ -51,6 +55,9 @@ const PersonInfoList = () => {
     const [createdEnd, setCreatedEnd] = useState<Dayjs | null>(null);
 
     const [departmentList, setDepartmentList] = useState<Department[]>([])
+
+    //popup 
+    const [historyPopupOpen, setHistoryPopupOpen] = useState(false);
 
     useEffect(() => {
         const loadDepartments = async () => {
@@ -143,6 +150,85 @@ const PersonInfoList = () => {
                         <EditIcon fontSize="small" />
                     </IconButton>
                     <IconButton size="small" onClick={() => handleDelete(params.row.uid)} disabled={params.row.member_status === 'active'}><DeleteIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" onClick={() => onOpenHistory(params.row.idcard)} ><ManageSearchIcon fontWeight="small" /></IconButton>
+                </div>
+            )
+        },
+        {
+            field: 'rownumb',
+            headerName: 'ลำดับ',
+            width: 80,
+            align: 'center',
+            headerAlign: 'center',
+            sortable: false,
+            filterable: false,
+            renderCell: (params) => {
+                const rowIndex = params.api.getRowIndexRelativeToVisibleRows(params.id);
+                const pagination = params.api.state.pagination.paginationModel;
+                return (
+                    <span>
+                        {pagination.page * pagination.pageSize + rowIndex + 1}
+                    </span>
+                );
+            },
+        },
+        { field: 'card_number', headerName: 'Card Number (Hex)', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
+        { field: 'card_code', headerName: 'Card Code', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
+        {
+            field: 'image_url', headerName: 'ภาพใบหน้า', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center', sortable: false,
+            renderCell: (params) => (
+                <div className='w-full h-full flex justify-center items-center'>
+                    <Avatar variant='square' src={params.value} className=' !h-[70%] !w-[70%]' />
+                </div>
+            )
+        },
+        {
+            field: 'fullname', headerName: 'ชื่อ-นามสกุล', flex: 1.5, minWidth: 200, headerAlign: 'center',
+            renderCell: (params) => `${params.row.firstname || ''} ${params.row.lastname || ''}`
+        },
+        { field: 'idcard', headerName: 'เลขบัตรประชาชน', flex: 1.5, minWidth: 200, headerAlign: 'center' },
+        { field: 'dep_name', headerName: 'หน่วยงาน', flex: 1.5, minWidth: 250, headerAlign: 'center' },
+        { field: 'member_status', headerName: 'สถานะ', flex: 1.5, minWidth: 250, headerAlign: 'center' },
+        {
+            field: 'created_at',
+            headerName: 'วันที่สร้าง',
+            flex: 1,
+            minWidth: 150,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params) =>
+                params.value ? dayjs(params.value).format("DD/MM/YYYY") : ""
+        },
+        {
+            field: 'end_date',
+            headerName: 'วันที่สิ้นสุด',
+            flex: 1,
+            minWidth: 150,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params) =>
+                params.value ? dayjs(params.value).format("DD/MM/YYYY") : ""
+        },
+        {
+            field: 'member_group_name_en', headerName: 'ประเภทบุคคล', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
+            renderCell: (params) => (
+                <div className='w-full h-full flex justify-center items-center'>
+                    <ChipTag tag={params.value} />
+                </div>
+            )
+        },
+
+    ];
+
+    const historycolumns: GridColDef[] = [
+        {
+            field: 'actions', headerName: '', width: 100, sortable: false, align: 'center',
+            renderCell: (params) => (
+                <div className='flex w-full h-full items-center justify-center gap-1'>
+                    <IconButton size="small" component={NavLink} to={`/info/person/form/${params.row.uid}`}>
+                        <VisibilityOutlinedIcon fontWeight="small" />
+                    </IconButton>
+
                 </div>
             )
         },
@@ -232,113 +318,151 @@ const PersonInfoList = () => {
         return "";
     };
 
+    const onOpenHistory = async (idcard: string) => {
+        try {
+            const res = await MemberApi.getByIdCard(idcard)
+            if (res.success) {
+                setHistoryRows(res.data || []);
+
+            } else {
+                setHistoryRows([]);
+            }
+            setHistoryPopupOpen(true);
+        } catch (err) {
+            console.error("❌ Load members error:", err);
+        }
+    }
+
+    const handleClosehistoryPopup = () => {
+        setHistoryPopupOpen(false);
+        setHistoryRows([]);
+    }
 
     return (
-        <Box>
-            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
-                ข้อมูลบุคคล
-            </Typography>
+        <>
+            <Box>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
+                    ข้อมูลบุคคล
+                </Typography>
 
-            <Accordion defaultExpanded>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography>Search</Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ bgcolor: 'white' }}>
-                    <div className="flex flex-col gap-4">
-                        <div className="flex flex-wrap -m-2">
-                            <div className="w-full sm:w-1/2 md:w-1/4 p-2">
-                                <InputLabel shrink>ชื่อ</InputLabel>
-                                <TextField value={firstname} onChange={(e) => setFirstname(e.target.value)} placeholder="ชื่อ" />
-                            </div>
-                            <div className="w-full sm:w-1/2 md:w-1/4 p-2">
-                                <InputLabel shrink>นามสกุล</InputLabel>
-                                <TextField value={lastname} onChange={(e) => setLastname(e.target.value)} placeholder="นามสกุล" />
-                            </div>
-                            <div className="w-full sm:w-1/2 md:w-1/4 p-2">
-                                <InputLabel shrink>หน่วยงาน</InputLabel>
-                                <Autocomplete
-                                    options={departmentList}
-                                    getOptionLabel={(option) => option.dep_name}
-                                    value={departmentList.find((d) => d.uid === dep) || null}
-                                    onChange={(_, newValue) => setDep(newValue ? newValue.uid : null)}
-                                    renderInput={(params) => (
-                                        <TextField {...params} placeholder="เลือกหน่วยงาน" />
-                                    )}
-                                />
-                            </div>
-                            <div className="w-full sm:w-1/2 md:w-1/4 p-2">
-                                <InputLabel shrink>ประเภทบุคคล</InputLabel>
-                                <Select value={memberGroupId} onChange={(e) => setMemberGroupId(Number(e.target.value))}>
-                                    <MenuItem value="">
-                                        <em>ทุกประเภท</em>
-                                    </MenuItem>
-                                    {memberGroups.map((g) => (
-                                        <MenuItem key={g.id} value={g.id}>
-                                            {g.name_th}
+                <Accordion defaultExpanded>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                        <Typography>Search</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ bgcolor: 'white' }}>
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-wrap -m-2">
+                                <div className="w-full sm:w-1/2 md:w-1/4 p-2">
+                                    <InputLabel shrink>ชื่อ</InputLabel>
+                                    <TextField value={firstname} onChange={(e) => setFirstname(e.target.value)} placeholder="ชื่อ" />
+                                </div>
+                                <div className="w-full sm:w-1/2 md:w-1/4 p-2">
+                                    <InputLabel shrink>นามสกุล</InputLabel>
+                                    <TextField value={lastname} onChange={(e) => setLastname(e.target.value)} placeholder="นามสกุล" />
+                                </div>
+                                <div className="w-full sm:w-1/2 md:w-1/4 p-2">
+                                    <InputLabel shrink>หน่วยงาน</InputLabel>
+                                    <Autocomplete
+                                        options={departmentList}
+                                        getOptionLabel={(option) => option.dep_name}
+                                        value={departmentList.find((d) => d.uid === dep) || null}
+                                        onChange={(_, newValue) => setDep(newValue ? newValue.uid : null)}
+                                        renderInput={(params) => (
+                                            <TextField {...params} placeholder="เลือกหน่วยงาน" />
+                                        )}
+                                    />
+                                </div>
+                                <div className="w-full sm:w-1/2 md:w-1/4 p-2">
+                                    <InputLabel shrink>ประเภทบุคคล</InputLabel>
+                                    <Select value={memberGroupId} onChange={(e) => setMemberGroupId(Number(e.target.value))}>
+                                        <MenuItem value="">
+                                            <em>ทุกประเภท</em>
                                         </MenuItem>
-                                    ))}
-                                </Select>
-                            </div>
-                            <div className="w-full sm:w-1/2 md:w-1/4 p-2">
-                                <InputLabel shrink>วันที่สร้างข้อมูล (เริ่มต้น)</InputLabel>
-                                <DatePicker value={createdStart} onChange={(val) => setCreatedStart(val)} />
-                            </div>
-                            <div className="w-full sm:w-1/2 md:w-1/4 p-2">
-                                <InputLabel shrink>วันที่สร้างข้อมูล (สิ้นสุด)</InputLabel>
-                                <DatePicker value={createdEnd} onChange={(val) => setCreatedEnd(val)} />
-                            </div>
-                            <div className="w-full sm:w-1/2 md:w-1/4 p-2">
-                                <InputLabel shrink>สถานะ</InputLabel>
-                                <Select value={status} onChange={(e) => setStatus(e.target.value)}>
-                                    <MenuItem value="">
-                                        <em>ทุกสถานะ</em>
-                                    </MenuItem>
-                                    {memberStatusList.map((g) => (
-                                        <MenuItem key={g.id} value={g.status}>
-                                            {g.status}
+                                        {memberGroups.map((g) => (
+                                            <MenuItem key={g.id} value={g.id}>
+                                                {g.name_th}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </div>
+                                <div className="w-full sm:w-1/2 md:w-1/4 p-2">
+                                    <InputLabel shrink>วันที่สร้างข้อมูล (เริ่มต้น)</InputLabel>
+                                    <DatePicker value={createdStart} onChange={(val) => setCreatedStart(val)} />
+                                </div>
+                                <div className="w-full sm:w-1/2 md:w-1/4 p-2">
+                                    <InputLabel shrink>วันที่สร้างข้อมูล (สิ้นสุด)</InputLabel>
+                                    <DatePicker value={createdEnd} onChange={(val) => setCreatedEnd(val)} />
+                                </div>
+                                <div className="w-full sm:w-1/2 md:w-1/4 p-2">
+                                    <InputLabel shrink>สถานะ</InputLabel>
+                                    <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+                                        <MenuItem value="">
+                                            <em>ทุกสถานะ</em>
                                         </MenuItem>
-                                    ))}
-                                </Select>
+                                        {memberStatusList.map((g) => (
+                                            <MenuItem key={g.id} value={g.status}>
+                                                {g.status}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="w-full flex justify-end p-2 gap-2">
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<CancelOutlinedIcon />}
+                                    className="!border-gray-400 !text-gray-600 hover:!bg-gray-100"
+                                    onClick={handleClear}
+                                >
+                                    Clear
+                                </Button>
+                                <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark' onClick={handleSearch}>
+                                    ค้นหา
+                                </Button>
                             </div>
                         </div>
-                        <div className="w-full flex justify-end p-2 gap-2">
-                            <Button
-                                variant="outlined"
-                                startIcon={<CancelOutlinedIcon />}
-                                className="!border-gray-400 !text-gray-600 hover:!bg-gray-100"
-                                onClick={handleClear}
-                            >
-                                Clear
-                            </Button>
-                            <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark' onClick={handleSearch}>
-                                ค้นหา
-                            </Button>
-                        </div>
-                    </div>
-                </AccordionDetails>
-            </Accordion>
+                    </AccordionDetails>
+                </Accordion>
 
-            <Stack direction="row" spacing={1} sx={{ my: 2 }}>
-                <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => navigate('/info/person/form')} className='!bg-gold hover:!bg-gold-dark'>บุคคล</Button>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/txt-file.png' />}>TXT</Button>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/xls-file.png' />}>XLS</Button>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/csv-file.png' />}>CSV</Button>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/pdf-file.png' />}>PDF</Button>
-                <Box sx={{ flexGrow: 1 }} />
-                <Typography variant="body2" sx={{ alignSelf: 'center' }}>ผลการค้นหา : {rowCount} รายการ</Typography>
-            </Stack>
+                <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+                    <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => navigate('/info/person/form')} className='!bg-gold hover:!bg-gold-dark'>บุคคล</Button>
+                    <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/txt-file.png' />}>TXT</Button>
+                    <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/xls-file.png' />}>XLS</Button>
+                    <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/csv-file.png' />}>CSV</Button>
+                    <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/pdf-file.png' />}>PDF</Button>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <Typography variant="body2" sx={{ alignSelf: 'center' }}>ผลการค้นหา : {rowCount} รายการ</Typography>
+                </Stack>
 
-            <DataTable
-                rows={rows}
-                columns={columns}
-                paginationModel={paginationModel}
-                rowCount={rowCount}
-                onPaginationModelChange={handlePageChange}
-                getRowId={(row) => row.uid}
-                getRowClassName={getRowClassName}
-            />
-        </Box>
+                <DataTable
+                    rows={rows}
+                    columns={columns}
+                    paginationModel={paginationModel}
+                    rowCount={rowCount}
+                    onPaginationModelChange={handlePageChange}
+                    getRowId={(row) => row.uid}
+                    getRowClassName={getRowClassName}
+                />
+            </Box>
+
+            <Popup
+                title="ประวัติผู้ใช้งาน"
+                show={historyPopupOpen}
+                onClose={handleClosehistoryPopup}
+            >
+                <Box sx={{ height: 400, width: '100%', marginTop: 3 }}>
+                    <DataTable
+                        getRowId={(row) => row.uid}
+                        columns={historycolumns}
+                        rows={historyRows}
+                        paginationMode="server"
+                        paginationModel={paginationModel}
+                        rowCount={rowCount}
+                    />
+                </Box>
+            </Popup>
+        </>
     );
 };
 

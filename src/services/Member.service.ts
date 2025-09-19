@@ -69,7 +69,14 @@ export const MemberApi = {
 
     // 👉 Get by id
     getById: async (uid: string): Promise<ApiResponse<Member[]>> => {
-        const url = `/smartgate-api/v0/members/get?filter=uid%3D${uid}`;
+        const url = `/smartgate-api/v0/members/get?last_only=true&filter=uid%3D${uid}`;
+        const res = await http.get<ApiResponse<Member[]>>(url);
+        return res.data;
+    },
+
+    // 👉 Get history by idcard
+    getByIdCard: async (idcard: string): Promise<ApiResponse<Member[]>> => {
+        const url = `/smartgate-api/v0/members/get?last_only=false&filter=idcard%3D${idcard}%26%26member_status%3Dterminated&orderBy=end_date.desc`;
         const res = await http.get<ApiResponse<Member[]>>(url);
         return res.data;
     },
@@ -85,6 +92,7 @@ export const MemberApi = {
         params.set("orderBy", orderBy);
         params.set("limit", String(limit));
         params.set("page", String(page));
+        params.set("last_only", String(true));
 
         if (filter) {
             const clean: Record<string, any> = {};
