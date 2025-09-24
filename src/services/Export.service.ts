@@ -246,7 +246,7 @@ const exportPdf = async (
           text: String(r[f] ?? ""),
           style: "tableBody",
           noWrap: false, // ✅ ให้ตัดบรรทัดได้
-          alignment: "left",
+          alignment: "center",
         };
       })
     );

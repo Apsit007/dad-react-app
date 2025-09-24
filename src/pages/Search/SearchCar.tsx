@@ -15,6 +15,7 @@ import { LprDataApi, type LprRecord } from '../../services/LprData.service';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import dayjs from 'dayjs';
+import { exportData } from '../../services/Export.service';
 // --- 1. อัปเดต Columns ของตาราง ---
 const columns: GridColDef[] = [
     {
@@ -122,6 +123,42 @@ const columns: GridColDef[] = [
     },
 ];
 
+const columnsExport = [
+
+    {
+        field: 'overview_image_url',
+        headerName: 'ภาพรถ',
+        width: 80,
+    },
+    {
+        field: 'driver_image_url',
+        headerName: 'ภาพคนขับ',
+        width: 80,
+    },
+    {
+        field: 'licensePlate',
+        headerName: 'เลขทะเบียน',
+
+    },
+    { field: 'vehicle_make', headerName: 'ยี่ห้อ' },
+    { field: 'vehicle_color_th', headerName: 'สี' },
+    {
+        field: 'name',
+        headerName: 'ชื่อ-นามสกุล',
+
+
+    },
+    {
+        field: 'department_name', headerName: 'หน่วยงาน', headerAlign: 'center',
+    },
+    {
+        field: 'datetime_in', headerName: 'วันเวลาเข้า'
+    },
+    {
+        field: 'datetime_out', headerName: 'เวลาออก'
+    },
+];
+
 const searchType = [
     { id: 1, value: "in", label: "เวลาเข้า" },
     { id: 2, value: "out", label: "เวลาออก" },
@@ -172,6 +209,7 @@ const SearchCar = () => {
                 vehicle_make: sVehicleMake || undefined,
                 vehicle_color: sVehicleColor || undefined,
                 direction: sDirection || undefined,
+                vehicle_group_id: sVehicleGroupId || undefined,
                 start_date: sStartDate ? sStartDate.startOf('day').toISOString() : undefined,
                 end_date: sEndDate ? sEndDate.endOf('day').toISOString() : undefined,
                 page: page + 1, // API นับจาก 1
@@ -355,9 +393,53 @@ const SearchCar = () => {
             </Accordion>
 
             <Stack direction="row" spacing={1} sx={{ my: 2 }}>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/txt-file.png' />}>TXT</Button>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/xls-file.png' />}>XLS</Button>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/csv-file.png' />}>CSV</Button>
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/txt-file.png" />}
+                    onClick={() => exportData(rows, "txt", "car_in/out_list")}
+                >
+                    TXT
+                </Button>
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/xls-file.png" />}
+                    onClick={() => exportData(rows, "xlsx", "car_in/out_list")}
+                >
+                    XLS
+                </Button>
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/csv-file.png" />}
+                    onClick={() => exportData(rows, "csv", "car_in/out_list")}
+                >
+                    CSV
+                </Button>
+                <Button
+                    variant="outlined"
+                    className='!border-gold !text-primary'
+                    size="small"
+                    startIcon={<img src='/icons/pdf-file.png' />}
+                    onClick={() => {
+                        // 👉 process rows ก่อน export
+                        const processedRows = rows.map((r, i) => ({
+                            ...r,
+                            licensePlate: `${r.plate || ""} ${r.region_th || ""}`,
+                            name: `${r.member_firstname || ""} ${r.member_lastname || ""}`,
+                            datetime_out: r.datetime_out ? dayjs(r.datetime_out).format("DD/MM/YYYY HH:mm:ss") : "",
+                            datetime_in: r.datetime_in ? dayjs(r.datetime_in).format("DD/MM/YYYY HH:mm:ss") : "",
+                        }));
+
+                        exportData(processedRows, "pdf", "car_in/out_list", columnsExport);
+                    }}
+                >
+                    PDF
+                </Button>
                 <Box sx={{ flexGrow: 1 }} />
                 <Typography variant="body2" sx={{ alignSelf: 'center' }}>
                     ผลการค้นหา : {rowCount} รายการ

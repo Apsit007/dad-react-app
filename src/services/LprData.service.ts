@@ -49,6 +49,8 @@ export interface LprRecord {
     department_name: string;
     member_expire: string;
     driver_image_url: string;
+    datetime_in: string;
+    datetime_out: string;
 
 }
 
@@ -87,6 +89,7 @@ export const LprDataApi = {
         vehicle_make?: string;
         vehicle_color?: string;
         vehicle_body_type?: string;
+        vehicle_group_id?: number;
         direction?: string;
         start_date?: string;
         end_date?: string;
