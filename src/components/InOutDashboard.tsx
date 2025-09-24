@@ -1,21 +1,62 @@
 // src/components/InOutDashboard.tsx
 import { Paper, Typography, Box, Divider } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { LprDataApi, type LprStat } from '../services/LprData.service';
 
-// ... (ส่วน data structure เหมือนเดิม)
-const summaryData = {
-    totalInOut: { in: 500, out: 330 },
-    stillInside: 170,
+
+
+type InOutDashboardProps = {
+    refreshKey: number;
 };
 
-const categoryData = [
-    { title: 'Member', in: 220, out: 180, inLabel: "จำนวนรถ Member", outLabel: "จำนวนบุคคล Member" },
-    { title: 'Visitor', in: 120, out: 100, inLabel: "จำนวนรถ Visitor", outLabel: "จำนวนบุคคล Visitor" },
-    { title: 'VIP', in: 30, out: 45, inLabel: "จำนวนรถ VIP", outLabel: "จำนวนบุคคล VIP" },
-    { title: 'Blacklist', in: 120, out: 100, inLabel: "จำนวนรถ Blacklist", outLabel: "จำนวนบุคคล Blacklist" },
-];
 
 
-const InOutDashboard = () => {
+const InOutDashboard = ({ refreshKey }: InOutDashboardProps) => {
+
+    const [stats, setStats] = useState<LprStat[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchData = async () => {
+        try {
+            const res = await LprDataApi.getStats();
+            setStats(res.data.stats);
+        } catch (err) {
+            console.error("❌ Failed to fetch LPR stats", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
+    useEffect(() => {
+        fetchData();
+    }, [refreshKey]);
+
+    if (loading) {
+        return <Typography className="p-4">Loading...</Typography>;
+    }
+
+    // ✅ ดึง All Groups มาใช้เป็น summary
+    const allGroup = stats.find((s) => s.vehicle_group_id === -1);
+    const summaryData = {
+        totalInOut: {
+            in: allGroup?.total_in ?? 0,
+            out: allGroup?.total_out ?? 0,
+        },
+        stillInside: allGroup?.remains ?? 0,
+    };
+
+    // ✅ กรองกลุ่มย่อย (ไม่เอา All Groups และ No Group)
+    const categoryData = stats.filter(
+        (s) => s.vehicle_group_id !== -1 && s.vehicle_group_name !== "No Group"
+    ).map((s) => ({
+        title: s.vehicle_group_name,
+        in: s.total_in,
+        out: s.total_out,
+        inLabel: `จำนวนรถ ${s.vehicle_group_name}`,
+        outLabel: `จำนวนบุคคล ${s.vehicle_group_name}`,
+    }));
     return (
         <Box className="w-80 flex-shrink-0 h-full flex flex-col">
             {/* ✨ 1. เปลี่ยน div ครอบการ์ดให้เป็น flex container แนวตั้ง */}

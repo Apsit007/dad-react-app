@@ -20,6 +20,11 @@
       "react",
       "react-dom"
     ] // 👈 บอกให้โหลด type definitions
+    ,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
   },
   "files": [],
   "references": [

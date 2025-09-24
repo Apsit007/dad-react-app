@@ -30,6 +30,7 @@ export interface MemberPayload {
     updater_uid: string;
     start_date: string;
     end_date: string;
+    created_at: string;
 }
 
 // ✅ data object ของ Member
