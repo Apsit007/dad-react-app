@@ -16,6 +16,7 @@ import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import dialog from '../../../services/dialog.service';
 import Popup from '../../../components/Popup';
 import { useSelector } from 'react-redux';
+import type { RootState } from '../../../store';
 import { selectGenders, selectMemberGroups, selectPersonTitles, selectRegions, selectVehicleColors, selectVehicleMakes } from '../../../store/slices/masterdataSlice';
 import { MemberApi, type MemberPayload } from '../../../services/Member.service';
 import dayjs from 'dayjs';
@@ -32,6 +33,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 const PersonInfoForm = () => {
     const { uid } = useParams<{ uid: string }>();
     const navigate = useNavigate();
+    const authUid = useSelector((state: RootState) => state.auth.user.uid);
+    const currentUid = authUid ?? '';
     // state สำหรับ form
     const [form, setForm] = useState<MemberPayload>({
         title: "",
@@ -47,8 +50,8 @@ const PersonInfoForm = () => {
         image_url: "",
         member_status: "active",
         notes: "",
-        creator_uid: "83f04e2b-09c8-40c2-83d2-cafb57742e21", // mock
-        updater_uid: "83f04e2b-09c8-40c2-83d2-cafb57742e21", // mock
+        creator_uid: currentUid,
+        updater_uid: currentUid,
         member_group_id: 0,
         card_code: "",
         card_number: "",
@@ -306,8 +309,8 @@ const PersonInfoForm = () => {
                 uid: uid || form.uid, // ✅ กรณี update ต้องมี uid
                 image_url: imageUrl,
                 vehicle_uid_list,
-                creator_uid: '83f04e2b-09c8-40c2-83d2-cafb57742e21',
-                updater_uid: '83f04e2b-09c8-40c2-83d2-cafb57742e21',
+                creator_uid: form.creator_uid || currentUid,
+                updater_uid: currentUid,
             };
 
             console.log("👉 payload", payload);

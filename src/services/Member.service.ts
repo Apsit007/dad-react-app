@@ -30,7 +30,7 @@ export interface MemberPayload {
     updater_uid: string;
     start_date: string;
     end_date: string;
-    created_at: string;
+
 }
 
 // ✅ data object ของ Member
@@ -38,6 +38,7 @@ export interface Member extends MemberPayload {
     uid: string;
     // 👉 ถ้ามี relation object เพิ่มตรงนี้
     // member_group?: MemberGroup
+    created_at: string;
     vehicles: Vehicle[];
 }
 

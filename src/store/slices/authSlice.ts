@@ -7,10 +7,18 @@ interface AuthState {
     loading: boolean;
     error: string | null;
     user: {
+        uid: string | null;
         username: string | null;
+        firstname: string | null;
+        lastname: string | null;
         email: string | null;
+        imaage_url: string | null;
+        // permissions: Permissions;
     };
 }
+
+
+
 
 // ✅ โหลด token จาก localStorage ทันที
 const tokenFromStorage = localStorage.getItem('accessToken');
@@ -20,8 +28,12 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     user: {
+        uid: null,
         username: null,
+        firstname: null,
+        lastname: null,
         email: null,
+        imaage_url: null,
     },
 };
 
@@ -50,7 +62,14 @@ const authSlice = createSlice({
     reducers: {
         logout: (state) => {
             state.accessToken = null;
-            state.user = { username: null, email: null };
+            state.user = {
+                uid: null,
+                username: null,
+                firstname: null,
+                lastname: null,
+                email: null,
+                imaage_url: null,
+            };
             localStorage.removeItem('accessToken');
         },
     },
@@ -64,8 +83,12 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.accessToken = action.payload.accessToken;
                 state.user = {
-                    username: action.payload.username ?? 'demo',
+                    uid: action.payload.uid ?? '',
+                    username: action.payload.username ?? '',
                     email: action.payload.email ?? '',
+                    firstname: action.payload.firstname ?? '',
+                    lastname: action.payload.lastname ?? '',
+                    imaage_url: action.payload.imaage_url ?? '',
                 };
                 // ✅ เก็บ token ลง localStorage
                 localStorage.setItem('accessToken', action.payload.accessToken);

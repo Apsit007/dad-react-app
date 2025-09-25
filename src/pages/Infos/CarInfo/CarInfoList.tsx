@@ -27,23 +27,11 @@ import dayjs, { Dayjs } from 'dayjs';
 import type { Vehicle, VehicleListFilter, VehiclePayload } from '../../../services/VehicleApi.service';
 import { exportData } from '../../../services/Export.service';
 import { useSelector } from 'react-redux';
+import type { RootState } from '../../../store';
 
 
 
-// --- Mock Data ---
-// const rows = [
-//     { id: 1, plate: 'กง 6677', province: 'กรุงเทพมหานคร', brand: 'Nissan', model: 'Almera', color: 'น้ำเงิน', createDate: '10/10/2568', carGroup: 'Visitor' },
-//     { id: 2, plate: 'กง 6677', province: 'กรุงเทพมหานคร', brand: 'Nissan', model: 'Almera', color: 'น้ำเงิน', createDate: '10/10/2568', carGroup: 'Member' },
-//     { id: 3, plate: 'กง 6677', province: 'กรุงเทพมหานคร', brand: 'Nissan', model: 'Almera', color: 'น้ำเงิน', createDate: '10/10/2568', carGroup: 'Visitor' },
-//     { id: 4, plate: 'กง 6677', province: 'กรุงเทพมหานคร', brand: 'Nissan', model: 'Almera', color: 'น้ำเงิน', createDate: '10/10/2568', carGroup: 'Member' },
-//     { id: 5, plate: 'กง 6677', province: 'กรุงเทพมหานคร', brand: 'Nissan', model: 'Almera', color: 'น้ำเงิน', createDate: '10/10/2568', carGroup: 'Member' },
-//     { id: 6, plate: 'กง 6677', province: 'กรุงเทพมหานคร', brand: 'Nissan', model: 'Almera', color: 'น้ำเงิน', createDate: '10/10/2568', carGroup: 'VIP' },
-//     { id: 7, plate: 'กง 6677', province: 'กรุงเทพมหานคร', brand: 'Nissan', model: 'Almera', color: 'น้ำเงิน', createDate: '10/10/2568', carGroup: 'Member' },
-//     { id: 8, plate: 'กง 6677', province: 'กรุงเทพมหานคร', brand: 'Nissan', model: 'Almera', color: 'น้ำเงิน', createDate: '10/10/2568', carGroup: 'Blacklist' },
-// ];
 
-const DEFAULT_CREATOR_UID = '83f04e2b-09c8-40c2-83d2-cafb57742e21';
-const DEFAULT_UPDATER_UID = '83f04e2b-09c8-40c2-83d2-cafb57742e21';
 
 const CarInfoList = () => {
     // ====== Search form states (ด้านบน accordion) ======
@@ -137,8 +125,9 @@ const CarInfoList = () => {
     const [notes, setNotes] = useState<string>('');
 
     // ผู้บันทึก/แก้ไข (แสดงเฉยๆ ในตัวอย่างนี้)
-    const [creatorUid] = useState<string>(DEFAULT_CREATOR_UID);
-    const [updaterUid] = useState<string>(DEFAULT_UPDATER_UID);
+    const authUid = useSelector((state: RootState) => state.auth.user.uid);
+    const creatorUid = authUid;
+    const updaterUid = authUid;
 
     // =========================
     // โหลด models ตาม selectedMakeId (ไม่เก็บลง Redux)
@@ -273,8 +262,8 @@ const CarInfoList = () => {
             visible,
             notes: notes || '',
             vehicle_group_id: vehicleGroupId === '' ? null : Number(vehicleGroupId),
-            creator_uid: creatorUid,
-            updater_uid: updaterUid,
+            creator_uid: creatorUid ?? '',
+            updater_uid: updaterUid ?? '',
         };
 
         try {
