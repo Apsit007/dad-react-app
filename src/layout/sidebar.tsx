@@ -28,9 +28,10 @@ type MenuItem = {
 
 interface SidebarProps {
     isCollapsed: boolean;
+    onExpand: () => void;
 }
 
-const Sidebar = ({ isCollapsed }: SidebarProps) => {
+const Sidebar = ({ isCollapsed, onExpand }: SidebarProps) => {
     const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
     const location = useLocation();
     const menuItems: MenuItem[] = menuItemsData;
@@ -71,7 +72,15 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
                             <li key={item.name} className="px-4 mb-2">
                                 <NavLink
                                     to={item.path || '#'}
-                                    onClick={() => item.subMenus && handleSubMenuToggle(item.name)}
+                                    // onClick={() => item.subMenus && handleSubMenuToggle(item.name)}
+                                    onClick={(e) => {
+                                        if (isCollapsed) {
+                                            e.preventDefault(); // กันไม่ให้ navigate ทันที
+                                            onExpand();          // ✅ สั่งขยายก่อน
+                                        } else if (item.subMenus) {
+                                            handleSubMenuToggle(item.name);
+                                        }
+                                    }}
                                     style={({ isActive }) => {
                                         // If this item has submenus, rely only on submenu matching
                                         if (item.subMenus && item.subMenus.length > 0) {

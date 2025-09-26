@@ -152,11 +152,7 @@ const columns: GridColDef[] = [
 
 
 
-// ฟังก์ชันสำหรับกำหนด class ให้กับแถว
-const getRowClassName = (params: GridRowClassNameParams) => {
-    // ถ้า isBlacklist เป็น true ให้ใช้ class 'highlight-row'
-    return params.row.isBlacklist ? 'highlight-row' : '';
-};
+
 
 const DashBoardPage = () => {
     // Popup state & detection (mock for new blacklist event)
@@ -168,6 +164,9 @@ const DashBoardPage = () => {
     const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
     const [rowCount, setRowCount] = useState(0);
     const [refreshDashboard, setRefreshDashboard] = useState(0);
+
+    const [highlightedRows, setHighlightedRows] = useState<Record<string, boolean>>({});
+    const prevRowsRef = useRef<LprRecord[]>([]);
 
 
     useEffect(() => {
@@ -199,13 +198,29 @@ const DashBoardPage = () => {
 
     const fetchData = async (page: number, pageSize: number) => {
         try {
-            const res = await LprDataApi.feed(
-                page + 1, // API เริ่มนับจาก 1
-                pageSize
-            );
+            const res = await LprDataApi.feed(page + 1, pageSize);
             if (res.success) {
-                setRows(res.data);
+                const newData = res.data;
+
+                // ✅ หา row ใหม่ โดยเทียบกับ prevRowsRef
+                const newHighlights: Record<string, boolean> = {};
+                newData.forEach(r => {
+                    if (!prevRowsRef.current.find(prev => prev.id === r.id)) {
+                        newHighlights[r.id] = true;
+                    }
+                });
+
+                if (Object.keys(newHighlights).length > 0) {
+                    setHighlightedRows(newHighlights);
+                    setTimeout(() => setHighlightedRows({}), 2000);
+                }
+
+                setRows(newData);
                 setRowCount(res.pagination?.countAll ?? 0);
+
+                // อัปเดต prevRowsRef
+                prevRowsRef.current = newData;
+
                 console.log('✅ list:', res.data, res.pagination);
             } else {
                 console.error('⚠️ list failed:', res.message);
@@ -222,6 +237,14 @@ const DashBoardPage = () => {
 
     const alertData = alertIndex ? rows.find(r => r.id === alertIndex) ?? null : null;
 
+    // ฟังก์ชันสำหรับกำหนด class ให้กับแถว
+    const getRowClassName = (params: GridRowClassNameParams) => {
+        if (highlightedRows[params.id as string]) {
+            return 'new-row-highlight';
+        }
+        return params.row.isBlacklist ? 'highlight-row' : '';
+    };
+    
     return (
         <div className='flex flex-col  gap-4 h-full'>
             <Typography variant='h5' className='text-primary-dark '>ข้อมูลการเข้า-ออกพื้นที่ ณ ปัจจุบัน</Typography>

@@ -7,3 +7,7 @@ body {
 .card {
   @apply bg-white rounded-lg shadow-md p-6;
 }
+.new-row-highlight {
+  background-color: orange !important;
+  transition: background-color 2s ease-out;
+}

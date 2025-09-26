@@ -3,12 +3,16 @@ import { useState, useEffect, useRef } from 'react'; // 1. Import hooks
 import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import { Avatar, Typography } from '@mui/material';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store';
 
 interface NavbarProps {
     toggleSidebar: () => void;
 }
 
 const Navbar = ({ toggleSidebar }: NavbarProps) => {
+    const user = useSelector((state: RootState) => state.auth.user);
+
     // 2. Create a ref to target the navbar element
     const navRef = useRef<HTMLElement>(null);
     // 3. Create state to track if the navbar is sticky
@@ -71,7 +75,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
                 <div className="flex items-center gap-3">
                     <Avatar sx={{ width: 32, height: 32 }}>J</Avatar>
                     <div>
-                        <p className="font-semibold text-sm text-gray-800">Pawarisa Techakulwiset</p>
+                        <p className="font-semibold text-sm text-gray-800">{user.firstname} {user.lastname}</p>
                         <p className="text-xs text-gold">System Administrator</p>
                     </div>
                 </div>

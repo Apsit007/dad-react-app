@@ -83,12 +83,12 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.accessToken = action.payload.accessToken;
                 state.user = {
-                    uid: action.payload.uid ?? '',
-                    username: action.payload.username ?? '',
-                    email: action.payload.email ?? '',
-                    firstname: action.payload.firstname ?? '',
-                    lastname: action.payload.lastname ?? '',
-                    imaage_url: action.payload.imaage_url ?? '',
+                    uid: action.payload.user.uid ?? '',
+                    username: action.payload.user.username ?? '',
+                    email: action.payload.user.email ?? '',
+                    firstname: action.payload.user.firstname ?? '',
+                    lastname: action.payload.user.lastname ?? '',
+                    imaage_url: action.payload.user.imaage_url ?? '',
                 };
                 // ✅ เก็บ token ลง localStorage
                 localStorage.setItem('accessToken', action.payload.accessToken);

@@ -41,7 +41,7 @@ const MainLayout = () => {
     return (
         <div className=" min-h-screen p-6">
             <div>
-                <Sidebar isCollapsed={isCollapsed} />
+                <Sidebar isCollapsed={isCollapsed} onExpand={() => setIsCollapsed(false)}  />
 
                 {/* ✨margin-left แบบไดนามิกตามสถานะของ Sidebar */}
                 <div className={`transition-all duration-300 ease-in-out ${isCollapsed ? 'ml-28' : 'ml-72'}`}>
