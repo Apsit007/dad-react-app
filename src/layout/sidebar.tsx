@@ -9,6 +9,8 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import menuItemsData from '../services/MenuItem.json';
 import { NavLink, useLocation } from 'react-router-dom';
 import Collapse from '@mui/material/Collapse';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store';
 
 const iconMap = {
     DashboardIcon: DashboardIcon,
@@ -23,7 +25,9 @@ type MenuItem = {
     subMenus?: {
         name: string;
         path: string;
+        permission?: string; // 🔑 map permission
     }[];
+    permission?: string; // 🔑 map permission
 };
 
 interface SidebarProps {
@@ -34,10 +38,50 @@ interface SidebarProps {
 const Sidebar = ({ isCollapsed, onExpand }: SidebarProps) => {
     const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
     const location = useLocation();
-    const menuItems: MenuItem[] = menuItemsData;
+    // 1) กำหนด type ของ permissions ชัดเจน
+    const permissions: Record<string, boolean> = useSelector((state: RootState) => state.auth.user?.permissions || {});
+    // 2) กำหนด mapping ของเมนู -> permission key
+    const menuPermissionMap: Record<string, string> = {
+        Dashboard: 'dashboard',
+        ค้นหาบุคคล: 'person_search',
+        ค้นหารถ: 'car_search',
+        ค้นหาVDO: 'video_search',
+        ข้อมูลบุคคล: 'person_manage',
+        ข้อมูลรถ: 'car_manage',
+        ตั้งค่าระบบ: 'system_manage',
+        จัดการสิทธิ์การใช้งาน: 'user_manage',
+        จัดการข้อมูลหน่วยงาน: 'department_manage',
+    };
+
+    // 3) ฟังก์ชันกรองเมนูตามสิทธิ์
+    const filterMenuItems = (items: MenuItem[]) => {
+        return items
+            .map((item) => {
+                const subMenus = item.subMenus?.filter(
+                    (sub) => permissions[menuPermissionMap[sub.name]] === true
+                );
+
+                // ถ้าเมนูนี้มี subMenus และมีสิทธิ์เข้าถึงบางอัน
+                if (subMenus && subMenus.length > 0) {
+                    return { ...item, subMenus };
+                }
+
+                // ถ้าเป็นเมนูหลักที่ map กับ permission โดยตรง
+                if (menuPermissionMap[item.name] && permissions[menuPermissionMap[item.name]] === true) {
+                    return { ...item, subMenus: undefined };
+                }
+
+                return null;
+            })
+            .filter(Boolean) as MenuItem[];
+    };
+
+    const menuItems = filterMenuItems(menuItemsData as MenuItem[]);
+
     const handleSubMenuToggle = (name: string) => {
         setOpenSubMenu(openSubMenu === name ? null : name);
     };
+
     const activeLinkStyle = {
         backgroundColor: '#2E514E',
         borderLeft: '3px solid #C9EFA4',

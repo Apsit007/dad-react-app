@@ -73,10 +73,10 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
                     <NotificationsNoneOutlinedIcon />
                 </button> */}
                 <div className="flex items-center gap-3">
-                    <Avatar sx={{ width: 32, height: 32 }}>J</Avatar>
+                    <Avatar sx={{ width: 32, height: 32 }}><img src={user.image_url ?? ''} /></Avatar>
                     <div>
                         <p className="font-semibold text-sm text-gray-800">{user.firstname} {user.lastname}</p>
-                        <p className="text-xs text-gold">System Administrator</p>
+                        <p className="text-xs text-gold">{user.job_position}</p>
                     </div>
                 </div>
             </div>

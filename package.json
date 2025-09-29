@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit --skipLibCheck && vite build",
+    "build": "tsc --noEmit --skipLibCheck && vite build && npm run zip-dist",
+    "zip-dist": "cd dist && bestzip ../dist.zip *",
     "lint": "eslint .",
     "preview": "vite preview",
     "zip": "powershell -ExecutionPolicy Bypass -File zip.ps1",

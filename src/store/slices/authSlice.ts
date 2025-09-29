@@ -12,15 +12,13 @@ interface AuthState {
         firstname: string | null;
         lastname: string | null;
         email: string | null;
-        imaage_url: string | null;
-        // permissions: Permissions;
+        image_url: string | null;
+        job_position: string | null;
+        permissions: any | null;   // 👈 เปลี่ยนจาก JSON -> any
     };
 }
 
-
-
-
-// ✅ โหลด token จาก localStorage ทันที
+// ✅ โหลด token จาก localStorage
 const tokenFromStorage = localStorage.getItem('accessToken');
 
 const initialState: AuthState = {
@@ -33,7 +31,9 @@ const initialState: AuthState = {
         firstname: null,
         lastname: null,
         email: null,
-        imaage_url: null,
+        image_url: null,
+        job_position: null,
+        permissions: null,
     },
 };
 
@@ -47,7 +47,8 @@ export const login = createAsyncThunk(
         try {
             const res = await axios.post(
                 `${import.meta.env.VITE_API_URL}/smartgate-api/v0/users/login`,
-                { username, password }
+                { username, password },
+                { withCredentials: true }
             );
             return res.data;
         } catch (err: any) {
@@ -68,11 +69,18 @@ const authSlice = createSlice({
                 firstname: null,
                 lastname: null,
                 email: null,
-                imaage_url: null,
+                image_url: null,
+                job_position: null,
+                permissions: null,
             };
             localStorage.removeItem('accessToken');
         },
+        setAccessToken: (state, action: PayloadAction<string>) => {
+            state.accessToken = action.payload;
+            localStorage.setItem('accessToken', action.payload);
+        },
     },
+
     extraReducers: (builder) => {
         builder
             .addCase(login.pending, (state) => {
@@ -81,15 +89,20 @@ const authSlice = createSlice({
             })
             .addCase(login.fulfilled, (state, action: PayloadAction<any>) => {
                 state.loading = false;
-                state.accessToken = action.payload.accessToken;
+                state.accessToken = action.payload.accessToken; // ✅ API คืน accessToken ตรง root
+
+
                 state.user = {
                     uid: action.payload.user.uid ?? '',
                     username: action.payload.user.username ?? '',
                     email: action.payload.user.email ?? '',
                     firstname: action.payload.user.firstname ?? '',
                     lastname: action.payload.user.lastname ?? '',
-                    imaage_url: action.payload.user.imaage_url ?? '',
+                    image_url: action.payload.user.image_url ?? '',
+                    job_position: action.payload.user.job_position ?? '',
+                    permissions: action.payload.user.permissions ?? '',
                 };
+
                 // ✅ เก็บ token ลง localStorage
                 localStorage.setItem('accessToken', action.payload.accessToken);
             })
@@ -100,5 +113,5 @@ const authSlice = createSlice({
     },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, setAccessToken } = authSlice.actions;
 export default authSlice.reducer;

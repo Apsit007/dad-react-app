@@ -12,6 +12,7 @@ import {
   Stack,
   IconButton,
   InputLabel,
+  Autocomplete,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
@@ -25,6 +26,8 @@ import ChipTag from '../../../components/ChipTag';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { UserApi, type User, type UserListFilter } from '../../../services/User.service';
 import dialog from '../../../services/dialog.service';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import { DepartmentApi, type Department } from '../../../services/Department.service';
 
 const statusOptions = [
   { label: 'Active', value: 'active' },
@@ -55,7 +58,7 @@ const formatFullName = ({ title, firstname, lastname }: Pick<User, 'title' | 'fi
 const buildFilter = (filters: {
   firstname: string;
   lastname: string;
-  organization: string;
+  organization: string | null | undefined;
   status: string;
 }): UserListFilter => {
   const nextFilter: UserListFilter = {};
@@ -90,10 +93,26 @@ const UserListPage = () => {
 
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
-  const [organization, setOrganization] = useState('');
+  const [organization, setOrganization] = useState<string | null | undefined>(null);
   const [status, setStatus] = useState('');
   const [appliedFilter, setAppliedFilter] = useState<UserListFilter>({});
   const [organizationOptions, setOrganizationOptions] = useState<string[]>([]);
+
+  const [departmentList, setDepartmentList] = useState<Department[]>([])
+
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const res = await DepartmentApi.list(
+          1, 1000
+        );
+        setDepartmentList(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadDepartments();
+  }, [])
 
   useEffect(() => {
     let active = true;
@@ -276,44 +295,53 @@ const UserListPage = () => {
           <div className='flex flex-col gap-2'>
             <div className='flex flex-wrap -m-2'>
               <div className='w-full md:w-1/4 p-2'>
-                <InputLabel shrink>First name</InputLabel>
-                <TextField placeholder='First name' value={firstname} onChange={(event) => setFirstname(event.target.value)} />
+                <InputLabel shrink>ชื่อ</InputLabel>
+                <TextField placeholder='ชื่อ' value={firstname} onChange={(event) => setFirstname(event.target.value)} />
               </div>
               <div className='w-full md:w-1/4 p-2'>
-                <InputLabel shrink>Last name</InputLabel>
-                <TextField placeholder='Last name' value={lastname} onChange={(event) => setLastname(event.target.value)} />
+                <InputLabel shrink>นามสกุล</InputLabel>
+                <TextField placeholder='นามสกุล' value={lastname} onChange={(event) => setLastname(event.target.value)} />
               </div>
               <div className='w-full md:w-1/4 p-2'>
-                <InputLabel shrink>Organization</InputLabel>
-                <Select
+                <InputLabel shrink>หน่วยงาน</InputLabel>
+                {/* <Select
                   displayEmpty
                   value={organization}
                   onChange={(event) => setOrganization(event.target.value as string)}
-                  renderValue={(selected) => (selected ? selected : 'Select organization')}
+                  renderValue={(selected) => (selected ? selected : 'เลือกหน่วยงาน')}
                 >
-                  <MenuItem value=''><em>All</em></MenuItem>
+                  <MenuItem value=''><em>ทั้งหมด</em></MenuItem>
                   {organizationOptions.map((option) => (
                     <MenuItem key={option} value={option}>
                       {option}
                     </MenuItem>
                   ))}
-                </Select>
+                </Select> */}
+                <Autocomplete
+                  options={departmentList}
+                  getOptionLabel={(option) => option.dep_name}
+                  value={departmentList.find((d) => d.uid === organization) || null}
+                  onChange={(_, newValue) => setOrganization(newValue ? newValue.uid : null)}
+                  renderInput={(params) => (
+                    <TextField {...params} placeholder="เลือกหน่วยงาน" />
+                  )}
+                />
               </div>
               <div className='w-full md:w-1/4 p-2'>
-                <InputLabel shrink>Status</InputLabel>
+                <InputLabel shrink>สถานะผู้ใช้งาน</InputLabel>
                 <Select
                   displayEmpty
                   value={status}
                   onChange={(event) => setStatus(event.target.value as string)}
                   renderValue={(selected) => {
                     if (!selected) {
-                      return 'Select status';
+                      return 'เลือกสถานะ';
                     }
                     const match = statusOptions.find((item) => item.value === selected);
                     return match?.label ?? selected;
                   }}
                 >
-                  <MenuItem value=''><em>All</em></MenuItem>
+                  <MenuItem value=''><em>ทั้งหมด</em></MenuItem>
                   {statusOptions.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
                       {option.label}
@@ -323,7 +351,17 @@ const UserListPage = () => {
               </div>
             </div>
             <div className='w-full flex justify-end gap-2 p-2'>
-              <Button variant='outlined' onClick={handleClear}>Reset</Button>
+              <Button
+                variant="outlined"
+                startIcon={<CancelOutlinedIcon />}
+                className="!border-gray-400 !text-gray-600 hover:!bg-gray-100"
+                onClick={handleClear}
+              >
+                Clear
+              </Button>
+              <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark' onClick={handleSearch}>
+                ค้นหา
+              </Button>
               <Button
                 variant='contained'
                 startIcon={<SearchIcon />}
@@ -346,11 +384,11 @@ const UserListPage = () => {
           onClick={() => navigate('/settings/usermanage/userinfo')}
           className='!bg-gold hover:!bg-gold-dark'
         >
-          Add user
+          เพิ่มผู้ใช้งาน
         </Button>
         <Box sx={{ flexGrow: 1 }} />
         <Typography variant='body2' sx={{ alignSelf: 'center' }}>
-          Total: {rowCount.toLocaleString()} records
+          ผลการค้นหา : {rowCount.toLocaleString()} รายการ
         </Typography>
       </Stack>
 

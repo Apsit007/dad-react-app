@@ -8,6 +8,7 @@ export interface FileUploadData {
     mimetype: string;
     sizeMB: number;
     title: string;
+    path: string;
     url: string;
 }
 
