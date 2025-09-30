@@ -91,119 +91,122 @@ const SearchPerson = () => {
     };
 
     return (
-        <Box>
-            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
-                ค้นหาบุคคล
-            </Typography>
+        <>
+            <Box>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
+                    ค้นหาบุคคล
+                </Typography>
 
-            <Accordion defaultExpanded>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography>Search</Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ bgcolor: 'white' }}>
-                    {/* 👇 Grid is replaced with div and Tailwind classes 👇 */}
-                    <div className="flex flex-wrap">
-                        <div className="w-full md:w-1/6 p-2 text-center">
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/png,image/jpeg"
-                                className="hidden"
-                                onChange={handleFileChange}
-                            />
-                            <Box sx={{ position: 'relative', width: 120, height: 150, m: 'auto' }}>
-                                {selectedImage ? (
-                                    <Avatar
-                                        variant="rounded"
-                                        src={selectedImage}
-                                        onClick={onPickFile}
-                                        sx={{ width: '100%', height: '100%', cursor: 'pointer' }}
-                                    />
-                                ) : (
-                                    <Box
-                                        role="button"
-                                        onClick={onPickFile}
-                                        className="flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 hover:bg-gray-50"
-                                        sx={{ width: '100%', height: '100%', borderRadius: 1 }}
-                                    >
-                                        <CloudUploadOutlinedIcon sx={{ color: 'text.secondary', mb: 1 }} />
-                                        <Typography variant="caption" color="text.secondary">Upload รูปภาพ</Typography>
-                                    </Box>
-                                )}
-                                {selectedImage && (
-                                    <button
-                                        type="button"
-                                        onClick={clearImage}
-                                        title="ล้างรูป"
-                                        className="absolute top-1 right-1 bg-white/90 hover:bg-white rounded-full shadow p-1"
-                                        style={{ lineHeight: 0 }}
-                                    >
-                                        <CloseRoundedIcon fontSize="small" />
-                                    </button>
-                                )}
-                            </Box>
-                            {/* Message and loading are now handled via dialog service */}
-                        </div>
-                        <div className="w-full md:w-5/6 p-2">
-                            <div className="flex flex-wrap -m-2">
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption' >ชื่อ</Typography>
-                                    <TextField placeholder='ชื่อ' />
-                                </div>
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption'>นามสกุล</Typography>
-                                    <TextField placeholder='นามสกุล' />
-                                </div>
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption'>ประเภทบุคคล</Typography>
-                                    <Select defaultValue="">
-                                        <MenuItem value=""><em>ทุกประเภท</em></MenuItem>
-                                        <MenuItem value="member">Member</MenuItem>
-                                        <MenuItem value="visitor">Visitor</MenuItem>
-                                    </Select>
-                                </div>
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption'>รูปแบบการค้นหา</Typography>
-                                    <Select defaultValue="last-seen">
-                                        <MenuItem value="last-seen">ค้นหาจากวันที่ล่าสุด</MenuItem>
-                                    </Select>
-                                </div>
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption'>วันที่เริ่มต้น</Typography>
-                                    <DateTimePicker sx={{ width: '100%' }} />
-                                </div>
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption'>วันที่สิ้นสุด</Typography>
-                                    <DateTimePicker sx={{ width: '100%' }} />
+                <Accordion defaultExpanded>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                        <Typography>Search</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ bgcolor: 'white' }}>
+                        {/* 👇 Grid is replaced with div and Tailwind classes 👇 */}
+                        <div className="flex flex-wrap">
+                            <div className="w-full md:w-1/6 p-2 text-center">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/png,image/jpeg"
+                                    className="hidden"
+                                    onChange={handleFileChange}
+                                />
+                                <Box sx={{ position: 'relative', width: 120, height: 150, m: 'auto' }}>
+                                    {selectedImage ? (
+                                        <Avatar
+                                            variant="rounded"
+                                            src={selectedImage}
+                                            onClick={onPickFile}
+                                            sx={{ width: '100%', height: '100%', cursor: 'pointer' }}
+                                        />
+                                    ) : (
+                                        <Box
+                                            role="button"
+                                            onClick={onPickFile}
+                                            className="flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 hover:bg-gray-50"
+                                            sx={{ width: '100%', height: '100%', borderRadius: 1 }}
+                                        >
+                                            <CloudUploadOutlinedIcon sx={{ color: 'text.secondary', mb: 1 }} />
+                                            <Typography variant="caption" color="text.secondary">Upload รูปภาพ</Typography>
+                                        </Box>
+                                    )}
+                                    {selectedImage && (
+                                        <button
+                                            type="button"
+                                            onClick={clearImage}
+                                            title="ล้างรูป"
+                                            className="absolute top-1 right-1 bg-white/90 hover:bg-white rounded-full shadow p-1"
+                                            style={{ lineHeight: 0 }}
+                                        >
+                                            <CloseRoundedIcon fontSize="small" />
+                                        </button>
+                                    )}
+                                </Box>
+                                {/* Message and loading are now handled via dialog service */}
+                            </div>
+                            <div className="w-full md:w-5/6 p-2">
+                                <div className="flex flex-wrap -m-2">
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption' >ชื่อ</Typography>
+                                        <TextField placeholder='ชื่อ' />
+                                    </div>
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption'>นามสกุล</Typography>
+                                        <TextField placeholder='นามสกุล' />
+                                    </div>
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption'>ประเภทบุคคล</Typography>
+                                        <Select defaultValue="">
+                                            <MenuItem value=""><em>ทุกประเภท</em></MenuItem>
+                                            <MenuItem value="member">Member</MenuItem>
+                                            <MenuItem value="visitor">Visitor</MenuItem>
+                                        </Select>
+                                    </div>
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption'>รูปแบบการค้นหา</Typography>
+                                        <Select defaultValue="last-seen">
+                                            <MenuItem value="last-seen">ค้นหาจากวันที่ล่าสุด</MenuItem>
+                                        </Select>
+                                    </div>
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption'>วันที่เริ่มต้น</Typography>
+                                        <DateTimePicker sx={{ width: '100%' }} />
+                                    </div>
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption'>วันที่สิ้นสุด</Typography>
+                                        <DateTimePicker sx={{ width: '100%' }} />
+                                    </div>
                                 </div>
                             </div>
+                            <div className="w-full flex justify-end p-2">
+                                <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark' >
+                                    ค้นหา
+                                </Button>
+                            </div>
                         </div>
-                        <div className="w-full flex justify-end p-2">
-                            <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark' >
-                                ค้นหา
-                            </Button>
-                        </div>
-                    </div>
-                </AccordionDetails>
-            </Accordion>
+                    </AccordionDetails>
+                </Accordion>
 
-            <Stack direction="row" spacing={1} sx={{ my: 2 }}>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/txt-file.png' />}>TXT</Button>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/xls-file.png' />}>XLS</Button>
-                <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/csv-file.png' />}>CSV</Button>
-                <Box sx={{ flexGrow: 1 }} />
-                <Typography variant="body2" sx={{ alignSelf: 'center' }}>ผลการค้นหา : 10 รายการ</Typography>
-            </Stack>
-            <div className="flex-1 flex flex-col ">
+                <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+                    <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/txt-file.png' />}>TXT</Button>
+                    <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/xls-file.png' />}>XLS</Button>
+                    <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/csv-file.png' />}>CSV</Button>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <Typography variant="body2" sx={{ alignSelf: 'center' }}>ผลการค้นหา : 10 รายการ</Typography>
+                </Stack>
+                <div className="flex-1 flex flex-col ">
 
-                <DataTable
-                    rows={rows}
-                    columns={columns}
+                    <DataTable
+                        rows={rows}
+                        columns={columns}
 
-                />
-            </div>
-        </Box>
+                    />
+                </div>
+            </Box>
+
+        </>
     );
 };
 

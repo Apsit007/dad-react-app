@@ -12,7 +12,7 @@ import { useNavigate, NavLink } from 'react-router-dom';
 import ChipTag from '../../../components/ChipTag';
 import { useSelector } from 'react-redux';
 import { selectMemberGroups } from '../../../store/slices/masterdataSlice';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { MemberApi, type Member } from '../../../services/Member.service';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -23,6 +23,7 @@ import Popup from '../../../components/Popup';
 import ManageSearchIcon from "@mui/icons-material/ManageSearch"
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined"
 import { exportData } from '../../../services/Export.service';
+import ImageViewer from '../../../components/ImageViewer';
 
 
 const memberStatusList = [
@@ -59,6 +60,9 @@ const PersonInfoList = () => {
 
     //popup 
     const [historyPopupOpen, setHistoryPopupOpen] = useState(false);
+
+    const [openImageViewer, setOpenImageViewer] = useState(false);
+    const [viewImgUrl, setViewImgUrl] = useState<string>('')
 
     useEffect(() => {
         const loadDepartments = async () => {
@@ -178,7 +182,7 @@ const PersonInfoList = () => {
         {
             field: 'image_url', headerName: 'ภาพใบหน้า', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center', sortable: false,
             renderCell: (params) => (
-                <div className='w-full h-full flex justify-center items-center'>
+                <div className='w-full h-full flex justify-center items-center' onClick={() => viewImg(params.value)}>
                     <Avatar variant='square' src={params.value} className=' !h-[70%] !w-[70%]' />
                 </div>
             )
@@ -338,6 +342,11 @@ const PersonInfoList = () => {
         setHistoryPopupOpen(false);
         setHistoryRows([]);
     }
+
+    const viewImg = useCallback((img: string) => {
+        setOpenImageViewer(true);
+        setViewImgUrl(img)
+    }, [viewImgUrl])
 
     return (
         <>
@@ -505,6 +514,11 @@ const PersonInfoList = () => {
                     />
                 </Box>
             </Popup>
+            <ImageViewer
+                open={openImageViewer}
+                imgUrl={viewImgUrl}
+                onClose={() => setOpenImageViewer(false)}
+            />
         </>
     );
 };

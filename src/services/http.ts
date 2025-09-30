@@ -15,8 +15,8 @@ http.interceptors.request.use(async (config) => {
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
+    console.log("👉 Sending request with token:", token.slice(0, 20) + "..."); // debug
   }
-
   return config;
 });
 
@@ -71,7 +71,6 @@ http.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // 🔄 เรียก refresh API
         const refreshResponse = await axios.post(
           "/smartgate-api/v0/users/refresh",
           {},
@@ -81,34 +80,26 @@ http.interceptors.response.use(
         const newToken: string = refreshResponse.data?.accessToken;
 
         if (newToken) {
-          const { store } = await import("../store");
-          store.dispatch(setAccessToken(newToken));
-
-          // ✅ update default header
           http.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
-        } else {
-          throw new Error("No accessToken in refresh response");
+          originalRequest.headers = {
+            ...(originalRequest.headers || {}),
+            Authorization: `Bearer ${newToken}`,
+          };
+          console.log("🔄 Retrying with new token:", newToken.slice(0, 20) + "...");
         }
+        return http(originalRequest);
 
         processQueue(null, newToken);
-
-        // 🔁 retry request เดิม ด้วย token ใหม่
-        if (originalRequest.headers && newToken) {
-          originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-        }
-
         return http(originalRequest);
       } catch (err) {
         processQueue(err, null);
-
-        // ❗ refresh fail → logout ป้องกัน loop
         const { store } = await import("../store");
         store.dispatch(logout());
-
         return Promise.reject(err);
       } finally {
         isRefreshing = false;
       }
+
     }
 
     return Promise.reject(error);
