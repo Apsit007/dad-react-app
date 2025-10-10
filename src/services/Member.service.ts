@@ -38,6 +38,8 @@ export interface Member extends MemberPayload {
     uid: string;
     // 👉 ถ้ามี relation object เพิ่มตรงนี้
     // member_group?: MemberGroup
+    dep_name: string;
+    member_group_name_en: string;
     created_at: string;
     vehicles: Vehicle[];
 }

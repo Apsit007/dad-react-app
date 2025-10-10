@@ -94,6 +94,10 @@ const PersonInfoForm = () => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const personTitles = useSelector(selectPersonTitles);
+    const [sortedTitles, setSortedTitles] = useState<{ id: number; title_th: string }[]>([]);
+    const [displayedTitles, setDisplayedTitles] = useState<typeof sortedTitles>([]);
+    const listRef = useRef<HTMLUListElement | null>(null);
+    const BATCH_SIZE = 10;
     const genders = useSelector(selectGenders);
     const memberGroups = useSelector(selectMemberGroups);
 
@@ -102,6 +106,8 @@ const PersonInfoForm = () => {
     const vehicleMakes = useSelector(selectVehicleMakes);
 
     const [departmentList, setDepartmentList] = useState<Department[]>([])
+
+
 
 
     // 👉 โหลดข้อมูลถ้าเป็นโหมดแก้ไข
@@ -145,11 +151,45 @@ const PersonInfoForm = () => {
         loadDepartments();
     }, [])
 
+    // ✅ จัดเรียงให้ “น” ขึ้นก่อน
+    useEffect(() => {
+        if (personTitles.length > 0) {
+            const sorted = [...personTitles].sort((a, b) => {
+                const aStarts = a.title_th.startsWith("น");
+                const bStarts = b.title_th.startsWith("น");
+                if (aStarts && !bStarts) return -1;
+                if (!aStarts && bStarts) return 1;
+                return a.title_th.localeCompare(b.title_th, "th");
+            });
+            setSortedTitles(sorted);
+            setDisplayedTitles(sorted.slice(0, BATCH_SIZE)); // โหลดครั้งแรก 10 รายการ
+        }
+    }, [personTitles]);
+
+    // 🧭 handle scroll ใน dropdown
+    const handleScroll = (event: React.UIEvent<HTMLUListElement>) => {
+        const list = event.currentTarget;
+        const isBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 10;
+        if (isBottom && displayedTitles.length < sortedTitles.length) {
+            const nextBatch = sortedTitles.slice(displayedTitles.length, displayedTitles.length + BATCH_SIZE);
+            setDisplayedTitles(prev => [...prev, ...nextBatch]);
+        }
+    };
+
     // toggle checkbox
     const handleToggleCar = (uid: string) => {
-        setSelectedCars((prev) =>
-            prev.includes(uid) ? prev.filter((id) => id !== uid) : [...prev, uid]
-        );
+        setSelectedCars((prev) => {
+            if (prev.includes(uid)) {
+                // เอาออกถ้ามีอยู่แล้ว
+                return prev.filter((id) => id !== uid);
+            } else {
+                if (prev.length >= 5) {
+                    dialog.warning("สามารถเลือกได้สูงสุด 5 คัน");
+                    return prev; // ❌ ไม่เพิ่ม
+                }
+                return [...prev, uid];
+            }
+        });
     };
 
     // เมื่อกดปุ่ม "เลือก"
@@ -189,12 +229,22 @@ const PersonInfoForm = () => {
 
 
     const validateFile = (file: File) => {
-        const isValidType = ['image/png', 'image/jpeg'].includes(file.type);
-        const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB
-        if (!isValidType) { dialog.warning('อนุญาตเฉพาะไฟล์ PNG หรือ JPEG'); return false; }
-        if (!isValidSize) { dialog.warning('ขนาดไฟล์ต้องไม่เกิน 5MB'); return false; }
+        const isValidType = file.type === 'image/jpeg'; // ✅ อนุญาตเฉพาะ JPEG
+        const minSize = 50 * 1024;  // 50 KB
+        const maxSize = 100 * 1024; // 100 KB
+        const fileSize = file.size;
+
+        if (!isValidType) {
+            dialog.warning('อนุญาตเฉพาะไฟล์ JPEG เท่านั้น');
+            return false;
+        }
+        if (fileSize < minSize || fileSize > maxSize) {
+            dialog.warning('ขนาดไฟล์ต้องอยู่ระหว่าง 50KB ถึง 100KB');
+            return false;
+        }
         return true;
     };
+
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -244,36 +294,52 @@ const PersonInfoForm = () => {
         if (!form.firstname) newErrors.firstname = "กรุณากรอกชื่อ";
         if (!form.lastname) newErrors.lastname = "กรุณากรอกนามสกุล";
         if (!form.gender) newErrors.gender = "กรุณาเลือกเพศ";
-
-        if (!form.idcard) {
-            newErrors.idcard = "กรุณากรอกเลขบัตรประชาชน";
-        } else if (!isValidThaiIdCard(form.idcard)) {
-            newErrors.idcard = "เลขบัตรประชาชนไม่ถูกต้อง";
-        }
-
-        if (!form.phone) {
-            newErrors.phone = "กรุณากรอกเบอร์โทร";
-        } else if (!isValidPhone(form.phone)) {
-            newErrors.phone = "เบอร์โทรต้องเป็นตัวเลข 10 หลัก และขึ้นต้นด้วย 0";
-        }
+        if (!form.dob) newErrors.dob = "กรุณาเลือกวันเกิด";
 
         if (form.email && !isValidEmail(form.email)) {
             newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
         }
 
-        if (!form.start_date) newErrors.start_date = "กรุณาเลือกวันที่เริ่มต้น";
-        if (!form.end_date) newErrors.end_date = "กรุณาเลือกวันที่สิ้นสุด";
-        if (!form.dob) newErrors.dob = "กรุณาเลือกวันเกิด";
+        const memberGroup = memberGroups.find(mg => mg.id === form.member_group_id);
+        const isMemberType = memberGroup?.name_th === "สมาชิก";
 
-        // ✅ ต้องมีรถอย่างน้อย 1 คัน
+        // ✅ เงื่อนไขเฉพาะสมาชิก
+        if (isMemberType) {
+            // 🔹 บัตรประชาชน
+            if (!form.idcard) {
+                newErrors.idcard = "กรุณากรอกเลขบัตรประชาชน";
+            } else if (!isValidThaiIdCard(form.idcard)) {
+                newErrors.idcard = "เลขบัตรประชาชนไม่ถูกต้อง";
+            }
+
+            // 🔹 เบอร์โทร
+            if (!form.phone) {
+                newErrors.phone = "กรุณากรอกเบอร์โทร";
+            } else if (!isValidPhone(form.phone)) {
+                newErrors.phone = "เบอร์โทรต้องเป็นตัวเลข 10 หลัก และขึ้นต้นด้วย 0";
+            }
+
+            // 🔹 หน่วยงาน
+            if (!form.dep_uid) newErrors.dep_uid = "กรุณาเลือกสังกัดหน่วยงาน";
+
+            // 🔹 เลขบัตรพนักงาน
+            if (!form.emp_card_id) newErrors.emp_card_id = "กรุณากรอกเลขบัตรพนักงาน";
+
+            // 🔹 วันที่เริ่ม–สิ้นสุด
+            if (!form.start_date) newErrors.start_date = "กรุณาเลือกวันที่เริ่มต้น";
+            if (!form.end_date) newErrors.end_date = "กรุณาเลือกวันที่สิ้นสุด";
+        }
+
+        // ✅ รถบังคับตลอด
         if (carRows.length === 0) {
             newErrors.vehicle_uid_list = "ต้องเพิ่มรถอย่างน้อย 1 คัน";
-            dialog.error("เลือกรถอย่างน้อย 1 คัน")
+            dialog.error("เลือกรถอย่างน้อย 1 คัน");
         }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
 
 
 
@@ -460,12 +526,19 @@ const PersonInfoForm = () => {
                 <div className="w-full lg:w-6/12 flex flex-col gap-6">
                     {/* Person Info Card */}
                     <Paper elevation={2} sx={{ p: 3 }}>
-                        <Typography variant="h6" gutterBottom>ข้อมูลบุคคล</Typography>
+                        <Typography variant="h6" gutterBottom>ข้อมูลผู้ขอลงทะเบียนใช้บริการลานจอด</Typography>
                         <div className="flex flex-wrap -m-2">
                             {/* Avatar */}
                             <div className="w-full md:w-1/3 p-2">
                                 <div className='relative'>
-                                    <input ref={fileInputRef} type='file' accept='image/png,image/jpeg' className='hidden' onChange={handleFileChange} disabled={isTerminated} />
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/jpeg"   // ✅ filter ให้เลือกได้เฉพาะ JPEG
+                                        className="hidden"
+                                        onChange={handleFileChange}
+                                        disabled={isTerminated}
+                                    />
                                     <Box sx={{ position: 'relative', width: 220, height: 220 }} className='rounded-full border-[8px] border-gold' style={{ borderColor: '#E7B13A' }}>
                                         {selectedImage ? (
                                             <Avatar
@@ -483,6 +556,7 @@ const PersonInfoForm = () => {
                                             >
                                                 <CloudUploadOutlinedIcon sx={{ color: 'text.disabled', fontSize: 42, mb: 1 }} />
                                                 <Typography variant='body2' color='text.secondary'>50-100 Kb</Typography>
+                                                <Typography variant='body2' color='text.secondary'>Type JPEG</Typography>
                                             </Box>
                                         )}
 
@@ -506,9 +580,16 @@ const PersonInfoForm = () => {
                                             onChange={(e) => handleChange("title", e.target.value)}
                                             error={!!errors.title}
                                             disabled={isTerminated}
+                                            MenuProps={{
+                                                PaperProps: {
+                                                    ref: listRef,
+                                                    onScroll: handleScroll,  // ✅ trigger lazy load
+                                                    style: { maxHeight: 300 }, // จำกัดความสูง dropdown
+                                                },
+                                            }}
                                         >
                                             <MenuItem value=""><em>เลือกคำนำหน้า</em></MenuItem>
-                                            {personTitles.map((t) => (
+                                            {displayedTitles.map((t) => (
                                                 <MenuItem key={t.id} value={t.title_th}>
                                                     {t.title_th}
                                                 </MenuItem>
@@ -554,7 +635,7 @@ const PersonInfoForm = () => {
                                         </Select>
                                     </div>
                                     <div className="w-full sm:w-[35%] p-2">
-                                        <InputLabel shrink required>เลขที่บัตรประชาชน</InputLabel>
+                                        <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>เลขที่บัตรประชาชน</InputLabel>
                                         <TextField
                                             value={form.idcard}
                                             onChange={(e) => handleChange("idcard", e.target.value)}
@@ -564,7 +645,7 @@ const PersonInfoForm = () => {
                                         />
                                     </div>
                                     <div className="w-full sm:w-[35%] p-2">
-                                        <InputLabel shrink>วันเกิด</InputLabel>
+                                        <InputLabel shrink required>วันเกิด</InputLabel>
                                         <DatePicker
                                             value={form.dob ? dayjs(form.dob) : null}
                                             onChange={(date) =>
@@ -582,7 +663,7 @@ const PersonInfoForm = () => {
                                     </div>
 
                                     <div className="w-full sm:w-1/3 p-2">
-                                        <InputLabel shrink required>เบอร์โทร</InputLabel>
+                                        <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>เบอร์โทร</InputLabel>
                                         <TextField
                                             value={form.phone}
                                             onChange={(e) => handleChange("phone", e.target.value)}
@@ -610,7 +691,7 @@ const PersonInfoForm = () => {
                             <div className='w-full flex flex-row'>
 
                                 <div className="w-full p-2">
-                                    <InputLabel shrink>สังกัดหน่วยงาน</InputLabel>
+                                    <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>สังกัดหน่วยงาน</InputLabel>
                                     <Autocomplete
                                         options={departmentList.map(d => ({
                                             id: d.uid,           // ใช้ uid เก็บค่า
@@ -629,6 +710,8 @@ const PersonInfoForm = () => {
                                             <TextField
                                                 {...params}
                                                 placeholder="เลือกหน่วยงาน"
+                                                error={!!errors.dep_uid}
+                                                helperText={errors.dep_uid}
                                             />
                                         )}
                                         getOptionLabel={(o) => (typeof o === "string" ? o : o?.label ?? "")}
@@ -636,16 +719,19 @@ const PersonInfoForm = () => {
                                     />
                                 </div>
                                 <div className="w-full p-2">
-                                    <InputLabel shrink>เลขบัตรพนักงาน</InputLabel>
+                                    <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>เลขบัตรพนักงาน</InputLabel>
                                     <TextField
                                         value={form.emp_card_id}
                                         onChange={(e) => handleChange("emp_card_id", e.target.value)}
                                         disabled={isTerminated}
+                                        error={!!errors.emp_card_id}
+                                        helperText={errors.emp_card_id}
+
                                     />
                                 </div>
                             </div>
                             <div className="w-full p-2">
-                                <InputLabel shrink>หมายเหตุ</InputLabel>
+                                <InputLabel shrink >หมายเหตุ</InputLabel>
                                 <TextField
                                     multiline
                                     rows={2}
@@ -695,12 +781,14 @@ const PersonInfoForm = () => {
                                     onChange={(e) => handleChange("member_group_id", Number(e.target.value))}
                                     disabled={isTerminated}
                                 >
-                                    <MenuItem value={0}><em>ทุกประเภท</em></MenuItem>
-                                    {memberGroups.map((mg) => (
-                                        <MenuItem key={mg.id} value={mg.id}>
-                                            {mg.name_th}
-                                        </MenuItem>
-                                    ))}
+                                    <MenuItem value={0}><em>เลือกประเภท</em></MenuItem>
+                                    {memberGroups
+                                        .filter((mg) => mg.name_en !== "Visitor") // 🔹 ตัด Visitor ออก
+                                        .map((mg) => (
+                                            <MenuItem key={mg.id} value={mg.id}>
+                                                {mg.name_th}
+                                            </MenuItem>
+                                        ))}
                                 </Select>
                             </div>
                             <div className="w-full sm:w-1/2 p-2">
@@ -713,7 +801,7 @@ const PersonInfoForm = () => {
                             </div>
                             <div className="w-full sm:w-1/2 flex">
                                 <div className='w-1/2 p-2'>
-                                    <InputLabel shrink required className='!text-white'>วันเริ่มต้น</InputLabel>
+                                    <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"} className='!text-white'>วันเริ่มต้น</InputLabel>
                                     <DatePicker
                                         value={form.start_date ? dayjs(form.start_date) : null}
                                         onChange={(date) =>
@@ -722,14 +810,20 @@ const PersonInfoForm = () => {
                                         disabled={isTerminated}
                                         slotProps={{
                                             textField: {
-                                                error: !!errors.start_date,
-                                                helperText: errors.start_date,
+                                                error:
+                                                    memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
+                                                        ? !!errors.start_date
+                                                        : false,
+                                                helperText:
+                                                    memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
+                                                        ? errors.start_date
+                                                        : "",
                                             },
                                         }}
                                     />
                                 </div>
                                 <div className='w-1/2 p-2'>
-                                    <InputLabel shrink required className='!text-white'>วันสิ้นสุด</InputLabel>
+                                    <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"} className='!text-white'>วันสิ้นสุด</InputLabel>
                                     <DatePicker
                                         value={form.end_date ? dayjs(form.end_date) : null}
                                         onChange={(date) =>
@@ -738,8 +832,14 @@ const PersonInfoForm = () => {
                                         disabled={isTerminated}
                                         slotProps={{
                                             textField: {
-                                                error: !!errors.end_date,
-                                                helperText: errors.end_date,
+                                                error:
+                                                    memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
+                                                        ? !!errors.end_date
+                                                        : false,
+                                                helperText:
+                                                    memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
+                                                        ? errors.end_date
+                                                        : "",
                                             },
                                         }}
                                     />
@@ -767,7 +867,15 @@ const PersonInfoForm = () => {
                         <Box mt={3}>
                             <Box className=" flex flex-col gap-3 justify-start  mb-2">
                                 <Typography variant="h6">รายละเอียดรถ</Typography>
-                                <Button size="small" className='!bg-gold !text-primary w-[120px]' disabled={isTerminated} startIcon={<AddIcon />} onClick={handleOpenCarPopup}>เพิ่มรถ</Button>
+                                <Button
+                                    size="small"
+                                    className='!bg-gold !text-primary w-[120px]'
+                                    disabled={isTerminated || carRows.length >= 5} // ✅ disable เมื่อมีครบ 5 คัน
+                                    startIcon={<AddIcon />}
+                                    onClick={handleOpenCarPopup}
+                                >
+                                    เพิ่มรถ
+                                </Button>
                             </Box>
                             <Box sx={{ height: '100%', width: '100%' }}>
                                 <DataTable

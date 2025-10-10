@@ -19,7 +19,7 @@ export const DepartmentApi = {
     list: async (
         page: number = 1,
         limit: number = 20,
-        orderBy: string = "uid.asc"
+        orderBy: string = "dep_name.asc"
     ): Promise<ApiResponse<Department[]>> => {
         const params = new URLSearchParams();
         params.set("orderBy", orderBy);

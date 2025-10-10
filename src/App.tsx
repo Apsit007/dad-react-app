@@ -1,5 +1,5 @@
 // src/App.tsx
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, useLocation } from 'react-router-dom';
 import MainLayout from './layout/mainLayout';
 import DashBoardPage from './pages/DashBoardPage';
 import SearchPerson from './pages/Search/SearchPerson';
@@ -95,11 +95,7 @@ const router = createBrowserRouter([
 
 // 2. Create the App component to provide the router
 function App() {
-  const dispatch = useDispatch<AppDispatch>();
 
-  useEffect(() => {
-    dispatch(fetchAllMasterdata()); // โหลดครั้งเดียว
-  }, [dispatch]);
 
   return <RouterProvider router={router} />;
 }

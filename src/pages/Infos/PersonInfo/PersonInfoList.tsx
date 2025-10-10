@@ -24,6 +24,7 @@ import ManageSearchIcon from "@mui/icons-material/ManageSearch"
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined"
 import { exportData } from '../../../services/Export.service';
 import ImageViewer from '../../../components/ImageViewer';
+import ImageTag from '../../../components/ImageTag';
 
 
 const memberStatusList = [
@@ -76,6 +77,7 @@ const PersonInfoList = () => {
             }
         }
         loadDepartments();
+        loadData();
     }, [])
 
     const loadData = async (page = 1, limit = 10) => {
@@ -86,8 +88,8 @@ const PersonInfoList = () => {
                 member_status: status || undefined,
                 dep_uid: dep || undefined,
                 member_group_id: memberGroupId || undefined,
-                created_at_start: createdStart ? dayjs(createdStart).format("YYYY-MM-DD") : undefined,
-                created_at_end: createdEnd ? dayjs(createdEnd).format("YYYY-MM-DD") : undefined,
+                created_at_start: createdStart ? dayjs(createdStart).startOf('day').toISOString() : undefined, // ✅ เพิ่ม startOf('day')
+                created_at_end: createdEnd ? dayjs(createdEnd).endOf('day').toISOString() : undefined,       // ✅ เพิ่ม endOf('day')
             };
 
             const res = await MemberApi.list(page, limit, "uid.asc", filter);
@@ -99,6 +101,8 @@ const PersonInfoList = () => {
             console.error("❌ Load members error:", err);
         }
     };
+
+
 
     const handleDelete = async (uid: string) => {
         const confirm = await dialog.confirm("ต้องการจะลบข้อมูลใช่หรือไม่");
@@ -148,23 +152,44 @@ const PersonInfoList = () => {
     // --- Table Columns Definition ---
     const columns: GridColDef[] = [
         {
-            field: 'actions', headerName: '', width: 100, sortable: false, align: 'center',
+            field: "actions",
+            headerName: "",
+            width: 100,
+            sortable: false,
+            align: "center",
             renderCell: (params) => (
-                <div className='flex w-full h-full items-center justify-center gap-1'>
-                    <IconButton size="small" component={NavLink} to={`/info/person/form/${params.row.uid}`}>
+                <div className="flex w-full h-full items-center justify-center gap-1">
+                    <IconButton
+                        size="small"
+                        component={NavLink}
+                        to={`/info/person/form/${params.row.uid}`}
+                    >
                         <EditIcon fontSize="small" />
                     </IconButton>
-                    <IconButton size="small" onClick={() => handleDelete(params.row.uid)} disabled={params.row.member_status === 'active'}><DeleteIcon fontSize="small" /></IconButton>
-                    <IconButton size="small" onClick={() => onOpenHistory(params.row.idcard)} ><ManageSearchIcon fontWeight="small" /></IconButton>
+
+                    <IconButton
+                        size="small"
+                        onClick={() => handleDelete(params.row.uid)}
+                        disabled={params.row.member_status === "active"}
+                    >
+                        <DeleteIcon fontSize="small" />
+                    </IconButton>
+
+                    <IconButton
+                        size="small"
+                        onClick={() => onOpenHistory(params.row.idcard)}
+                    >
+                        <ManageSearchIcon fontWeight="small" />
+                    </IconButton>
                 </div>
-            )
+            ),
         },
         {
-            field: 'rownumb',
-            headerName: 'ลำดับ',
+            field: "rownumb",
+            headerName: "ลำดับ",
             width: 80,
-            align: 'center',
-            headerAlign: 'center',
+            align: "center",
+            headerAlign: "center",
             sortable: false,
             filterable: false,
             renderCell: (params) => {
@@ -177,53 +202,126 @@ const PersonInfoList = () => {
                 );
             },
         },
-        { field: 'card_number', headerName: 'Card Number (Hex)', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
-        { field: 'card_code', headerName: 'Card Code', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center' },
         {
-            field: 'image_url', headerName: 'ภาพใบหน้า', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center', sortable: false,
-            renderCell: (params) => (
-                <div className='w-full h-full flex justify-center items-center' onClick={() => viewImg(params.value)}>
-                    <Avatar variant='square' src={params.value} className=' !h-[70%] !w-[70%]' />
-                </div>
-            )
-        },
-        {
-            field: 'fullname', headerName: 'ชื่อ-นามสกุล', flex: 1.5, minWidth: 200, headerAlign: 'center',
-            renderCell: (params) => `${params.row.firstname || ''} ${params.row.lastname || ''}`
-        },
-        { field: 'idcard', headerName: 'เลขบัตรประชาชน', flex: 1.5, minWidth: 200, headerAlign: 'center' },
-        { field: 'dep_name', headerName: 'หน่วยงาน', flex: 1.5, minWidth: 250, headerAlign: 'center' },
-        { field: 'member_status', headerName: 'สถานะ', flex: 1.5, minWidth: 250, headerAlign: 'center' },
-        {
-            field: 'created_at',
-            headerName: 'วันที่สร้าง',
+            field: "card_number",
+            headerName: "Card Number (Hex)",
             flex: 1,
             minWidth: 150,
-            headerAlign: 'center',
-            align: 'center',
-            renderCell: (params) =>
-                params.value ? dayjs(params.value).format("DD/MM/YYYY") : ""
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => <Typography>{params.value || "-"}</Typography>,
         },
         {
-            field: 'end_date',
-            headerName: 'วันที่สิ้นสุด',
+            field: "card_code",
+            headerName: "Card Code",
             flex: 1,
             minWidth: 150,
-            headerAlign: 'center',
-            align: 'center',
-            renderCell: (params) =>
-                params.value ? dayjs(params.value).format("DD/MM/YYYY") : ""
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => <Typography>{params.value || "-"}</Typography>,
         },
         {
-            field: 'member_group_name_en', headerName: 'ประเภทบุคคล', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
+            field: "image_url",
+            headerName: "ภาพใบหน้า",
+            flex: 1,
+            minWidth: 120,
+            headerAlign: "center",
+            align: "center",
+            sortable: false,
             renderCell: (params) => (
-                <div className='w-full h-full flex justify-center items-center'>
-                    <ChipTag tag={params.value} />
+                <div className="flex w-full justify-center gap-2 h-full p-[1px]">
+                    <ImageTag
+                        tag={params.row.member_group_name_en ?? null}
+                        img={params.row.image_url ?? ""}
+                    />
                 </div>
-            )
+            ),
         },
-
+        {
+            field: "fullname",
+            headerName: "ชื่อ-นามสกุล",
+            flex: 1.5,
+            minWidth: 200,
+            headerAlign: "center",
+            renderCell: (params) => {
+                const firstname = params.row.firstname ?? "";
+                const lastname = params.row.lastname ?? "";
+                const fullname = `${firstname} ${lastname}`.trim();
+                return <Typography>{fullname || "-"}</Typography>;
+            },
+        },
+        {
+            field: "idcard",
+            headerName: "เลขบัตรประชาชน",
+            flex: 1.5,
+            minWidth: 200,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => <Typography>{params.value || "-"}</Typography>,
+        },
+        {
+            field: "dep_name",
+            headerName: "หน่วยงาน",
+            flex: 1.5,
+            minWidth: 250,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => <Typography>{params.value || "-"}</Typography>,
+        },
+        {
+            field: "member_status",
+            headerName: "สถานะ",
+            flex: 1.5,
+            minWidth: 250,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => <Typography>{params.value || "-"}</Typography>,
+        },
+        {
+            field: "created_at",
+            headerName: "วันที่สร้าง",
+            flex: 1,
+            minWidth: 150,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => (
+                <Typography>
+                    {params.value
+                        ? dayjs(params.value).format("DD/MM/YYYY")
+                        : "-"}
+                </Typography>
+            ),
+        },
+        {
+            field: "end_date",
+            headerName: "วันที่สิ้นสุด",
+            flex: 1,
+            minWidth: 150,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => (
+                <Typography>
+                    {params.value
+                        ? dayjs(params.value).format("DD/MM/YYYY")
+                        : "-"}
+                </Typography>
+            ),
+        },
+        {
+            field: "member_group_name_en",
+            headerName: "ประเภทบุคคล",
+            flex: 1,
+            minWidth: 150,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => (
+                <div className="w-full h-full flex justify-center items-center">
+                    <ChipTag tag={params.value || "-"} />
+                </div>
+            ),
+        },
     ];
+
 
     const historycolumns: GridColDef[] = [
         {
@@ -348,6 +446,26 @@ const PersonInfoList = () => {
         setViewImgUrl(img)
     }, [viewImgUrl])
 
+    // ✅ ฟังก์ชันเตรียมข้อมูลก่อน export
+    const prepareExportRows = (rows: Member[]) => {
+        return rows.map((r, i) => ({
+            ลำดับ: i + 1,
+            "Card Number (Hex)": r.card_number ?? "-",
+            "Card Code": r.card_code ?? "-",
+            "ชื่อ-นามสกุล": `${r.firstname ?? ""} ${r.lastname ?? ""}`.trim() || "-",
+            "เลขบัตรประชาชน": r.idcard ?? "-",
+            "หน่วยงาน": r.dep_name ?? "-",
+            "สถานะ": r.member_status ?? "-",
+            "วันที่สร้าง": r.created_at
+                ? dayjs(r.created_at).format("DD/MM/YYYY")
+                : "-",
+            "วันที่สิ้นสุด": r.end_date
+                ? dayjs(r.end_date).format("DD/MM/YYYY")
+                : "-",
+            "ประเภทบุคคล": r.member_group_name_en ?? "-",
+        }));
+    };
+
     return (
         <>
             <Box>
@@ -442,7 +560,7 @@ const PersonInfoList = () => {
                         className="!border-gold !text-primary"
                         size="small"
                         startIcon={<img src="/icons/txt-file.png" />}
-                        onClick={() => exportData(rows, "txt", "member_list")}
+                        onClick={() => exportData(prepareExportRows(rows), "txt", "member_list")}
                     >
                         TXT
                     </Button>
@@ -451,7 +569,7 @@ const PersonInfoList = () => {
                         className="!border-gold !text-primary"
                         size="small"
                         startIcon={<img src="/icons/xls-file.png" />}
-                        onClick={() => exportData(rows, "xlsx", "member_list")}
+                        onClick={() => exportData(prepareExportRows(rows), "xlsx", "member_list")}
                     >
                         XLS
                     </Button>
@@ -460,7 +578,7 @@ const PersonInfoList = () => {
                         className="!border-gold !text-primary"
                         size="small"
                         startIcon={<img src="/icons/csv-file.png" />}
-                        onClick={() => exportData(rows, "csv", "member_list")}
+                        onClick={() => exportData(prepareExportRows(rows), "csv", "member_list")}
                     >
                         CSV
                     </Button>

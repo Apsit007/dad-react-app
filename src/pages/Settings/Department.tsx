@@ -93,18 +93,63 @@ export default function DepartmentPage() {
 
 
     const columns: GridColDef[] = [
-        { field: "dep_name", headerName: "ชื่อหน่วยงาน", headerAlign: 'center', flex: 1 },
-        { field: "location", headerName: "ที่อยู่", headerAlign: 'center', flex: 1 },
-        { field: "floor", headerName: "ชั้น", headerAlign: 'center', flex: 0.5 },
-        { field: "notes", headerName: "หมายเหตุ", headerAlign: 'center', flex: 1 },
+        {
+            field: "dep_name",
+            headerName: "ชื่อหน่วยงาน",
+            headerAlign: "center",
+            flex: 1,
+            align: "center",
+            renderCell: (params) => (
+                <Typography variant="body2">
+                    {params.value || "-"}
+                </Typography>
+            ),
+        },
+        {
+            field: "location",
+            headerName: "ที่อยู่",
+            headerAlign: "center",
+            flex: 1,
+            align: "center",
+            renderCell: (params) => (
+                <Typography variant="body2">
+                    {params.value || "-"}
+                </Typography>
+            ),
+        },
+        {
+            field: "floor",
+            headerName: "ชั้น",
+            headerAlign: "center",
+            flex: 0.5,
+            align: "center",
+            renderCell: (params) => (
+                <Typography variant="body2">
+                    {params.value || "-"}
+                </Typography>
+            ),
+        },
+        {
+            field: "notes",
+            headerName: "หมายเหตุ",
+            headerAlign: "center",
+            flex: 1,
+            align: "center",
+            renderCell: (params) => (
+                <Typography variant="body2" sx={{ whiteSpace: "normal", wordBreak: "break-word" }}>
+                    {params.value || "-"}
+                </Typography>
+            ),
+        },
         {
             field: "actions",
             headerName: "การจัดการ",
-            headerAlign: 'center',
+            headerAlign: "center",
             sortable: false,
             flex: 0.5,
+            align: "center",
             renderCell: (params) => (
-                <>
+                <div className="flex justify-center items-center gap-1">
                     <IconButton
                         color="primary"
                         onClick={() => {
@@ -121,10 +166,11 @@ export default function DepartmentPage() {
                     >
                         <DeleteIcon />
                     </IconButton>
-                </>
+                </div>
             ),
         },
     ];
+
 
     return (
         <Box p={3}>

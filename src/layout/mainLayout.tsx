@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import Sidebar from './sidebar';
 import Navbar from './navbar';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchLprRegions } from '../store/slices/masterdataSlice';
+import { fetchAllMasterdata, fetchLprRegions } from '../store/slices/masterdataSlice';
 import type { AppDispatch, RootState } from '../store';
 
 
@@ -13,6 +13,7 @@ const MainLayout = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const dispatch = useDispatch<AppDispatch>();
     const lastFetchedAt = useSelector((s: RootState) => s.masterdata.lastFetchedAt);
+    const location = useLocation();
 
     const toggleSidebar = () => {
         setIsCollapsed(!isCollapsed);
@@ -22,6 +23,13 @@ const MainLayout = () => {
     useEffect(() => {
         if (!lastFetchedAt) dispatch(fetchLprRegions());
     }, [dispatch, lastFetchedAt]);
+
+    useEffect(() => {
+        // ✅ โหลด masterdata เฉพาะเมื่อไม่ใช่หน้า login
+        if (location.pathname !== "/login") {
+            dispatch(fetchAllMasterdata());
+        }
+    }, [dispatch, location.pathname]);
 
     // ✅ Auto collapse on small screen
     useEffect(() => {
@@ -41,7 +49,7 @@ const MainLayout = () => {
     return (
         <div className=" min-h-screen p-6">
             <div>
-                <Sidebar isCollapsed={isCollapsed} onExpand={() => setIsCollapsed(false)}  />
+                <Sidebar isCollapsed={isCollapsed} onExpand={() => setIsCollapsed(false)} />
 
                 {/* ✨margin-left แบบไดนามิกตามสถานะของ Sidebar */}
                 <div className={`transition-all duration-300 ease-in-out ${isCollapsed ? 'ml-28' : 'ml-72'}`}>

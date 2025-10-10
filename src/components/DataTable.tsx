@@ -16,7 +16,12 @@ const defaultGetRowClassName = (params: GridRowClassNameParams) => {
     return params.row.isBlacklist ? 'highlight-row' : '';
 };
 
-const CustomDataGrid = (props: DataGridProps) => {
+interface CustomDataGridProps extends DataGridProps {
+    disableFooter?: boolean;
+}
+
+const CustomDataGrid = (props: CustomDataGridProps) => {
+    const { disableFooter, ...rest } = props;
     const hasCustomRowClass = !!props.getRowClassName;
     return (
         // 2. เพิ่ม Wrapper Box เพื่อควบคุมขนาด
@@ -42,8 +47,12 @@ const CustomDataGrid = (props: DataGridProps) => {
                     ...props.initialState,
                 }}
                 pageSizeOptions={[10, 20, 50]}
+                // ✅ ถ้า disableFooter = true → ปิด footer ทั้งหมด
+                hideFooter={disableFooter}
+                // ✅ ถ้ามี disableFooter = true → ไม่ใช้ CustomFooter
+
                 slots={{
-                    footer: CustomFooter,
+                    footer: disableFooter ? undefined : CustomFooter,
                     ...props.slots,
                 }}
                 sx={{

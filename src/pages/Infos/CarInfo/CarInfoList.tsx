@@ -182,7 +182,9 @@ const CarInfoList = () => {
         })();
     }, [selectedMakeId]);
 
-
+    useEffect(() => {
+        fetchData(0, paginationModel.pageSize, lastFilter);
+    }, [])
 
     // options สำหรับ Autocomplete
     const makeOptions = useMemo(
@@ -428,11 +430,11 @@ const CarInfoList = () => {
     // --- Table Columns Definition ---
     const columns: GridColDef[] = [
         {
-            field: 'rownumb',
-            headerName: 'ลำดับ',
+            field: "rownumb",
+            headerName: "ลำดับ",
             width: 80,
-            align: 'center',
-            headerAlign: 'center',
+            align: "center",
+            headerAlign: "center",
             sortable: false,
             filterable: false,
             renderCell: (params) => {
@@ -446,48 +448,103 @@ const CarInfoList = () => {
             },
         },
         {
-            field: 'plate', headerName: 'ทะเบียนรถ', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
-            renderCell: (params) => (
-                <div className='w-full h-full flex justify-center items-center'>
-                    <Typography variant='body2'>{params.row.plate_prefix}{params.row.plate_number}</Typography>
-                </div>
-            )
-        },
-        { field: 'region_name_th', headerName: 'หมวดจังหวัด', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center', },
-        { field: 'vehicle_make', headerName: 'ยี่ห้อ', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
-        { field: 'vehicle_model', headerName: 'รุ่นรถ', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
-        { field: 'vehicle_color_name_th', headerName: 'สี', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center', },
-        {
-            field: 'created_at', headerName: 'วันที่สร้าง', flex: 1, minWidth: 150, headerAlign: 'center', align: 'center',
-            renderCell: (params) => (
-                <div className='w-full h-full flex justify-center items-center'>
-                    <Typography>
-                        {params.value ? dayjs(params.value).format('DD/MM/YYYY') : '-'}
-                    </Typography>
-                </div>
-            )
-        },
-        {
-            field: 'vehicle_group_name_en',
-            headerName: 'กลุ่มรถ',
+            field: "plate",
+            headerName: "ทะเบียนรถ",
             flex: 1,
             minWidth: 150,
-            headerAlign: 'center',
-            align: 'center',
-            renderCell: (params) => (
-                <div className='w-full h-full flex justify-center items-center'>
-                    <ChipTag tag={params.value} />
-                </div>
-            )
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => {
+                const prefix = params.row.plate_prefix ?? "";
+                const number = params.row.plate_number ?? "";
+                const plate = `${prefix}${number}`.trim();
+                return (
+                    <div className="w-full h-full flex justify-center items-center">
+                        <Typography variant="body2">{plate || "-"}</Typography>
+                    </div>
+                );
+            },
         },
         {
-            field: 'actions',
-            headerName: '',
+            field: "region_name_th",
+            headerName: "หมวดจังหวัด",
+            flex: 1,
+            minWidth: 150,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => (
+                <Typography variant="body2">{params.value || "-"}</Typography>
+            ),
+        },
+        {
+            field: "vehicle_make",
+            headerName: "ยี่ห้อ",
+            flex: 1,
+            minWidth: 120,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => (
+                <Typography variant="body2">{params.value || "-"}</Typography>
+            ),
+        },
+        {
+            field: "vehicle_model",
+            headerName: "รุ่นรถ",
+            flex: 1,
+            minWidth: 120,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => (
+                <Typography variant="body2">{params.value || "-"}</Typography>
+            ),
+        },
+        {
+            field: "vehicle_color_name_th",
+            headerName: "สี",
+            flex: 1,
+            minWidth: 120,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => (
+                <Typography variant="body2">{params.value || "-"}</Typography>
+            ),
+        },
+        {
+            field: "created_at",
+            headerName: "วันที่สร้าง",
+            flex: 1,
+            minWidth: 150,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => (
+                <Typography variant="body2">
+                    {params.value
+                        ? dayjs(params.value).format("DD/MM/YYYY")
+                        : "-"}
+                </Typography>
+            ),
+        },
+        {
+            field: "vehicle_group_name_en",
+            headerName: "กลุ่มรถ",
+            flex: 1,
+            minWidth: 150,
+            headerAlign: "center",
+            align: "center",
+            renderCell: (params) => (
+                <div className="w-full h-full flex justify-center items-center">
+                    <ChipTag tag={params.value || "-"} />
+                </div>
+            ),
+        },
+        {
+            field: "actions",
+            headerName: "",
             width: 100,
             sortable: false,
-            align: 'center',
+            align: "center",
             renderCell: (params) => (
-                <div className='flex w-full h-full items-center justify-center gap-1'>
+                <div className="flex w-full h-full items-center justify-center gap-1">
                     <IconButton size="small" onClick={() => handleEdit(params.row)}>
                         <EditIcon fontSize="small" />
                     </IconButton>
@@ -495,9 +552,27 @@ const CarInfoList = () => {
                         <DeleteIcon fontSize="small" />
                     </IconButton>
                 </div>
-            )
-        }
+            ),
+        },
     ];
+
+    // ✅ ฟังก์ชันเตรียมข้อมูลก่อน export
+    const prepareExportRows = (rows: Vehicle[]) => {
+        return rows.map((r, i) => {
+            const plate = `${r.plate_prefix ?? ""}${r.plate_number ?? ""}`.trim() || "-";
+
+            return {
+                ลำดับ: i + 1,
+                "ทะเบียนรถ": plate,
+                "หมวดจังหวัด": r.region_name_th ?? "-",
+                "ยี่ห้อ": r.vehicle_make ?? "-",
+                "รุ่นรถ": r.vehicle_model ?? "-",
+                "สี": r.vehicle_color_name_th ?? "-",
+                "วันที่สร้าง": r.created_at ? dayjs(r.created_at).format("DD/MM/YYYY") : "-",
+                "กลุ่มรถ": r.vehicle_group_name_en ?? "-",
+            };
+        });
+    };
 
     return (
         <Box>
@@ -601,7 +676,7 @@ const CarInfoList = () => {
                                     onChange={(e) => setSVehicleGroupId(e.target.value as unknown as number | '')}
                                     displayEmpty
                                 >
-                                    <MenuItem value=""><em>ทุกประเภท</em></MenuItem>
+                                    <MenuItem value=""><em>ทุกกลุ่ม</em></MenuItem>
                                     {groups.map(g => (
                                         <MenuItem key={g.id} value={g.id}>{g.name_th}</MenuItem>
                                     ))}
@@ -656,7 +731,7 @@ const CarInfoList = () => {
                     className="!border-gold !text-primary"
                     size="small"
                     startIcon={<img src="/icons/txt-file.png" />}
-                    onClick={() => exportData(rows, "txt", "vehicle_list")}
+                    onClick={() => exportData(prepareExportRows(rows), "txt", "vehicle_list")}
                 >
                     TXT
                 </Button>
@@ -665,7 +740,7 @@ const CarInfoList = () => {
                     className="!border-gold !text-primary"
                     size="small"
                     startIcon={<img src="/icons/xls-file.png" />}
-                    onClick={() => exportData(rows, "xlsx", "vehicle_list")}
+                    onClick={() => exportData(prepareExportRows(rows), "xlsx", "vehicle_list")}
                 >
                     XLS
                 </Button>
@@ -674,7 +749,7 @@ const CarInfoList = () => {
                     className="!border-gold !text-primary"
                     size="small"
                     startIcon={<img src="/icons/csv-file.png" />}
-                    onClick={() => exportData(rows, "csv", "vehicle_list")}
+                    onClick={() => exportData(prepareExportRows(rows), "csv", "vehicle_list")}
                 >
                     CSV
                 </Button>
@@ -929,8 +1004,12 @@ const CarInfoList = () => {
                                     displayEmpty
                                     error={!!groupError}
                                 >
-                                    <MenuItem value=""><em>ทุกประเภท</em></MenuItem>
-                                    {groups.map(g => (
+                                    <MenuItem value=""><em>เลือกกลุ่ม</em></MenuItem>
+
+                                    {(editingVehicle
+                                        ? groups // ✅ แก้ไข → แสดงทั้งหมด
+                                        : groups.filter((g) => g.name_th !== 'ทั่วไป') // ✅ เพิ่ม → ตัด "ทั่วไป" ออก
+                                    ).map((g) => (
                                         <MenuItem key={g.id} value={g.id}>{g.name_th}</MenuItem>
                                     ))}
                                 </Select>

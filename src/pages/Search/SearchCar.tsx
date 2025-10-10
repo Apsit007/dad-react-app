@@ -9,7 +9,7 @@ import { type GridColDef } from '@mui/x-data-grid';
 import ImageTag from '../../components/ImageTag';
 import { useSelector } from 'react-redux';
 import { selectRegions, selectVehicleColors, selectVehicleGroups, selectVehicleMakes } from '../../store/slices/masterdataSlice';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Dayjs } from 'dayjs';
 import { LprDataApi, type LprRecord } from '../../services/LprData.service';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -19,11 +19,11 @@ import { exportData } from '../../services/Export.service';
 // --- 1. อัปเดต Columns ของตาราง ---
 const columns: GridColDef[] = [
     {
-        field: 'rownumb',
-        headerName: 'ลำดับ',
+        field: "rownumb",
+        headerName: "ลำดับ",
         width: 80,
-        align: 'center',
-        headerAlign: 'center',
+        align: "center",
+        headerAlign: "center",
         sortable: false,
         filterable: false,
         renderCell: (params) => {
@@ -37,91 +37,157 @@ const columns: GridColDef[] = [
         },
     },
     {
-        field: 'overview_image_url',
-        headerName: 'ภาพ',
+        field: "overview_image_url",
+        headerName: "ภาพ",
         width: 200,
-        headerAlign: 'center',
-        align: 'center',
+        headerAlign: "center",
+        align: "center",
         sortable: false,
         renderCell: (params) => (
-            <div className="flex w-full gap-2 h-full">
-                <ImageTag tag={params.row.vehicle_group_en} img={params.value} />
-                <ImageTag tag={params.row.member_group_en} img={params.row.driver_image_url} />
+            <div className="flex w-full gap-2 h-full p-[1px]">
+                <ImageTag
+                    tag={params.row.vehicle_group_en ?? null}
+                    img={params.value ?? ""}
+                />
+                <ImageTag
+                    tag={params.row.member_group_en ?? null}
+                    img={params.row.driver_image_url ?? ""}
+                />
             </div>
         ),
     },
     {
-        field: 'licensePlate',
-        headerName: 'เลขทะเบียน',
+        field: "licensePlate",
+        headerName: "เลขทะเบียน",
         minWidth: 150,
-        headerAlign: 'center',
+        headerAlign: "center",
         renderCell: (params) => (
-            <div className='flex justify-center items-center h-full'>
-                <div className='flex flex-col items-center'>
-                    <Typography variant="body2" sx={{ color: params.row.vehicle_group_id == 5 ? 'red' : 'inherit', fontWeight: 'bold' }}>
-                        {params.row.plate}
+            <div className="flex justify-center items-center h-full">
+                <div className="flex flex-col items-center">
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            color:
+                                params.row.vehicle_group_id === 5 ? "red" : "inherit",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        {params.row.plate || "-"}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                        {params.row.region_th}
+                        {params.row.region_th || "-"}
                     </Typography>
-
                 </div>
             </div>
-        )
+        ),
     },
-    { field: 'vehicle_make', headerName: 'ยี่ห้อ', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
-    { field: 'vehicle_color_th', headerName: 'สี', flex: 1, minWidth: 120, headerAlign: 'center', align: 'center' },
     {
-        field: 'name',
-        headerName: 'ชื่อ-นามสกุล',
-        flex: 1, minWidth: 200,
-        headerAlign: 'center',
+        field: "vehicle_make",
+        headerName: "ยี่ห้อ",
+        flex: 1,
+        minWidth: 120,
+        headerAlign: "center",
+        align: "center",
         renderCell: (params) => (
-            <div className='flex justify-start items-center h-full'>
-                <Typography variant="body2" sx={{ color: params.row.member_group_en === 'blacklist' ? 'red' : 'inherit' }}>
-                    {params.row.member_firstname}&nbsp;{params.row.member_lastname}
-                </Typography>
-            </div>
-        )
+            <Typography>{params.value || "-"}</Typography>
+        ),
     },
     {
-        field: 'department_name', headerName: 'หน่วยงาน', flex: 1.5, minWidth: 250, headerAlign: 'center',
+        field: "vehicle_color_th",
+        headerName: "สี",
+        flex: 1,
+        minWidth: 120,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) => (
+            <Typography>{params.value || "-"}</Typography>
+        ),
+    },
+    {
+        field: "name",
+        headerName: "ชื่อ-นามสกุล",
+        flex: 1,
+        minWidth: 200,
+        headerAlign: "center",
+        renderCell: (params) => {
+            const firstname = params.row.member_firstname ?? "";
+            const lastname = params.row.member_lastname ?? "";
+            const fullname = `${firstname} ${lastname}`.trim();
+            const displayName = fullname !== "" ? fullname : "-";
+            return (
+                <div className="flex justify-center items-center h-full">
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            color:
+                                params.row.member_group_en === "blacklist"
+                                    ? "red"
+                                    : "inherit",
+                        }}
+                    >
+                        {displayName}
+                    </Typography>
+                </div>
+            );
+        },
+    },
+    {
+        field: "department_name",
+        headerName: "หน่วยงาน",
+        flex: 1.5,
+        minWidth: 250,
+        headerAlign: "center",
         renderCell: (params) => (
             <div
                 style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    width: '100%',
-                    textAlign: 'center',
-                    whiteSpace: 'normal',
-                    wordBreak: 'break-word',
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    width: "100%",
+                    textAlign: "center",
+                    whiteSpace: "normal",
+                    wordBreak: "break-word",
                 }}
             >
                 <Typography variant="body2" sx={{ lineHeight: 1.3 }}>
-                    {params.value ?? '-'}
+                    {params.value || "-"}
                 </Typography>
             </div>
         ),
     },
     {
-        field: 'datetime_in', headerName: 'วันเวลาเข้า', flex: 1, minWidth: 180, headerAlign: 'center', align: 'center',
+        field: "datetime_in",
+        headerName: "วันเวลาเข้า",
+        flex: 1,
+        minWidth: 180,
+        headerAlign: "center",
+        align: "center",
         renderCell: (params) => (
-            <Typography variant="body2" >
-                {params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm') : '-'}
+            <Typography variant="body2">
+                {params.value
+                    ? dayjs(params.value).format("DD/MM/YYYY HH:mm")
+                    : "-"}
             </Typography>
-        )
+        ),
     },
     {
-        field: 'datetime_out', headerName: 'เวลาออก', flex: 1, minWidth: 180, headerAlign: 'center', align: 'center',
+        field: "datetime_out",
+        headerName: "เวลาออก",
+        flex: 1,
+        minWidth: 180,
+        headerAlign: "center",
+        align: "center",
         renderCell: (params) => (
-            <Typography variant="body2" >
-                {params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm') : '-'}
+            <Typography variant="body2">
+                {params.value
+                    ? dayjs(params.value).format("DD/MM/YYYY HH:mm")
+                    : "-"}
             </Typography>
-        )
+        ),
     },
 ];
+
 
 const columnsExport = [
 
@@ -158,6 +224,44 @@ const columnsExport = [
         field: 'datetime_out', headerName: 'เวลาออก'
     },
 ];
+
+// ✅ ฟังก์ชันเตรียมข้อมูลก่อน export
+const prepareExportRows = (rows: LprRecord[]) => {
+    return rows.map((r, i) => {
+        // สร้างเลขทะเบียนให้รวมหมวดจังหวัด
+        const licensePlate =
+            [r.plate ?? ""].filter(Boolean).join(" ").trim() || "-";
+        const region =
+            [r.region_th ?? ""].filter(Boolean).join(" ").trim() || "-";
+
+        // รวมชื่อ-นามสกุล
+        const fullname =
+            [r.member_firstname ?? "", r.member_lastname ?? ""]
+                .filter(Boolean)
+                .join(" ")
+                .trim() || "-";
+
+        // แปลงวันเวลาให้เป็น format ที่อ่านง่าย
+        const datetimeIn = r.datetime_in
+            ? dayjs(r.datetime_in).format("DD/MM/YYYY HH:mm:ss")
+            : "-";
+        const datetimeOut = r.datetime_out
+            ? dayjs(r.datetime_out).format("DD/MM/YYYY HH:mm:ss")
+            : "-";
+
+        return {
+            ลำดับ: i + 1,
+            "เลขทะเบียน": licensePlate,
+            "จังหวัด": region,
+            "ยี่ห้อ": r.vehicle_make ?? "-",
+            "สี": r.vehicle_color_th ?? "-",
+            "ชื่อ-นามสกุล": fullname,
+            "หน่วยงาน": r.department_name ?? "-",
+            "วันเวลาเข้า": datetimeIn,
+            "เวลาออก": datetimeOut,
+        };
+    });
+};
 
 const searchType = [
     { id: 1, value: "in", label: "เวลาเข้า" },
@@ -210,8 +314,8 @@ const SearchCar = () => {
                 vehicle_color: sVehicleColor || undefined,
                 direction: sDirection || undefined,
                 vehicle_group_id: sVehicleGroupId || undefined,
-                start_date: sStartDate ? sStartDate.startOf('day').toISOString() : undefined,
-                end_date: sEndDate ? sEndDate.endOf('day').toISOString() : undefined,
+                start_date: sStartDate ? sStartDate.startOf('minute').toISOString() : undefined,
+                end_date: sEndDate ? sEndDate.endOf('minute').toISOString() : undefined,
                 page: page + 1, // API นับจาก 1
                 limit: pageSize,
                 orderBy: 'id.desc',
@@ -225,6 +329,12 @@ const SearchCar = () => {
             console.error('❌ Search API error:', err);
         }
     };
+
+    // ✅ ดึงข้อมูลเมื่อเปิดหน้า (โหลดหน้าแรก)
+    useEffect(() => {
+        handleSearch(0, paginationModel.pageSize);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // === 3. pagination change ===
     const handlePaginationChange = (model: { page: number; pageSize: number }) => {
@@ -332,13 +442,13 @@ const SearchCar = () => {
 
                             {/* กลุ่มรถ */}
                             <div className="w-full sm:w-1/2 md:w-1/5 p-2">
-                                <InputLabel shrink>ประเภทรถ</InputLabel>
+                                <InputLabel shrink>กลุ่มรถ</InputLabel>
                                 <Select
                                     value={sVehicleGroupId}
                                     onChange={(e) => setSVehicleGroupId(e.target.value as unknown as number | '')}
                                     displayEmpty
                                 >
-                                    <MenuItem value=""><em>ทุกประเภท</em></MenuItem>
+                                    <MenuItem value=""><em>ทุกกลุ่ม</em></MenuItem>
                                     {groups.map(g => (
                                         <MenuItem key={g.id} value={g.id}>{g.name_th}</MenuItem>
                                     ))}
@@ -360,11 +470,11 @@ const SearchCar = () => {
                             {/* วันที่สร้างข้อมูล */}
                             <div className="w-full sm:w-1/2 md:w-1/5 p-2">
                                 <InputLabel shrink>วันที่เริ่มต้น</InputLabel>
-                                <DatePicker value={sStartDate} onChange={setSStartDate} />
+                                <DateTimePicker sx={{ width: '100%' }} value={sStartDate} onChange={setSStartDate} />
                             </div>
                             <div className="w-full sm:w-1/2 md:w-1/5 p-2">
                                 <InputLabel shrink>วันที่สิ้นสุด</InputLabel>
-                                <DatePicker value={sEndDate} onChange={setSEndDate} />
+                                <DateTimePicker sx={{ width: '100%' }} value={sEndDate} onChange={setSEndDate} />
                             </div>
 
                         </div>
@@ -398,7 +508,7 @@ const SearchCar = () => {
                     className="!border-gold !text-primary"
                     size="small"
                     startIcon={<img src="/icons/txt-file.png" />}
-                    onClick={() => exportData(rows, "txt", "car_in/out_list")}
+                    onClick={() => exportData(prepareExportRows(rows), "txt", "car_in/out_list")}
                 >
                     TXT
                 </Button>
@@ -407,7 +517,7 @@ const SearchCar = () => {
                     className="!border-gold !text-primary"
                     size="small"
                     startIcon={<img src="/icons/xls-file.png" />}
-                    onClick={() => exportData(rows, "xlsx", "car_in/out_list")}
+                    onClick={() => exportData(prepareExportRows(rows), "xlsx", "car_in/out_list")}
                 >
                     XLS
                 </Button>
@@ -416,7 +526,7 @@ const SearchCar = () => {
                     className="!border-gold !text-primary"
                     size="small"
                     startIcon={<img src="/icons/csv-file.png" />}
-                    onClick={() => exportData(rows, "csv", "car_in/out_list")}
+                    onClick={() => exportData(prepareExportRows(rows), "csv", "car_in/out_list")}
                 >
                     CSV
                 </Button>

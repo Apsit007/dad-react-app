@@ -27,12 +27,12 @@
         "icon": "StorageIcon",
         "subMenus": [
             {
-                "name": "ข้อมูลบุคคล",
-                "path": "info/person"
-            },
-            {
                 "name": "ข้อมูลรถ",
                 "path": "info/car"
+            },
+            {
+                "name": "ข้อมูลบุคคล",
+                "path": "info/person"
             }
         ]
     },

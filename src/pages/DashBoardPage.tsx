@@ -42,9 +42,11 @@ const columns: GridColDef[] = [
         flex: 1,
         headerAlign: 'center',
         align: 'center',
-        // renderCell: (params) => (
-        //     <Typography variant="body2">{params.value}</Typography>
-        // ),
+        renderCell: (params) => (
+            <div className='flex justify-center items-center h-full'>
+                <Typography variant="body2">{params.value}({params.row.lprId})</Typography>
+            </div>
+        ),
     },
     {
         field: 'images',
@@ -86,9 +88,9 @@ const columns: GridColDef[] = [
         flex: 2,
         headerAlign: 'center',
         renderCell: (params) => (
-            <div className='flex justify-start items-center h-full'>
+            <div className='flex justify-center items-center h-full'>
                 <Typography variant="body2" sx={{ color: params.row.member_group_en === 'blacklist' ? 'red' : 'inherit' }}>
-                    {params.row.member_firstname}&nbsp;{params.row.member_lastname}
+                    {params.row.member_firstname || params.row.member_firstname ? params.row.member_firstname + ' ' + params.row.member_lastname : '-'}
                 </Typography>
             </div>
         )
@@ -138,13 +140,15 @@ const columns: GridColDef[] = [
             }
 
             return (
-                <Typography
-                    variant="body2"
-                    sx={{ color: expireDate && expireDate.isBefore(today) ? "red" : "inherit" }}
-                >
-                    {params.value}<br />
-                    {diffText}
-                </Typography>
+                <div className='flex justify-center items-center h-full'>
+                    <Typography
+                        variant="body2"
+                        sx={{ color: expireDate && expireDate.isBefore(today) ? "red" : "inherit" }}
+                    >
+                        {params.value}<br />
+                        {diffText}
+                    </Typography>
+                </div>
             );
         },
     }
@@ -188,13 +192,14 @@ const DashBoardPage = () => {
     }, []);
 
     useEffect(() => {
+        if (paginationModel.page !== 0) return;
         const newest = rows[0];
-        if (newest && (newest.vehicle_group_en === 'blacklist' || newest.member_group_en === 'blacklist') && newest.id !== lastShownIdRef.current) {
+        if (newest && (newest.vehicle_group_en === 'Blacklist' || newest.member_group_en === 'Blacklist') && newest.id !== lastShownIdRef.current) {
             lastShownIdRef.current = newest.id;
             setAlertIndex(newest.id); // เก็บ id
             setOpenAlert(true);
         }
-    }, [rows]);
+    }, [rows, paginationModel.page]);
 
     const fetchData = async (page: number, pageSize: number) => {
         try {
@@ -244,7 +249,7 @@ const DashBoardPage = () => {
         }
         return params.row.isBlacklist ? 'highlight-row' : '';
     };
-    
+
     return (
         <div className='flex flex-col  gap-4 h-full'>
             <Typography variant='h5' className='text-primary-dark '>ข้อมูลการเข้า-ออกพื้นที่ ณ ปัจจุบัน</Typography>
@@ -257,7 +262,7 @@ const DashBoardPage = () => {
                         getRowClassName={getRowClassName}
                         getRowId={(row) => row.id}
                         paginationModel={paginationModel}
-                        rowCount={rowCount}
+                        rowCount={50}
                         onPaginationModelChange={handlePaginationChange}
                         rowHeight={75}
 
@@ -269,13 +274,13 @@ const DashBoardPage = () => {
                     open={openAlert}
                     onClose={() => setOpenAlert(false)}
                     typeText={`ประเภท : ${alertData.direction === 'in' ? 'ขาเข้า' : 'ขาออก'}`}
-                    dateTimeText={dayjs(alertData.epoch_start).format('DD/MM/YYYY HH:mm')}
+                    dateTimeText={dayjs(alertData.datetime).format('DD/MM/YYYY HH:mm')}
                     vehicle={{
                         plate: alertData.plate ?? '-',
                         province: alertData.region_th ?? '-',
                         brand: alertData.vehicle_make ?? '-',
                         color: alertData.vehicle_color_th ?? '-',
-                        imageUrl: alertData.overview_image, // รถ
+                        imageUrl: alertData.overview_image_url, // รถ
                     }}
                     person={{
                         fullName: `${alertData.member_firstname ?? ''} ${alertData.member_lastname ?? ''}`.trim() || '-',

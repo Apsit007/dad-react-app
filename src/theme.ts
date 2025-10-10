@@ -94,6 +94,8 @@ const theme = createTheme({
 
         MuiDateTimePicker: {
             defaultProps: {
+                format: "DD/MM/YYYY HH:mm",
+                ampm: false,
                 slotProps: {
                     textField: {
                         size: 'small',
@@ -116,6 +118,7 @@ const theme = createTheme({
         },
         MuiDatePicker: {
             defaultProps: {
+                format: "DD/MM/YYYY",
                 slotProps: {
                     textField: {
                         size: 'small',

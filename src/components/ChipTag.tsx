@@ -9,6 +9,8 @@ const bgClass: Record<string, string> = {
     Member: "bg-gradient-to-tr from-[#EA8810] to-[#FFB84D]",
     Blacklist: "bg-gradient-to-tr from-[#9F0C0C] to-[#cf4432]",
     VIP: "bg-gradient-to-tr from-[#FFC300] to-[#ffdd62]",
+    Guest: "bg-gradient-to-tr from-[#7785AC] to-[#a6b1cc]",
+    Watchlist: "bg-gradient-to-tr from-[#E29578] to-[#ebbbaa]",
     Active: "bg-gradient-to-tr from-[#4CB64C] to-[#89db89]",
     Inactive: "bg-gradient-to-tr from-[#838383] to-[#d6d5d5]",
     none: "bg-gradient-to-tr from-[#9E9E9E] to-[#BDBDBD]"

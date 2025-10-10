@@ -7,10 +7,11 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import menuItemsData from '../services/MenuItem.json';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import Collapse from '@mui/material/Collapse';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store';
+import { logout } from '../store/slices/authSlice';
 
 const iconMap = {
     DashboardIcon: DashboardIcon,
@@ -37,6 +38,8 @@ interface SidebarProps {
 
 const Sidebar = ({ isCollapsed, onExpand }: SidebarProps) => {
     const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const location = useLocation();
     // 1) กำหนด type ของ permissions ชัดเจน
     const permissions: Record<string, boolean> = useSelector((state: RootState) => state.auth.user?.permissions || {});
@@ -46,8 +49,8 @@ const Sidebar = ({ isCollapsed, onExpand }: SidebarProps) => {
         ค้นหาบุคคล: 'person_search',
         ค้นหารถ: 'car_search',
         ค้นหาVDO: 'video_search',
-        ข้อมูลบุคคล: 'person_manage',
         ข้อมูลรถ: 'car_manage',
+        ข้อมูลบุคคล: 'person_manage',
         ตั้งค่าระบบ: 'system_manage',
         จัดการสิทธิ์การใช้งาน: 'user_manage',
         จัดการข้อมูลหน่วยงาน: 'department_manage',
@@ -87,6 +90,13 @@ const Sidebar = ({ isCollapsed, onExpand }: SidebarProps) => {
         borderLeft: '3px solid #C9EFA4',
         // Use boxShadow to prevent content shift from the border
         boxShadow: 'inset 3px 0 0 0 #C9EFA4',
+    };
+
+
+
+    const handleLogout = () => {
+        dispatch(logout());           // ✅ ล้าง token และ state ใน Redux
+        navigate('/login');           // ✅ กลับไปหน้า login
     };
 
     return (
@@ -167,11 +177,14 @@ const Sidebar = ({ isCollapsed, onExpand }: SidebarProps) => {
             </nav>
 
             {/* Logout Button */}
-            <div className="p-4 ">
-                <a href="/login" className="flex items-center p-2 rounded-md hover:bg-primary-dark transition-colors">
+            <div className="p-4">
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center p-2 w-full rounded-md hover:bg-primary-dark transition-colors text-left"
+                >
                     <LogoutIcon />
                     {!isCollapsed && <span className="ml-4">ออกจากระบบ</span>}
-                </a>
+                </button>
             </div>
         </aside>
     );

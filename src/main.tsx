@@ -7,6 +7,7 @@ import theme from './theme.ts'
 //  Import ที่จำเป็นสำหรับ Date Picker
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import 'dayjs/locale/th';
 //------------------------------------------------------------------------
 // 👉 Import Redux
 import { Provider } from 'react-redux';
@@ -18,7 +19,7 @@ createRoot(document.getElementById('root')!).render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ThemeProvider theme={theme}>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="th">
             <App />
           </LocalizationProvider>
         </ThemeProvider>

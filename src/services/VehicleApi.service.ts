@@ -40,6 +40,9 @@ export interface Vehicle {
     region: LprRegion;
     vehicle_color: VehicleColor;
     vehicle_group: VehicleGroup;
+    region_name_th: string;
+    vehicle_color_name_th: string;
+    vehicle_group_name_en: string;
 }
 
 // ✅ filter ที่ส่งไป แนะนำใช้ชื่อ key ชัดเจนสำหรับ date ช่วงเวลา

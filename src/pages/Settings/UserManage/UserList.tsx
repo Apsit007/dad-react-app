@@ -211,7 +211,7 @@ const UserListPage = () => {
     () => [
       {
         field: 'rownumber',
-        headerName: 'No.',
+        headerName: 'ลำดับ',
         width: 90,
         headerAlign: 'center',
         align: 'center',
@@ -224,36 +224,57 @@ const UserListPage = () => {
       },
       {
         field: 'fullname',
-        headerName: 'Full name',
+        headerName: 'ชื่อ-นามสกุล',
         flex: 1.4,
         minWidth: 220,
         headerAlign: 'center',
-        valueGetter: (value, row) => formatFullName(row),
+        renderCell: (params) => {
+          // ✅ ป้องกัน null/undefined จากฟังก์ชัน formatFullName
+          const fullName = formatFullName?.(params.row) || '-';
+          return (
+            <div className="flex justify-center items-center h-full">
+              <Typography variant="body2">{fullName}</Typography>
+            </div>
+          );
+        },
       },
       {
         field: 'job_position',
-        headerName: 'Position',
+        headerName: 'ตำแหน่ง',
         flex: 1.2,
         minWidth: 200,
         headerAlign: 'center',
+        align: 'center',
+        renderCell: (params) => (
+          <div className="flex justify-center items-center h-full">
+            <Typography variant="body2">{params.value || '-'}</Typography>
+          </div>
+        ),
       },
       {
         field: 'organization',
-        headerName: 'Organization',
+        headerName: 'หน่วยงาน',
         flex: 1.2,
         minWidth: 200,
         headerAlign: 'center',
+        align: 'center',
+        renderCell: (params) => (
+          <div className="flex justify-center items-center h-full">
+            <Typography variant="body2">{params.value || '-'}</Typography>
+          </div>
+        ),
       },
       {
         field: 'user_status',
-        headerName: 'Status',
+        headerName: 'สถานะการใช้งาน',
         width: 160,
         headerAlign: 'center',
         align: 'center',
         renderCell: (params) => {
-          const statusTag = mapStatusToChipTag(params.value);
+          // ✅ ถ้าไม่มีค่า ให้ ChipTag แสดงสถานะ "unknown"
+          const statusTag = mapStatusToChipTag(params.value || 'unknown');
           return (
-            <div className='flex justify-center items-center h-full w-full'>
+            <div className="flex justify-center items-center h-full w-full">
               <ChipTag tag={statusTag} />
             </div>
           );
@@ -266,12 +287,19 @@ const UserListPage = () => {
         sortable: false,
         align: 'center',
         renderCell: (params) => (
-          <div className='flex w-full h-full items-center justify-center gap-1'>
-            <IconButton size='small' onClick={() => navigate('/settings/usermanage/userinfo', { state: { uid: params.row.uid } })}>
-              <EditIcon fontSize='small' />
+          <div className="flex w-full h-full items-center justify-center gap-1">
+            <IconButton
+              size="small"
+              onClick={() =>
+                navigate('/settings/usermanage/userinfo', {
+                  state: { uid: params.row.uid },
+                })
+              }
+            >
+              <EditIcon fontSize="small" />
             </IconButton>
-            <IconButton size='small' onClick={() => handleDelete(params.row.uid)}>
-              <DeleteIcon fontSize='small' />
+            <IconButton size="small" onClick={() => handleDelete(params.row.uid)}>
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </div>
         ),
@@ -280,10 +308,11 @@ const UserListPage = () => {
     [handleDelete, navigate]
   );
 
+
   return (
     <Box>
       <Typography variant='h5' sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
-        User Management
+        จัดการสิทธิ์การใช้งาน
       </Typography>
 
       <Accordion defaultExpanded>
@@ -362,15 +391,7 @@ const UserListPage = () => {
               <Button variant="contained" startIcon={<SearchIcon />} className='!bg-primary hover:!bg-primary-dark' onClick={handleSearch}>
                 ค้นหา
               </Button>
-              <Button
-                variant='contained'
-                startIcon={<SearchIcon />}
-                className='!bg-primary hover:!bg-primary-dark'
-                onClick={handleSearch}
-                disabled={loading}
-              >
-                Search
-              </Button>
+
             </div>
           </div>
         </AccordionDetails>

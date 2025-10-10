@@ -80,7 +80,7 @@ export interface Gender {
 export const getLprRegions = async (
   limit = 1000,
 ): Promise<ApiResponse<LprRegion[]>> => {
-  const url = `/smartgate-api/v0/lpr-regions/get?limit=${limit}`;
+  const url = `/smartgate-api/v0/lpr-regions/get?limit=${limit}&orderBy=name_th.asc`;
   const res = await http.get(url);
   return res.data as ApiResponse<LprRegion[]>;
 };
@@ -88,7 +88,7 @@ export const getLprRegions = async (
 export const getGates = async (
   limit = 1000,
 ): Promise<ApiResponse<Gate[]>> => {
-  const url = `/smartgate-api/v0/gates/get?limit=${limit}`;
+  const url = `/smartgate-api/v0/gates/get?limit=${limit}&orderBy=gate_name.asc`;
   const res = await http.get(url);
   return res.data as ApiResponse<Gate[]>;
 };
@@ -96,7 +96,7 @@ export const getGates = async (
 export const getVehicleColors = async (
   limit = 1000,
 ): Promise<ApiResponse<VehicleColor[]>> => {
-  const url = `/smartgate-api/v0/vehicle-colors/get?limit=${limit}`;
+  const url = `/smartgate-api/v0/vehicle-colors/get?limit=${limit}&orderBy=color_th.asc`;
   const res = await http.get(url);
   return res.data as ApiResponse<VehicleColor[]>;
 };
@@ -104,14 +104,14 @@ export const getVehicleColors = async (
 export const getVehicleGroups = async (
   limit = 1000,
 ): Promise<ApiResponse<VehicleGroup[]>> => {
-  const url = `/smartgate-api/v0/vehicle-groups/get?limit=${limit}`;
+  const url = `/smartgate-api/v0/vehicle-groups/get?limit=${limit}&orderBy=name_th.asc`;
   const res = await http.get(url);
   return res.data as ApiResponse<VehicleGroup[]>;
 };
 export const getVehicleMakes = async (
   limit = 1000,
 ): Promise<ApiResponse<VehicleMake[]>> => {
-  const url = `/smartgate-api/v0/vehicle-makes/get?limit=${limit}`;
+  const url = `/smartgate-api/v0/vehicle-makes/get?limit=${limit}&orderBy=make_en.asc`;
   const res = await http.get(url);
   return res.data as ApiResponse<VehicleMake[]>;
 };
@@ -120,7 +120,7 @@ export const getVehicleModels = async (
   make_id: number,
   limit = 1000,
 ): Promise<ApiResponse<VehicleModel[]>> => {
-  const url = `/smartgate-api/v0/vehicle-models/get?limit=${limit}&filter=make_id%20%3D${make_id}`;
+  const url = `/smartgate-api/v0/vehicle-models/get?limit=${limit}&filter=make_id%20%3D${make_id}&orderBy=model_en.asc`;
   const res = await http.get(url);
   return res.data as ApiResponse<VehicleModel[]>;
 };
@@ -128,7 +128,7 @@ export const getVehicleModels = async (
 export const getMemberGroups = async (
   limit = 1000,
 ): Promise<ApiResponse<MemberGroup[]>> => {
-  const url = `/smartgate-api/v0/member-groups/get?limit=${limit}`;
+  const url = `/smartgate-api/v0/member-groups/get?limit=${limit}&orderBy=name_th.asc`;
   const res = await http.get(url);
   return res.data as ApiResponse<MemberGroup[]>;
 };
@@ -136,7 +136,7 @@ export const getMemberGroups = async (
 export const getPersonTitles = async (
   limit = 1000,
 ): Promise<ApiResponse<PersonTitle[]>> => {
-  const url = `/smartgate-api/v0/person-titles/get?limit=${limit}`;
+  const url = `/smartgate-api/v0/person-titles/get?limit=${limit}&orderBy=title_th.asc`;
   const res = await http.get(url);
   return res.data as ApiResponse<PersonTitle[]>;
 };
