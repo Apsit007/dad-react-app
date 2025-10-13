@@ -119,7 +119,7 @@ const getBase64FromUrl = async (url: string): Promise<string> => {
 const exportPdf = async (
   rows: any[],
   fileName: string,
-  columns?: { field: string; headerName?: string }[]
+  columns?: { field: string; headerName?: string, width?: number }[]
 ) => {
   // 1) กรองคอลัมน์: ตัด actions / rownumb
   const filteredCols =
@@ -153,16 +153,18 @@ const exportPdf = async (
     const r = rows[i];
     const cells = await Promise.all(
       useCols.map(async (f) => {
-        if (f.toLowerCase().includes("image") && r[f]) {
+        if (
+          (f.toLowerCase().includes("image") ||
+            f.toLowerCase().includes("face") ||
+            f.toLowerCase().includes("url")) &&
+          typeof r[f] === "string" &&
+          r[f].startsWith("http")
+        ) {
           try {
             const base64 = await getBase64FromUrl(r[f]);
-            return {
-              image: base64,
-              fit: [40, 40],
-              alignment: "center",
-            };
+            return { image: base64, fit: [40, 40], alignment: "center" };
           } catch {
-            return "";
+            return { text: "-", alignment: "center" };
           }
         }
         return {

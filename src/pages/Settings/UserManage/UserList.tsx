@@ -287,7 +287,7 @@ const UserListPage = () => {
         sortable: false,
         align: 'center',
         renderCell: (params) => (
-          <div className="flex w-full h-full items-center justify-center gap-1">
+          <div className="w-full h-full flex justify-center items-center gap-1">
             <IconButton
               size="small"
               onClick={() =>

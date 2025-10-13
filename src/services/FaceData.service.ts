@@ -124,7 +124,7 @@ export const FaceDataApi = {
             firstname?: string;
             lastname?: string;
             member_group_id?: number;
-            direction?: "in" | "out" | "";
+            direction?: string;
             start_date?: string;
             end_date?: string;
         }

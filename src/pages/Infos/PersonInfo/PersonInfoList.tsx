@@ -82,20 +82,22 @@ const PersonInfoList = () => {
 
     const loadData = async (page = 1, limit = 10) => {
         try {
-            const filter: any = {
-                firstname,
-                lastname,
-                member_status: status || undefined,
+            const res = await MemberApi.search(page, limit, "id", false, {
+                firstname: firstname ? `${firstname}*` : undefined,
+                lastname: lastname ? `${lastname}*` : undefined,
                 dep_uid: dep || undefined,
                 member_group_id: memberGroupId || undefined,
-                created_at_start: createdStart ? dayjs(createdStart).startOf('day').toISOString() : undefined, // ✅ เพิ่ม startOf('day')
-                created_at_end: createdEnd ? dayjs(createdEnd).endOf('day').toISOString() : undefined,       // ✅ เพิ่ม endOf('day')
-            };
+                start_date: createdStart ? dayjs(createdStart).startOf("day").format('YYYY-MM-DD HH:mm:ss') : undefined,
+                end_date: createdEnd ? dayjs(createdEnd).endOf("day").format('YYYY-MM-DD HH:mm:ss') : undefined,
+                member_status: status || undefined,
+            });
 
-            const res = await MemberApi.list(page, limit, "uid.asc", filter);
             if (res.success) {
                 setRows(res.data || []);
                 setRowCount(res.pagination?.countAll || 0);
+            } else {
+                setRows([]);
+                setRowCount(0);
             }
         } catch (err) {
             console.error("❌ Load members error:", err);
@@ -209,7 +211,10 @@ const PersonInfoList = () => {
             minWidth: 150,
             headerAlign: "center",
             align: "center",
-            renderCell: (params) => <Typography>{params.value || "-"}</Typography>,
+            renderCell: (params) =>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography>{params.value || "-"}</Typography>
+                </div>
         },
         {
             field: "card_code",
@@ -218,7 +223,12 @@ const PersonInfoList = () => {
             minWidth: 150,
             headerAlign: "center",
             align: "center",
-            renderCell: (params) => <Typography>{params.value || "-"}</Typography>,
+            renderCell: (params) => (
+
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography>{params.value || "-"}</Typography>
+                </div>
+            )
         },
         {
             field: "image_url",
@@ -247,7 +257,9 @@ const PersonInfoList = () => {
                 const firstname = params.row.firstname ?? "";
                 const lastname = params.row.lastname ?? "";
                 const fullname = `${firstname} ${lastname}`.trim();
-                return <Typography>{fullname || "-"}</Typography>;
+                return (<div className="w-full h-full flex justify-center items-center">
+                    <Typography>{fullname || "-"}</Typography>
+                </div>)
             },
         },
         {
@@ -257,7 +269,7 @@ const PersonInfoList = () => {
             minWidth: 200,
             headerAlign: "center",
             align: "center",
-            renderCell: (params) => <Typography>{params.value || "-"}</Typography>,
+            renderCell: (params) => (<div className="w-full h-full flex justify-center items-center"><Typography>{params.value || "-"}</Typography></div>),
         },
         {
             field: "dep_name",
@@ -266,7 +278,10 @@ const PersonInfoList = () => {
             minWidth: 250,
             headerAlign: "center",
             align: "center",
-            renderCell: (params) => <Typography>{params.value || "-"}</Typography>,
+            renderCell: (params) =>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography>{params.value || "-"}</Typography>
+                </div>
         },
         {
             field: "member_status",
@@ -275,7 +290,10 @@ const PersonInfoList = () => {
             minWidth: 250,
             headerAlign: "center",
             align: "center",
-            renderCell: (params) => <Typography>{params.value || "-"}</Typography>,
+            renderCell: (params) =>
+            (<div className="w-full h-full flex justify-center items-center">
+                <Typography>{params.value || "-"}</Typography>
+            </div>)
         },
         {
             field: "created_at",
@@ -285,11 +303,13 @@ const PersonInfoList = () => {
             headerAlign: "center",
             align: "center",
             renderCell: (params) => (
-                <Typography>
-                    {params.value
-                        ? dayjs(params.value).format("DD/MM/YYYY")
-                        : "-"}
-                </Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography>
+                        {params.value
+                            ? dayjs(params.value).format("DD/MM/YYYY")
+                            : "-"}
+                    </Typography>
+                </div>
             ),
         },
         {
@@ -300,11 +320,13 @@ const PersonInfoList = () => {
             headerAlign: "center",
             align: "center",
             renderCell: (params) => (
-                <Typography>
-                    {params.value
-                        ? dayjs(params.value).format("DD/MM/YYYY")
-                        : "-"}
-                </Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography>
+                        {params.value
+                            ? dayjs(params.value).format("DD/MM/YYYY")
+                            : "-"}
+                    </Typography>
+                </div>
             ),
         },
         {

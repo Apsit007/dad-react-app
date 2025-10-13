@@ -58,6 +58,7 @@ const columns: GridColDef[] = [
             <div className='flex w-full gap-2 h-full'>
                 <ImageTag tag={params.row.vehicle_group_en} img={params.row.overview_image_url} />
                 <ImageTag tag={params.row.member_group_en} img={params.row.driver_image_url} />
+                <ImageTag tag={params.row.member_group_en} img={params.row.member_image_url} />
             </div>
         ),
     },
@@ -168,9 +169,12 @@ const DashBoardPage = () => {
     const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
     const [rowCount, setRowCount] = useState(0);
     const [refreshDashboard, setRefreshDashboard] = useState(0);
+    const [alertTitle, setAlertTitle] = useState<Record<string, string>>({})
 
     const [highlightedRows, setHighlightedRows] = useState<Record<string, boolean>>({});
     const prevRowsRef = useRef<LprRecord[]>([]);
+
+    const isFirstLoadRef = useRef(true); // ✅ บอกว่าโหลดครั้งแรกหรือยัง
 
 
     useEffect(() => {
@@ -194,16 +198,39 @@ const DashBoardPage = () => {
     useEffect(() => {
         if (paginationModel.page !== 0) return;
         const newest = rows[0];
-        if (newest && (newest.vehicle_group_en === 'Blacklist' || newest.member_group_en === 'Blacklist') && newest.id !== lastShownIdRef.current) {
-            lastShownIdRef.current = newest.id;
-            setAlertIndex(newest.id); // เก็บ id
-            setOpenAlert(true);
+        if (!newest) return;
+        const vehecleTitle = newest.vehicle_group_en
+        const memberTitle = newest.member_group_en
+        const lprTitle = newest.driver_group_en
+        if ((vehecleTitle === 'Blacklist' || memberTitle === 'Blacklist' || lprTitle === 'Blacklist' ||
+            vehecleTitle === 'VIP' || memberTitle === 'VIP' || lprTitle === 'VIP' ||
+            vehecleTitle === 'Watchlist' || memberTitle === 'Watchlist' || lprTitle === 'Watchlist'
+        ) && newest.id !== lastShownIdRef.current) {
+            if (newest.id !== lastShownIdRef.current) {
+                lastShownIdRef.current = newest.id;
+                setAlertTitle({
+                    vehecleTitle: vehecleTitle,
+                    membertitile: memberTitle,
+                    lprTitle: lprTitle
+                    // vehecleTitle: 'Blacklist',
+                    // memberTitle: 'Blacklist',
+                    // lprTitle: 'Blacklist'
+                })
+                setAlertIndex(newest.id); // เก็บ id
+                setOpenAlert(true);
+            }
+            else {
+                setAlertTitle({})
+            }
         }
     }, [rows, paginationModel.page]);
 
     const fetchData = async (page: number, pageSize: number) => {
         try {
-            const res = await LprDataApi.feed(page + 1, pageSize);
+            // ✅ เงื่อนไขการส่ง includeFaceData
+            const includeFaceData =
+                page === 0 && !isFirstLoadRef.current ? true : false;
+            const res = await LprDataApi.feed(page + 1, pageSize, includeFaceData);
             if (res.success) {
                 const newData = res.data;
 
@@ -226,7 +253,11 @@ const DashBoardPage = () => {
                 // อัปเดต prevRowsRef
                 prevRowsRef.current = newData;
 
-                console.log('✅ list:', res.data, res.pagination);
+                // ✅ หลังจากโหลดครั้งแรกแล้ว
+                if (isFirstLoadRef.current) {
+                    isFirstLoadRef.current = false;
+                }
+
             } else {
                 console.error('⚠️ list failed:', res.message);
             }
@@ -273,7 +304,9 @@ const DashBoardPage = () => {
                 <BlackListAlert
                     open={openAlert}
                     onClose={() => setOpenAlert(false)}
-                    typeText={`ประเภท : ${alertData.direction === 'in' ? 'ขาเข้า' : 'ขาออก'}`}
+                    alertTitle={alertTitle}
+                    department={alertData.department_name}
+                    typeText={`ประตู : ${alertData.direction === 'in' ? 'ขาเข้า' : 'ขาออก'} ${alertData.lprId}`}
                     dateTimeText={dayjs(alertData.datetime).format('DD/MM/YYYY HH:mm')}
                     vehicle={{
                         plate: alertData.plate ?? '-',
@@ -282,10 +315,15 @@ const DashBoardPage = () => {
                         color: alertData.vehicle_color_th ?? '-',
                         imageUrl: alertData.overview_image_url, // รถ
                     }}
-                    person={{
+                    member={{
                         fullName: `${alertData.member_firstname ?? ''} ${alertData.member_lastname ?? ''}`.trim() || '-',
                         agency: alertData.department_name ?? '-',
-                        imageUrl: alertData.driver_image_url, // ใช้รูปป้ายหรือ portrait ถ้ามี
+                        imageUrl: alertData.member_image_url ?? "-", // ใช้รูปป้ายหรือ portrait ถ้ามี
+                    }}
+                    lpr={{
+                        fullName: `${alertData.driver_firstname ?? ''} ${alertData.driver_lastname ?? ''}`.trim() || '-',
+                        agency: alertData.department_name ?? '-',
+                        imageUrl: alertData.driver_image_url ?? "-", // ใช้รูปป้ายหรือ portrait ถ้ามี
                     }}
                 />
             )}

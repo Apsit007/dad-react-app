@@ -473,7 +473,9 @@ const CarInfoList = () => {
             headerAlign: "center",
             align: "center",
             renderCell: (params) => (
-                <Typography variant="body2">{params.value || "-"}</Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography variant="body2">{params.value || "-"}</Typography>
+                </div>
             ),
         },
         {
@@ -484,7 +486,9 @@ const CarInfoList = () => {
             headerAlign: "center",
             align: "center",
             renderCell: (params) => (
-                <Typography variant="body2">{params.value || "-"}</Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography variant="body2">{params.value || "-"}</Typography>
+                </div>
             ),
         },
         {
@@ -495,7 +499,9 @@ const CarInfoList = () => {
             headerAlign: "center",
             align: "center",
             renderCell: (params) => (
-                <Typography variant="body2">{params.value || "-"}</Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography variant="body2">{params.value || "-"}</Typography>
+                </div>
             ),
         },
         {
@@ -506,7 +512,9 @@ const CarInfoList = () => {
             headerAlign: "center",
             align: "center",
             renderCell: (params) => (
-                <Typography variant="body2">{params.value || "-"}</Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography variant="body2">{params.value || "-"}</Typography>
+                </div>
             ),
         },
         {
@@ -517,11 +525,14 @@ const CarInfoList = () => {
             headerAlign: "center",
             align: "center",
             renderCell: (params) => (
-                <Typography variant="body2">
-                    {params.value
-                        ? dayjs(params.value).format("DD/MM/YYYY")
-                        : "-"}
-                </Typography>
+                <div className="w-full h-full flex justify-center items-center">
+
+                    <Typography variant="body2">
+                        {params.value
+                            ? dayjs(params.value).format("DD/MM/YYYY")
+                            : "-"}
+                    </Typography>
+                </div>
             ),
         },
         {

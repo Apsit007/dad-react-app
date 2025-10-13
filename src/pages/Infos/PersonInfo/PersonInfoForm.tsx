@@ -230,7 +230,7 @@ const PersonInfoForm = () => {
 
     const validateFile = (file: File) => {
         const isValidType = file.type === 'image/jpeg'; // ✅ อนุญาตเฉพาะ JPEG
-        const minSize = 50 * 1024;  // 50 KB
+        const minSize = 0;  // 50 KB
         const maxSize = 100 * 1024; // 100 KB
         const fileSize = file.size;
 
@@ -239,7 +239,7 @@ const PersonInfoForm = () => {
             return false;
         }
         if (fileSize < minSize || fileSize > maxSize) {
-            dialog.warning('ขนาดไฟล์ต้องอยู่ระหว่าง 50KB ถึง 100KB');
+            dialog.warning('ขนาดไฟล์ต้องอยู่ระหว่าง 0KB ถึง 100KB');
             return false;
         }
         return true;
@@ -257,10 +257,19 @@ const PersonInfoForm = () => {
     };
 
     const handleOpenCarPopup = () => {
+        loadData(0, paginationModel.pageSize, search)
         setIsCarPopupOpen(true);
     };
 
     const handleCloseCarPopup = () => {
+        setSearch({
+            plate_prefix: "",
+            plate_number: "",
+            region_code: "",
+            vehicle_make: "",
+            vehicle_color_id: undefined,
+        })
+        setPaginationModel({ page: 0, pageSize: 10 })
         setIsCarPopupOpen(false);
     };
 
@@ -555,7 +564,7 @@ const PersonInfoForm = () => {
                                                 sx={{ width: '100%', height: '100%' }}
                                             >
                                                 <CloudUploadOutlinedIcon sx={{ color: 'text.disabled', fontSize: 42, mb: 1 }} />
-                                                <Typography variant='body2' color='text.secondary'>50-100 Kb</Typography>
+                                                <Typography variant='body2' color='text.secondary'>0-100 Kb</Typography>
                                                 <Typography variant='body2' color='text.secondary'>Type JPEG</Typography>
                                             </Box>
                                         )}
@@ -989,7 +998,7 @@ const PersonInfoForm = () => {
                                     >
                                         <MenuItem value=""><em>ทุกสี</em></MenuItem>
                                         {vehicleColors.map((c) => (
-                                            <MenuItem key={c.id} value={c.color_en}>
+                                            <MenuItem key={c.id} value={c.id}>
                                                 {c.color_th}
                                             </MenuItem>
                                         ))}

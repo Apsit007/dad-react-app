@@ -53,6 +53,10 @@ const columns: GridColDef[] = [
                     tag={params.row.member_group_en ?? null}
                     img={params.row.driver_image_url ?? ""}
                 />
+                <ImageTag
+                    tag={params.row.member_group_en ?? null}
+                    img={params.row.member_image_url ?? ""}
+                />
             </div>
         ),
     },
@@ -84,12 +88,13 @@ const columns: GridColDef[] = [
     {
         field: "vehicle_make",
         headerName: "ยี่ห้อ",
-        flex: 1,
         minWidth: 120,
         headerAlign: "center",
         align: "center",
         renderCell: (params) => (
-            <Typography>{params.value || "-"}</Typography>
+            <div className="w-full h-full flex justify-center items-center">
+                <Typography>{params.value || "-"}</Typography>
+            </div>
         ),
     },
     {
@@ -100,7 +105,9 @@ const columns: GridColDef[] = [
         headerAlign: "center",
         align: "center",
         renderCell: (params) => (
-            <Typography>{params.value || "-"}</Typography>
+            <div className="w-full h-full flex justify-center items-center">
+                <Typography>{params.value || "-"}</Typography>
+            </div>
         ),
     },
     {
@@ -134,8 +141,7 @@ const columns: GridColDef[] = [
     {
         field: "department_name",
         headerName: "หน่วยงาน",
-        flex: 1.5,
-        minWidth: 250,
+        minWidth: 150,
         headerAlign: "center",
         renderCell: (params) => (
             <div
@@ -164,11 +170,13 @@ const columns: GridColDef[] = [
         headerAlign: "center",
         align: "center",
         renderCell: (params) => (
-            <Typography variant="body2">
-                {params.value
-                    ? dayjs(params.value).format("DD/MM/YYYY HH:mm")
-                    : "-"}
-            </Typography>
+            <div className="w-full h-full flex justify-center items-center">
+                <Typography variant="body2">
+                    {params.value
+                        ? dayjs(params.value).format("DD/MM/YYYY HH:mm")
+                        : "-"}
+                </Typography>
+            </div>
         ),
     },
     {
@@ -179,11 +187,13 @@ const columns: GridColDef[] = [
         headerAlign: "center",
         align: "center",
         renderCell: (params) => (
-            <Typography variant="body2">
-                {params.value
-                    ? dayjs(params.value).format("DD/MM/YYYY HH:mm")
-                    : "-"}
-            </Typography>
+            <div className="w-full h-full flex justify-center items-center">
+                <Typography variant="body2">
+                    {params.value
+                        ? dayjs(params.value).format("DD/MM/YYYY HH:mm")
+                        : "-"}
+                </Typography>
+            </div>
         ),
     },
 ];
@@ -199,6 +209,11 @@ const columnsExport = [
     {
         field: 'driver_image_url',
         headerName: 'ภาพคนขับ',
+        width: 80,
+    },
+    {
+        field: 'member_image_url',
+        headerName: 'ภาพสมาชิก',
         width: 80,
     },
     {

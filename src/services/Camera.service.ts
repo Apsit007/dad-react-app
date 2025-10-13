@@ -121,8 +121,9 @@ export const CameraApi = {
 
   async rebootCamera(camera_uid: string): Promise<RebootCameraResponse> {
     const res = await http.post<RebootCameraResponse>(
-      `/smartgate-api/v0/camera/reboot-engine?camera_uid=${camera_uid}`
+      '/smartgate-api/v0/cameras/reboot-engine',
+      { camera_uid } // ✅ ส่งใน body แทน query string
     );
     return res.data;
-  },
+  }
 };

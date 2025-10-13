@@ -100,9 +100,11 @@ export default function DepartmentPage() {
             flex: 1,
             align: "center",
             renderCell: (params) => (
-                <Typography variant="body2">
-                    {params.value || "-"}
-                </Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography variant="body2">
+                        {params.value || "-"}
+                    </Typography>
+                </div>
             ),
         },
         {
@@ -112,9 +114,11 @@ export default function DepartmentPage() {
             flex: 1,
             align: "center",
             renderCell: (params) => (
-                <Typography variant="body2">
-                    {params.value || "-"}
-                </Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography variant="body2">
+                        {params.value || "-"}
+                    </Typography>
+                </div>
             ),
         },
         {
@@ -124,9 +128,11 @@ export default function DepartmentPage() {
             flex: 0.5,
             align: "center",
             renderCell: (params) => (
-                <Typography variant="body2">
-                    {params.value || "-"}
-                </Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography variant="body2">
+                        {params.value || "-"}
+                    </Typography>
+                </div>
             ),
         },
         {
@@ -136,9 +142,11 @@ export default function DepartmentPage() {
             flex: 1,
             align: "center",
             renderCell: (params) => (
-                <Typography variant="body2" sx={{ whiteSpace: "normal", wordBreak: "break-word" }}>
-                    {params.value || "-"}
-                </Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography variant="body2" sx={{ whiteSpace: "normal", wordBreak: "break-word" }}>
+                        {params.value || "-"}
+                    </Typography>
+                </div>
             ),
         },
         {

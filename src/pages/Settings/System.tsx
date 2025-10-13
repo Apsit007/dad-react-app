@@ -426,7 +426,7 @@ const SystemSettings = () => {
                     const res = await CameraApi.rebootCamera(selectedCamera.camera_uid);
                     if (res.success) {
                       console.log("✅ รีบูตกล้องสำเร็จ:", res);
-                      dialog.success(`รีบูตกล้องสำเร็จ: ${res.message}\nเวลา: ${new Date(res.rebootIssuedAt).toLocaleString()}`);
+                      dialog.success(`รีบูตกล้องสำเร็จ: `);
                     } else {
                       dialog.error("รีบูตไม่สำเร็จ: " + res.message);
                     }

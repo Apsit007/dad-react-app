@@ -131,6 +131,41 @@ export const MemberApi = {
         return res.data;
     },
 
+    // ✅ เพิ่มฟังก์ชัน search ด้านล่าง MemberApi
+    search: async (
+        page: number = 1,
+        limit: number = 10,
+        orderBy: string = "id",
+        reverseOrder: boolean = false,
+        filter?: {
+            firstname?: string;
+            lastname?: string;
+            dep_uid?: string;
+            member_group_id?: number;
+            start_date?: string;
+            end_date?: string;
+            member_status?: string;
+        }
+    ): Promise<ApiResponse<Member[]>> => {
+        const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("limit", String(limit));
+        params.set("orderBy", orderBy);
+        params.set("reverseOrder", reverseOrder ? "1" : "0");
+
+        if (filter) {
+            Object.entries(filter).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== "") {
+                    params.set(key, String(value));
+                }
+            });
+        }
+
+        const url = `/smartgate-api/v0/members/search?${params.toString()}`;
+        const res = await http.get<ApiResponse<Member[]>>(url);
+        return res.data;
+    },
+
     // 👉 Delete
     delete: async (uid: string): Promise<ApiResponse<null>> => {
         const url = `/smartgate-api/v0/members/delete?uids=${uid}`;

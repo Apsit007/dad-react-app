@@ -107,13 +107,21 @@ const UserInfoPage = () => {
 
   // validate ไฟล์รูป
   const validateFile = (file: File) => {
-    const isValidType = ['image/png', 'image/jpeg'].includes(file.type);
-    const isValidSize = file.size <= 5 * 1024 * 1024;
-    if (!isValidType) { dialog.warning('อนุญาตเฉพาะไฟล์ PNG หรือ JPEG'); return false; }
-    if (!isValidSize) { dialog.warning('ขนาดไฟล์ต้องไม่เกิน 5MB'); return false; }
+    const isValidType = file.type === 'image/jpeg'; // ✅ อนุญาตเฉพาะ JPEG
+    const minSize = 0;  // 50 KB
+    const maxSize = 100 * 1024; // 100 KB
+    const fileSize = file.size;
+
+    if (!isValidType) {
+      dialog.warning('อนุญาตเฉพาะไฟล์ JPEG เท่านั้น');
+      return false;
+    }
+    if (fileSize < minSize || fileSize > maxSize) {
+      dialog.warning('ขนาดไฟล์ต้องอยู่ระหว่าง 0KB ถึง 100KB');
+      return false;
+    }
     return true;
   };
-
 
   // ฟังก์ชันตรวจสอบเลขบัตรประชาชน
   const isValidThaiIdCard = (id: string): boolean => {
@@ -136,6 +144,7 @@ const UserInfoPage = () => {
     if (!form.firstname) newErrors.firstname = "กรุณากรอกชื่อ";
     if (!form.lastname) newErrors.lastname = "กรุณากรอกนามสกุล";
     if (!form.gender) newErrors.gender = "กรุณาเลือกเพศ";
+    if (!form.dob) newErrors.dob = "กรุณาเลือกวันเกิด";
 
     if (!form.idcard) {
       newErrors.idcard = "กรุณากรอกเลขบัตรประชาชน";
@@ -276,7 +285,8 @@ const UserInfoPage = () => {
                     ) : (
                       <Box role='button' onClick={() => fileInputRef.current?.click()} className='flex flex-col items-center justify-center cursor-pointer bg-white rounded-full hover:bg-gray-50' sx={{ width: '100%', height: '100%' }}>
                         <CloudUploadOutlinedIcon sx={{ color: 'text.disabled', fontSize: 42, mb: 1 }} />
-                        <Typography variant='body2' color='text.secondary'>ขนาดภาพ 50-100 Kb</Typography>
+                        <Typography variant='body2' color='text.secondary'>0-100 Kb</Typography>
+                        <Typography variant='body2' color='text.secondary'>Type JPEG</Typography>
                       </Box>
                     )}
                   </Box>
@@ -331,13 +341,18 @@ const UserInfoPage = () => {
                     />
                   </div>
                   <div className="w-full sm:w-[35%] p-2">
-                    <InputLabel shrink>วันเกิด</InputLabel>
+                    <InputLabel shrink required>วันเกิด</InputLabel>
                     <DatePicker
                       value={form.dob ? dayjs(form.dob) : null}
                       onChange={(date) =>
                         handleChange("dob", date ? dayjs(date).format("YYYY-MM-DD") : "")
                       }
-
+                      slotProps={{
+                        textField: {
+                          error: !!errors.dob,
+                          helperText: errors.dob
+                        },
+                      }}
                     />
                   </div>
 

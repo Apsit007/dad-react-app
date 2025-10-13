@@ -17,8 +17,24 @@ import { selectMemberGroups } from '../../store/slices/masterdataSlice';
 import { exportData } from '../../services/Export.service';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 
+const columnsExport = [
+    { field: "overview_image", headerName: "ภาพรถ", width: 50 },
+    { field: "fdlib_url", headerName: "ภาพคนขับ", width: 50 },
+    { field: "face_url", headerName: "ภาพสมาชิก", width: 50 },
+    { field: "name", headerName: "ชื่อ-นามสกุล" },
+    { field: "similarity", headerName: "% ความคล้ายคลึง" },
+    { field: "department", headerName: "หน่วยงาน" },
+    { field: "licensePlate", headerName: "เลขทะเบียน" },
+    { field: "vehicle_make_name_en", headerName: "ยี่ห้อ" },
+    { field: "vehicle_color_name_th", headerName: "สี" },
+    { field: "date_time_in", headerName: "วันเวลาเข้า" },
+    { field: "date_time_out", headerName: "เวลาออก" },
+];
 
-
+const searchType = [
+    { id: 1, value: "in", label: "เวลาเข้า" },
+    { id: 2, value: "out", label: "เวลาออก" },
+]
 const SearchPerson = () => {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -28,6 +44,7 @@ const SearchPerson = () => {
     // --- filters ---
     const [firstname, setFirstname] = useState('');
     const [lastname, setLastname] = useState('');
+    const [sDirection, setSDirection] = useState<string>('');
     const [memberGroupId, setMemberGroupId] = useState<number | "">("");
     const [startDate, setStartDate] = useState<Dayjs | null>(null);
     const [endDate, setEndDate] = useState<Dayjs | null>(null);
@@ -46,10 +63,11 @@ const SearchPerson = () => {
             const params = {
                 page,
                 limit,
-                orderBy: "id.asc",
+                orderBy: "id.desc",
                 firstname: firstname || undefined,
                 lastname: lastname || undefined,
                 member_group_id: memberGroupId || undefined,
+                direction: sDirection || undefined,
                 start_date: startDate ? startDate.toISOString() : undefined,
                 end_date: endDate ? endDate.toISOString() : undefined,
             };
@@ -116,6 +134,7 @@ const SearchPerson = () => {
         setFirstname("");
         setLastname("");
         setMemberGroupId("");
+        setSDirection("");
         setStartDate(null);
         setEndDate(null);
         setRows([]);
@@ -160,6 +179,10 @@ const SearchPerson = () => {
                         tag={params.row.member_data?.member_group_name_en ?? null}
                         img={params.row.face_url ?? ""}
                     />
+                    <ImageTag
+                        tag={params.row.member_data?.member_group_name_en ?? null}
+                        img={params.row.fdlib_url ?? ""}
+                    />
                 </div>
             ),
         },
@@ -197,8 +220,7 @@ const SearchPerson = () => {
         {
             field: 'department',
             headerName: 'หน่วยงาน',
-            flex: 1,
-            minWidth: 250,
+            minWidth: 150,
             headerAlign: 'center',
             align: 'center',
             renderCell: (params) => (
@@ -236,12 +258,13 @@ const SearchPerson = () => {
         {
             field: 'vehicle_make_name_en',
             headerName: 'ยี่ห้อ',
-            flex: 1,
-            minWidth: 250,
+            minWidth: 120,
             headerAlign: 'center',
             align: 'center',
             renderCell: (params) => (
-                <Typography>{params.value ?? '-'}</Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography>{params.value ?? '-'}</Typography>
+                </div>
             ),
         },
         {
@@ -252,7 +275,9 @@ const SearchPerson = () => {
             headerAlign: 'center',
             align: 'center',
             renderCell: (params) => (
-                <Typography>{params.value ?? '-'}</Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography>{params.value ?? '-'}</Typography>
+                </div>
             ),
         },
         {
@@ -263,9 +288,11 @@ const SearchPerson = () => {
             headerAlign: 'center',
             align: 'center',
             renderCell: (params) => (
-                <Typography>
-                    {params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm:ss') : '-'}
-                </Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography>
+                        {params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm:ss') : '-'}
+                    </Typography>
+                </div>
             ),
         },
         {
@@ -276,12 +303,15 @@ const SearchPerson = () => {
             headerAlign: 'center',
             align: 'center',
             renderCell: (params) => (
-                <Typography>
-                    {params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm:ss') : '-'}
-                </Typography>
+                <div className="w-full h-full flex justify-center items-center">
+                    <Typography>
+                        {params.value ? dayjs(params.value).format('DD/MM/YYYY HH:mm:ss') : '-'}
+                    </Typography>
+                </div>
             ),
         },
     ];
+
     const prepareExportRows = (rows: FaceData[]) => {
         return rows.map((r, i) => ({
             ลำดับ: i + 1,
@@ -301,6 +331,38 @@ const SearchPerson = () => {
         }));
     };
 
+    // ✅ ฟังก์ชัน Export หลัก
+    const handleExport = (type: "txt" | "xlsx" | "csv" | "pdf") => {
+        if (!rows.length) return dialog.warning("ไม่มีข้อมูลให้ส่งออก");
+
+        if (type === "pdf") {
+            // ✅ เตรียมข้อมูลก่อน export PDF
+            const processedRows = rows.map((r) => ({
+                ...r,
+                name: r.member_data
+                    ? `${r.member_data.title ?? ""}${r.member_data.firstname ?? ""} ${r.member_data.lastname ?? ""}`.trim()
+                    : "-",
+                similarity:
+                    r.similarity != null && !isNaN(Number(r.similarity))
+                        ? `${(Number(r.similarity) * 100).toFixed(2)}%`
+                        : "-",
+                department: r.member_data?.department_name ?? "-",
+                licensePlate: r.plate ?? "-",
+                vehicle_make_name_en: r.vehicle_make_name_en ?? "-",
+                vehicle_color_name_th: r.vehicle_color_name_th ?? "-",
+                date_time_in: r.date_time_in
+                    ? dayjs(r.date_time_in).format("DD/MM/YYYY HH:mm:ss")
+                    : "-",
+                date_time_out: r.date_time_out
+                    ? dayjs(r.date_time_out).format("DD/MM/YYYY HH:mm:ss")
+                    : "-",
+            }));
+
+            exportData(processedRows, "pdf", "face_data", columnsExport);
+        } else {
+            exportData(prepareExportRows(rows), type, "face_data");
+        }
+    };
     return (
         <Box>
             <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
@@ -376,6 +438,15 @@ const SearchPerson = () => {
                                     </Select>
                                 </div>
                                 <div className="w-full sm:w-1/3 p-2">
+                                    <Typography variant='caption'>รูปแบบการค้นหา</Typography>
+                                    <Select displayEmpty value={sDirection} onChange={(e) => setSDirection(e.target.value as unknown as string)}>
+                                        <MenuItem value=""><em>ทั้งหมด</em></MenuItem>
+                                        {searchType.map(g => (
+                                            <MenuItem key={g.id} value={g.value}>{g.label}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </div>
+                                <div className="w-full sm:w-1/3 p-2">
                                     <Typography variant='caption'>วันที่เริ่มต้น</Typography>
                                     <DateTimePicker sx={{ width: '100%' }} value={startDate} onChange={setStartDate} />
                                 </div>
@@ -415,7 +486,7 @@ const SearchPerson = () => {
                     className="!border-gold !text-primary"
                     size="small"
                     startIcon={<img src="/icons/txt-file.png" />}
-                    onClick={() => exportData(prepareExportRows(rows), "txt", "face_data")}
+                    onClick={() => handleExport("txt")}
                 >
                     TXT
                 </Button>
@@ -424,7 +495,7 @@ const SearchPerson = () => {
                     className="!border-gold !text-primary"
                     size="small"
                     startIcon={<img src="/icons/xls-file.png" />}
-                    onClick={() => exportData(prepareExportRows(rows), "xlsx", "face_data")}
+                    onClick={() => handleExport("xlsx")}
                 >
                     XLS
                 </Button>
@@ -433,9 +504,18 @@ const SearchPerson = () => {
                     className="!border-gold !text-primary"
                     size="small"
                     startIcon={<img src="/icons/csv-file.png" />}
-                    onClick={() => exportData(prepareExportRows(rows), "csv", "face_data")}
+                    onClick={() => handleExport("csv")}
                 >
                     CSV
+                </Button>
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/pdf-file.png" />}
+                    onClick={() => handleExport("pdf")}
+                >
+                    PDF
                 </Button>
                 <Box sx={{ flexGrow: 1 }} />
                 <Typography variant="body2" sx={{ alignSelf: "center" }}>
