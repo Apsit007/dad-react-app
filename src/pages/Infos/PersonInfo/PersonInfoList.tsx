@@ -531,7 +531,7 @@ const PersonInfoList = () => {
                                         </MenuItem>
                                         {memberGroups.map((g) => (
                                             <MenuItem key={g.id} value={g.id}>
-                                                {g.name_th}
+                                                {g.name_th}  ({g.name_en})
                                             </MenuItem>
                                         ))}
                                     </Select>

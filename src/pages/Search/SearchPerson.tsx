@@ -16,11 +16,12 @@ import { useSelector } from 'react-redux';
 import { selectMemberGroups } from '../../store/slices/masterdataSlice';
 import { exportData } from '../../services/Export.service';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import FileUploadApi from '../../services/FileUpload.service';
 
 const columnsExport = [
     { field: "overview_image", headerName: "ภาพรถ", width: 50 },
-    { field: "fdlib_url", headerName: "ภาพคนขับ", width: 50 },
-    { field: "face_url", headerName: "ภาพสมาชิก", width: 50 },
+    { field: "face_url", headerName: "ภาพคนขับ", width: 50 },
+    { field: "fdlib_url", headerName: "ภาพสมาชิก", width: 50 },
     { field: "name", headerName: "ชื่อ-นามสกุล" },
     { field: "similarity", headerName: "% ความคล้ายคลึง" },
     { field: "department", headerName: "หน่วยงาน" },
@@ -58,7 +59,7 @@ const SearchPerson = () => {
     });
     const [loading, setLoading] = useState(false);
 
-    const loadData = async (page = 1, limit = 10) => {
+    const loadData = async (page = 1, limit = 10, imageUrl?: string) => {
         try {
             const params = {
                 page,
@@ -68,6 +69,7 @@ const SearchPerson = () => {
                 lastname: lastname || undefined,
                 member_group_id: memberGroupId || undefined,
                 direction: sDirection || undefined,
+                image_url: imageUrl || undefined, // ✅ เพิ่มตรงนี้
                 start_date: startDate ? startDate.toISOString() : undefined,
                 end_date: endDate ? endDate.toISOString() : undefined,
             };
@@ -118,9 +120,36 @@ const SearchPerson = () => {
     };
 
     // 👉 กดค้นหา
-    const handleSearch = () => {
-        setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
-        loadData(1, paginationModel.pageSize);
+    const handleSearch = async () => {
+        try {
+            setLoading(true);
+            let imageUrl: string | undefined = undefined;
+
+            // ✅ ถ้ามีรูป ให้ upload ก่อน
+            if (selectedImage && fileInputRef.current?.files?.[0]) {
+                const file = fileInputRef.current.files[0];
+                const uploadRes = await FileUploadApi.upload(file);
+                if (uploadRes.success && uploadRes.data.length > 0) {
+                    imageUrl = uploadRes.data[0].url;
+                } else {
+                    dialog.error("อัปโหลดรูปไม่สำเร็จ");
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            // ✅ เริ่มค้นหาที่หน้าแรกเสมอ
+            const newModel = { page: 0, pageSize: paginationModel.pageSize };
+            setPaginationModel(newModel);
+
+            // ✅ เรียก loadData พร้อมส่ง image_url ถ้ามี
+            await loadData(1, newModel.pageSize, imageUrl);
+        } catch (err) {
+            console.error("❌ Search error:", err);
+            dialog.error("เกิดข้อผิดพลาดในการค้นหา");
+        } finally {
+            setLoading(false);
+        }
     };
 
     // 👉 เปลี่ยนหน้า pagination
@@ -131,6 +160,7 @@ const SearchPerson = () => {
 
     // 👉 clear filter
     const handleClear = () => {
+        // ✅ เคลียร์ฟิลด์ทั้งหมด
         setFirstname("");
         setLastname("");
         setMemberGroupId("");
@@ -140,6 +170,11 @@ const SearchPerson = () => {
         setRows([]);
         setRowCount(0);
         setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
+
+        // ✅ เคลียร์รูปด้วย
+        clearImage();
+
+        loadData(1, paginationModel.pageSize);
     };
 
     // --- Data for Table ---
@@ -432,7 +467,7 @@ const SearchPerson = () => {
                                         <MenuItem value=""><em>ทุกประเภท</em></MenuItem>
                                         {memberGroups.map((g) => (
                                             <MenuItem key={g.id} value={g.id}>
-                                                {g.name_th}
+                                                {g.name_th}  ({g.name_en})
                                             </MenuItem>
                                         ))}
                                     </Select>

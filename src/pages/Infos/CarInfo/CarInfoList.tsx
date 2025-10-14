@@ -689,7 +689,7 @@ const CarInfoList = () => {
                                 >
                                     <MenuItem value=""><em>ทุกกลุ่ม</em></MenuItem>
                                     {groups.map(g => (
-                                        <MenuItem key={g.id} value={g.id}>{g.name_th}</MenuItem>
+                                        <MenuItem key={g.id} value={g.id}>{g.name_th} ({g.name_en})</MenuItem>
                                     ))}
                                 </Select>
                             </div>
@@ -763,6 +763,24 @@ const CarInfoList = () => {
                     onClick={() => exportData(prepareExportRows(rows), "csv", "vehicle_list")}
                 >
                     CSV
+                </Button>
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/pdf-file.png" />}
+                    onClick={() => {
+                        // 🔹 เตรียมข้อมูล
+                        const exportRows = prepareExportRows(rows);
+
+                        // 🔹 กรองออกเฉพาะ column "ลำดับ"
+                        const filteredRows = exportRows.map(({ ลำดับ, ...rest }) => rest);
+
+                        // 🔹 ส่งให้ exportData แบบ PDF
+                        exportData(filteredRows, "pdf", "vehicle_list");
+                    }}
+                >
+                    PDF
                 </Button>
                 <Box sx={{ flexGrow: 1 }} />
                 <Typography variant="body2" sx={{ alignSelf: "center" }}>
@@ -1021,7 +1039,7 @@ const CarInfoList = () => {
                                         ? groups // ✅ แก้ไข → แสดงทั้งหมด
                                         : groups.filter((g) => g.name_th !== 'ทั่วไป') // ✅ เพิ่ม → ตัด "ทั่วไป" ออก
                                     ).map((g) => (
-                                        <MenuItem key={g.id} value={g.id}>{g.name_th}</MenuItem>
+                                        <MenuItem key={g.id} value={g.id}>{g.name_th}  ({g.name_en})</MenuItem>
                                     ))}
                                 </Select>
                                 {groupError && <Typography variant="caption" color="error">{groupError}</Typography>}

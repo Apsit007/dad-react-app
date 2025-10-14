@@ -465,7 +465,7 @@ const SearchCar = () => {
                                 >
                                     <MenuItem value=""><em>ทุกกลุ่ม</em></MenuItem>
                                     {groups.map(g => (
-                                        <MenuItem key={g.id} value={g.id}>{g.name_th}</MenuItem>
+                                        <MenuItem key={g.id} value={g.id}>{g.name_th}  ({g.name_en})</MenuItem>
                                     ))}
                                 </Select>
                             </div>
@@ -555,7 +555,7 @@ const SearchCar = () => {
                         const processedRows = rows.map((r, i) => ({
                             ...r,
                             licensePlate: `${r.plate || ""} ${r.region_th || ""}`,
-                            name: `${r.member_firstname || ""} ${r.member_lastname || ""}`,
+                            name: `${r.member_firstname || ""} ${r.member_lastname || ""}`.trim() ?? "-",
                             datetime_out: r.datetime_out ? dayjs(r.datetime_out).format("DD/MM/YYYY HH:mm:ss") : "",
                             datetime_in: r.datetime_in ? dayjs(r.datetime_in).format("DD/MM/YYYY HH:mm:ss") : "",
                         }));

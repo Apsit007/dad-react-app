@@ -247,7 +247,7 @@ const VideoResultPage = () => {
               >
                 <MenuItem value=""><em>ทุกกลุ่ม</em></MenuItem>
                 {groups.map(g => (
-                  <MenuItem key={g.id} value={g.id}>{g.name_th}</MenuItem>
+                  <MenuItem key={g.id} value={g.id}>{g.name_th}  ({g.name_en})</MenuItem>
                 ))}
               </Select>
             </div>

@@ -795,7 +795,7 @@ const PersonInfoForm = () => {
                                         .filter((mg) => mg.name_en !== "Visitor") // 🔹 ตัด Visitor ออก
                                         .map((mg) => (
                                             <MenuItem key={mg.id} value={mg.id}>
-                                                {mg.name_th}
+                                                {mg.name_th}  ({mg.name_en})
                                             </MenuItem>
                                         ))}
                                 </Select>

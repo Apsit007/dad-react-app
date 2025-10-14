@@ -61,10 +61,16 @@ const CardWithImage = ({
         return "bg-gradient-to-tr from-[#E29578] to-[#ebbbaa]";
       case "VIP":
         return "bg-gradient-to-tr from-[#FFC300] to-[#ffdd62]";
+      case "Guest":
+        return "bg-gradient-to-tr from-[#7785AC] to-[#a6b1cc]";
+      case "Member":
+        return "bg-gradient-to-tr from-[#EA8810] to-[#FFB84D]";
+      case "Visitor":
+        return "bg-gradient-to-tr from-[#6EA7E1] to-[#90bef3]";
       case "Blacklist":
-        return "bg-[#9F0C0C]";
+        return "bg-gradient-to-tr from-[#9F0C0C] to-[#cf4432]";
       default:
-        return "bg-gray-500"; // fallback
+        return "bg-gradient-to-tr from-[#6EA7E1] to-[#90bef3]"; // fallback
     }
   };
   const getThText = (title: string) => {
@@ -75,8 +81,14 @@ const CardWithImage = ({
         return "บุคคลสำคัญ";
       case "Blacklist":
         return "ต้องห้าม";
+      case "Guest":
+        return "ผู้มาติดต่อ";
+      case "Member":
+        return "สมาชิก";
+      case "Visitor":
+        return "ทั่วไป";
       default:
-        return ""; // fallback
+        return "ทั่วไป"; // fallback
     }
   };
 

@@ -29,17 +29,23 @@ export const exportData = async (
     return;
   }
 
-  // ✅ กรอง columns ที่ต้องใช้ (เหมือน DataGrid)
+  // ✅ Helper: ถ้าไม่มีค่าให้แสดง "-"
+  const safeValue = (v: any): string => {
+    if (v === undefined || v === null || v === "") return "-";
+    return String(v);
+  };
+
+  // ✅ กรอง columns ที่ต้องใช้
   const filteredCols =
     columns
       ?.filter(
         (c) =>
-          !["actions", "rownumb"].includes(c.field.toLowerCase()) &&
-          !c.field.toLowerCase().includes("image")
+          !["actions", "rownumb"].includes(c.field.toLowerCase())
       )
       .map((c) => ({
         field: c.field,
         headerName: c.headerName ?? c.field,
+        width: c.width,
       })) ??
     Object.keys(rows[0]).map((f) => ({ field: f, headerName: f }));
 
@@ -50,7 +56,9 @@ export const exportData = async (
     case "txt": {
       const content = [
         headers.join("\t"),
-        ...rows.map((r) => useCols.map((f) => r[f] ?? "").join("\t")),
+        ...rows.map((r) =>
+          useCols.map((f) => safeValue(r[f])).join("\t")
+        ),
       ].join("\n");
       downloadFile(content, `${fileName}.txt`, "text/plain;charset=utf-8;");
       break;
@@ -61,7 +69,7 @@ export const exportData = async (
         headers.join(","),
         ...rows.map((r) =>
           useCols
-            .map((f) => `"${String(r[f] ?? "").replace(/"/g, '""')}"`)
+            .map((f) => `"${safeValue(r[f]).replace(/"/g, '""')}"`)
             .join(",")
         ),
       ];
@@ -71,7 +79,7 @@ export const exportData = async (
 
     case "xlsx": {
       const filtered = rows.map((r) =>
-        Object.fromEntries(useCols.map((f) => [f, r[f]]))
+        Object.fromEntries(useCols.map((f) => [f, safeValue(r[f])]))
       );
       const ws = XLSX.utils.json_to_sheet(filtered, { header: useCols });
       XLSX.utils.sheet_add_aoa(ws, [headers], { origin: "A1" });
@@ -108,9 +116,10 @@ const downloadFile = (content: string, fileName: string, mimeType: string) => {
 const getBase64FromUrl = async (url: string): Promise<string> => {
   const res = await fetch(url);
   const blob = await res.blob();
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("failed"));
     reader.readAsDataURL(blob);
   });
 };
@@ -119,9 +128,14 @@ const getBase64FromUrl = async (url: string): Promise<string> => {
 const exportPdf = async (
   rows: any[],
   fileName: string,
-  columns?: { field: string; headerName?: string, width?: number }[]
+  columns?: { field: string; headerName?: string; width?: number }[]
 ) => {
-  // 1) กรองคอลัมน์: ตัด actions / rownumb
+  const safeValue = (v: any): string => {
+    if (v === undefined || v === null || v === "") return "-";
+    return String(v);
+  };
+
+  // 1️⃣ กรองคอลัมน์
   const filteredCols =
     columns?.filter(
       (c) =>
@@ -135,11 +149,10 @@ const exportPdf = async (
       )
       .map((f) => ({ field: f, headerName: f }));
 
-  // 2) header
+  // 2️⃣ header
   const headers = ["ลำดับ", ...filteredCols.map((c) => c.headerName || c.field)];
   const useCols = filteredCols.map((c) => c.field);
 
-  // 3) header row → ชิดกลาง
   const headerRow = headers.map((h) => ({
     text: h,
     style: "tableHeader",
@@ -147,48 +160,56 @@ const exportPdf = async (
     noWrap: false,
   }));
 
-  // 4) body
+  // 3️⃣ body
   const tableBody: any[] = [headerRow];
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
+
     const cells = await Promise.all(
       useCols.map(async (f) => {
+        const raw = r[f];
+        const value = safeValue(raw); // ✅ ใช้ safeValue ครอบทุกกรณี
+
+        // 🔸 ตรวจจับฟิลด์รูปภาพ
         if (
           (f.toLowerCase().includes("image") ||
             f.toLowerCase().includes("face") ||
             f.toLowerCase().includes("url")) &&
-          typeof r[f] === "string" &&
-          r[f].startsWith("http")
+          typeof raw === "string" &&
+          raw.startsWith("http")
         ) {
           try {
-            const base64 = await getBase64FromUrl(r[f]);
-            return { image: base64, fit: [40, 40], alignment: "center" };
+            const base64 = await getBase64FromUrl(raw);
+            return { image: base64, fit: [45, 45], alignment: "center" };
           } catch {
             return { text: "-", alignment: "center" };
           }
         }
+
+        // 🔸 ฟิลด์ข้อความทั่วไป
         return {
-          text: String(r[f] ?? ""),
+          text: value,
           style: "tableBody",
-          noWrap: false, // ✅ ให้ตัดบรรทัดได้
           alignment: "center",
+          noWrap: false,
         };
       })
     );
-    tableBody.push([
-      { text: String(i + 1), alignment: "center" },
-      ...cells,
-    ]);
+
+    tableBody.push([{ text: String(i + 1), alignment: "center" }, ...cells]);
   }
 
-  // 5) ให้ทุกคอลัมน์บีบในหน้ากระดาษ
-  // const widths: (number | string)[] = Array(filteredCols.length + 1).fill("*");
-  // 4) widths: ใช้จาก columns ถ้ามี width, ถ้าไม่มีก็ '*'
+  // 4️⃣ widths
   const widths: (number | string)[] = [
-    40, // ลำดับ fix 40px
-    ...filteredCols.map((c) => c.width || "*"),
+    40,
+    ...filteredCols.map((c) => {
+      const name = c.field.toLowerCase();
+      if (name.includes("image") || name.includes("face") || name.includes("url")) return 55;
+      return c.width || "*";
+    }),
   ];
-  // 6) docDefinition
+
+  // 5️⃣ generate PDF
   const docDefinition: any = {
     pageSize: "A4",
     pageOrientation: "landscape",
