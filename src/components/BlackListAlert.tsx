@@ -101,7 +101,7 @@ const CardWithImage = ({
             className={`${getBgClass(title)} text-white px-3 py-1  shadow w-full`}
           >
             <Typography variant="subtitle1" className="!font-semibold">
-              {typeTitle}  : {title} ({getThText(title)})
+              {typeTitle}  : {getThText(title)} ( {title ?? "Visitor"} )
             </Typography>
 
           </div>
@@ -205,7 +205,7 @@ const BlackListAlert: FC<BlackListAlertProps> = ({
             <div>
               <CardWithImage
                 typeTitle='บุคคลที่ลงทะเบียน'
-                title={alertTitle.memberTitle}
+                title={alertTitle.memberTitile}
                 imageUrl={member.imageUrl}
               />
               <div className="mt-2">

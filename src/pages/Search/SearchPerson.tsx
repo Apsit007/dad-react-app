@@ -36,6 +36,8 @@ const searchType = [
     { id: 1, value: "in", label: "เวลาเข้า" },
     { id: 2, value: "out", label: "เวลาออก" },
 ]
+
+
 const SearchPerson = () => {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -58,6 +60,7 @@ const SearchPerson = () => {
         pageSize: 10,
     });
     const [loading, setLoading] = useState(false);
+    const [uploadedImageUrl, setUploadedImageUrl] = useState<string | undefined>(undefined);
 
     const loadData = async (page = 1, limit = 10, imageUrl?: string) => {
         try {
@@ -131,11 +134,15 @@ const SearchPerson = () => {
                 const uploadRes = await FileUploadApi.upload(file);
                 if (uploadRes.success && uploadRes.data.length > 0) {
                     imageUrl = uploadRes.data[0].url;
+                    setUploadedImageUrl(imageUrl); // ✅ เก็บไว้ใช้ตอนเปลี่ยนหน้า
                 } else {
                     dialog.error("อัปโหลดรูปไม่สำเร็จ");
                     setLoading(false);
                     return;
                 }
+            } else {
+                // ✅ ถ้าไม่มีรูป ให้ล้างค่าเก่า
+                setUploadedImageUrl(undefined);
             }
 
             // ✅ เริ่มค้นหาที่หน้าแรกเสมอ
@@ -155,12 +162,11 @@ const SearchPerson = () => {
     // 👉 เปลี่ยนหน้า pagination
     const handlePageChange = (model: GridPaginationModel) => {
         setPaginationModel(model);
-        loadData(model.page + 1, model.pageSize);
+        loadData(model.page + 1, model.pageSize, uploadedImageUrl);
     };
 
     // 👉 clear filter
     const handleClear = () => {
-        // ✅ เคลียร์ฟิลด์ทั้งหมด
         setFirstname("");
         setLastname("");
         setMemberGroupId("");
@@ -171,8 +177,8 @@ const SearchPerson = () => {
         setRowCount(0);
         setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
 
-        // ✅ เคลียร์รูปด้วย
         clearImage();
+        setUploadedImageUrl(undefined); // ✅ ล้าง URL ที่อัปโหลดไว้ด้วย
 
         loadData(1, paginationModel.pageSize);
     };
@@ -369,7 +375,11 @@ const SearchPerson = () => {
     // ✅ ฟังก์ชัน Export หลัก
     const handleExport = (type: "txt" | "xlsx" | "csv" | "pdf") => {
         if (!rows.length) return dialog.warning("ไม่มีข้อมูลให้ส่งออก");
-
+        const paginationInfo = {
+            page: paginationModel.page,
+            pageSize: paginationModel.pageSize,
+            rowCount: rowCount,
+        };
         if (type === "pdf") {
             // ✅ เตรียมข้อมูลก่อน export PDF
             const processedRows = rows.map((r) => ({
@@ -393,7 +403,7 @@ const SearchPerson = () => {
                     : "-",
             }));
 
-            exportData(processedRows, "pdf", "face_data", columnsExport);
+            exportData(processedRows, "pdf", "ค้นหาบุคคล", columnsExport, paginationInfo);
         } else {
             exportData(prepareExportRows(rows), type, "face_data");
         }

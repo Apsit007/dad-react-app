@@ -86,7 +86,7 @@ const LoginPage = () => {
 
 
         <Box mt={2}>
-          <Link href="#" underline="hover" color="inherit" variant='subtitle2'>ลืมรหัสผ่านหรือไม่?</Link>
+          {/* <Link href="#" underline="hover" color="inherit" variant='subtitle2'>ลืมรหัสผ่านหรือไม่?</Link> */}
         </Box>
 
         <Box textAlign="center" mt={4}>

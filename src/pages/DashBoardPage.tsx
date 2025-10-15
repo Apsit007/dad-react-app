@@ -210,7 +210,7 @@ const DashBoardPage = () => {
                 lastShownIdRef.current = newest.id;
                 setAlertTitle({
                     vehecleTitle: vehecleTitle,
-                    membertitile: memberTitle,
+                    memberTitile: memberTitle,
                     lprTitle: lprTitle
                     // vehecleTitle: 'Blacklist',
                     // memberTitle: 'Blacklist',
@@ -293,7 +293,7 @@ const DashBoardPage = () => {
                         getRowClassName={getRowClassName}
                         getRowId={(row) => row.id}
                         paginationModel={paginationModel}
-                        rowCount={50}
+                        rowCount={100}
                         onPaginationModelChange={handlePaginationChange}
                         rowHeight={75}
 

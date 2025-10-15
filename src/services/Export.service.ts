@@ -1,18 +1,68 @@
 ﻿// src/services/Export.service.ts
 import * as XLSX from "xlsx";
+import dayjs from "dayjs";
 import pdfMake from "pdfmake/build/pdfmake";
-import pdfFonts from "../../src/assets/fonts/vfs_fonts";
-
-(pdfMake as any).vfs = pdfFonts.pdfMake.vfs;
 
 const THAI_FONT_FAMILY = "NotoSansThai";
-(pdfMake as any).fonts = {
+const THAI_FONT_FILE_NAME = "NotoSansThai.ttf";
+const THAI_FONT_URL = new URL("../assets/fonts/ttf/NotoSansThai.ttf", import.meta.url).href;
+
+const pdfMakeAny = pdfMake as any;
+pdfMakeAny.fonts = {
+  ...pdfMakeAny.fonts,
   [THAI_FONT_FAMILY]: {
-    normal: "NotoSansThai.ttf",
-    bold: "NotoSansThai.ttf",
-    italics: "NotoSansThai.ttf",
-    bolditalics: "NotoSansThai.ttf",
+    normal: THAI_FONT_FILE_NAME,
+    bold: THAI_FONT_FILE_NAME,
+    italics: THAI_FONT_FILE_NAME,
+    bolditalics: THAI_FONT_FILE_NAME,
   },
+};
+
+const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    const chunk = bytes.subarray(offset, offset + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  return btoa(binary);
+};
+
+let thaiFontPromise: Promise<void> | null = null;
+const ensureThaiFontLoaded = async (): Promise<void> => {
+  if (!thaiFontPromise) {
+    thaiFontPromise = (async () => {
+      const response = await fetch(THAI_FONT_URL);
+      if (!response.ok) {
+        throw new Error(`Failed to load Thai font (${response.status} ${response.statusText})`);
+      }
+      const buffer = await response.arrayBuffer();
+      const base64 = arrayBufferToBase64(buffer);
+      if (typeof pdfMakeAny.addVirtualFileSystem === "function") {
+        pdfMakeAny.addVirtualFileSystem({
+          [THAI_FONT_FILE_NAME]: base64,
+        });
+      } else {
+        const currentVfs = pdfMakeAny.vfs ?? {};
+        pdfMakeAny.vfs = {
+          ...currentVfs,
+          [THAI_FONT_FILE_NAME]: base64,
+        };
+      }
+    })().catch((error) => {
+      thaiFontPromise = null;
+      throw error;
+    });
+  }
+
+  return thaiFontPromise;
+};
+
+type PaginationInfo = {
+  page: number;
+  pageSize: number;
+  rowCount: number;
 };
 
 export type ExportFileType = "txt" | "csv" | "xlsx" | "pdf";
@@ -22,7 +72,8 @@ export const exportData = async (
   rows: any[],
   fileType: ExportFileType,
   fileName: string = "export",
-  columns?: { field: string; headerName?: string; width?: number }[]
+  columns?: { field: string; headerName?: string; width?: number }[],
+  paginationInfo?: PaginationInfo
 ) => {
   if (!rows || rows.length === 0) {
     console.warn("⚠️ ไม่มีข้อมูลสำหรับ export");
@@ -90,7 +141,7 @@ export const exportData = async (
     }
 
     case "pdf": {
-      await exportPdf(rows, fileName, columns);
+      await exportPdf(rows, fileName, columns, paginationInfo);
       break;
     }
 
@@ -128,8 +179,11 @@ const getBase64FromUrl = async (url: string): Promise<string> => {
 const exportPdf = async (
   rows: any[],
   fileName: string,
-  columns?: { field: string; headerName?: string; width?: number }[]
+  columns?: { field: string; headerName?: string; width?: number }[],
+  paginationInfo?: PaginationInfo
 ) => {
+  await ensureThaiFontLoaded();
+
   const safeValue = (v: any): string => {
     if (v === undefined || v === null || v === "") return "-";
     return String(v);
@@ -164,13 +218,10 @@ const exportPdf = async (
   const tableBody: any[] = [headerRow];
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
-
     const cells = await Promise.all(
       useCols.map(async (f) => {
         const raw = r[f];
-        const value = safeValue(raw); // ✅ ใช้ safeValue ครอบทุกกรณี
-
-        // 🔸 ตรวจจับฟิลด์รูปภาพ
+        const value = safeValue(raw);
         if (
           (f.toLowerCase().includes("image") ||
             f.toLowerCase().includes("face") ||
@@ -185,17 +236,9 @@ const exportPdf = async (
             return { text: "-", alignment: "center" };
           }
         }
-
-        // 🔸 ฟิลด์ข้อความทั่วไป
-        return {
-          text: value,
-          style: "tableBody",
-          alignment: "center",
-          noWrap: false,
-        };
+        return { text: value, style: "tableBody", alignment: "center" };
       })
     );
-
     tableBody.push([{ text: String(i + 1), alignment: "center" }, ...cells]);
   }
 
@@ -209,13 +252,50 @@ const exportPdf = async (
     }),
   ];
 
-  // 5️⃣ generate PDF
+  // ✅ Header (แก้ให้แสดงวันที่ออกรายงานครบ)
+  const now = dayjs().format("DD/MM/YYYY HH:mm:ss");
+  const total = paginationInfo?.rowCount ?? rows.length;
+
+  const startIdx =
+    total === 0
+      ? 0
+      : paginationInfo
+        ? paginationInfo.page * paginationInfo.pageSize + 1
+        : 1;
+  const endIdx =
+    total === 0
+      ? 0
+      : paginationInfo
+        ? Math.min(startIdx + paginationInfo.pageSize - 1, total)
+        : rows.length;
+
+  const headerStack = [
+    { text: `ประเภทรายงาน: ${fileName}`, bold: true, fontSize: 11, margin: [0, 0, 0, 2] },
+    { text: `รายการที่ ${startIdx} ถึง ${endIdx} จากทั้งหมด ${total} รายการ`, fontSize: 10, margin: [0, 0, 0, 2] },
+    { text: `วันที่ออกรายงาน: ${now}`, fontSize: 10 },
+  ];
+
   const docDefinition: any = {
     pageSize: "A4",
     pageOrientation: "landscape",
-    pageMargins: [10, 10, 10, 10],
+    pageMargins: [20, 80, 20, 20],
+    // ✅ ใช้ function ได้ใน 0.3.x แล้ว
+    // pageMargins: (pageNumber: number) => {
+    //   return pageNumber === 1 ? [20, 80, 20, 20] : [20, 20, 20, 20];
+    // },
+
+    header: (pageNumber: number) => {
+      if (pageNumber === 1) {
+        return {
+          stack: headerStack,
+          alignment: "left",
+          margin: [20, 18, 0, 0],
+        };
+      }
+      return null;
+    },
+
     content: [
-      { text: fileName, style: "header", margin: [0, 0, 0, 8] },
       {
         table: {
           headerRows: 1,
@@ -232,11 +312,6 @@ const exportPdf = async (
         },
       },
     ],
-    styles: {
-      header: { fontSize: 14, bold: true },
-      tableHeader: { fontSize: 9, bold: true, alignment: "center" },
-      tableBody: { fontSize: 8 },
-    },
     defaultStyle: {
       font: THAI_FONT_FAMILY,
       fontSize: 8,
