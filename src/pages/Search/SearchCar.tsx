@@ -485,11 +485,11 @@ const SearchCar = () => {
                             {/* วันที่สร้างข้อมูล */}
                             <div className="w-full sm:w-1/2 md:w-1/5 p-2">
                                 <InputLabel shrink>วันที่เริ่มต้น</InputLabel>
-                                <DateTimePicker sx={{ width: '100%' }} value={sStartDate} onChange={setSStartDate} />
+                                <DateTimePicker sx={{ width: '100%' }} value={sStartDate} onChange={setSStartDate} maxDateTime={sEndDate ?? undefined}  />
                             </div>
                             <div className="w-full sm:w-1/2 md:w-1/5 p-2">
                                 <InputLabel shrink>วันที่สิ้นสุด</InputLabel>
-                                <DateTimePicker sx={{ width: '100%' }} value={sEndDate} onChange={setSEndDate} />
+                                <DateTimePicker sx={{ width: '100%' }} value={sEndDate} onChange={setSEndDate} minDateTime={sStartDate ?? undefined}  />
                             </div>
 
                         </div>

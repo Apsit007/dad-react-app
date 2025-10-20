@@ -697,11 +697,11 @@ const CarInfoList = () => {
                             {/* วันที่สร้างข้อมูล */}
                             <div className="w-full sm:w-1/2 md:w-1/5 p-2">
                                 <InputLabel shrink>วันที่สร้างข้อมูล (เริ่มต้น)</InputLabel>
-                                <DatePicker value={sStartDate} onChange={setSStartDate} />
+                                <DatePicker value={sStartDate} onChange={setSStartDate} maxDate={sEndDate ?? undefined} />
                             </div>
                             <div className="w-full sm:w-1/2 md:w-1/5 p-2">
                                 <InputLabel shrink>วันที่สร้างข้อมูล (สิ้นสุด)</InputLabel>
-                                <DatePicker value={sEndDate} onChange={setSEndDate} />
+                                <DatePicker value={sEndDate} onChange={setSEndDate} minDate={sStartDate ?? undefined} />
                             </div>
                         </div>
 

@@ -493,11 +493,11 @@ const SearchPerson = () => {
                                 </div>
                                 <div className="w-full sm:w-1/3 p-2">
                                     <Typography variant='caption'>วันที่เริ่มต้น</Typography>
-                                    <DateTimePicker sx={{ width: '100%' }} value={startDate} onChange={setStartDate} />
+                                    <DateTimePicker sx={{ width: '100%' }} value={startDate} onChange={setStartDate} maxDateTime={endDate ?? undefined} />
                                 </div>
                                 <div className="w-full sm:w-1/3 p-2">
                                     <Typography variant='caption'>วันที่สิ้นสุด</Typography>
-                                    <DateTimePicker sx={{ width: '100%' }} value={endDate} onChange={setEndDate} />
+                                    <DateTimePicker sx={{ width: '100%' }} value={endDate} onChange={setEndDate} minDateTime={startDate ?? undefined} />
                                 </div>
                             </div>
                         </div>

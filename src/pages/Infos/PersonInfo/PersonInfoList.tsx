@@ -538,11 +538,11 @@ const PersonInfoList = () => {
                                 </div>
                                 <div className="w-full sm:w-1/2 md:w-1/4 p-2">
                                     <InputLabel shrink>วันที่สร้างข้อมูล (เริ่มต้น)</InputLabel>
-                                    <DatePicker value={createdStart} onChange={(val) => setCreatedStart(val)} />
+                                    <DatePicker value={createdStart} onChange={(val) => setCreatedStart(val)} maxDate={createdEnd ?? undefined} />
                                 </div>
                                 <div className="w-full sm:w-1/2 md:w-1/4 p-2">
                                     <InputLabel shrink>วันที่สร้างข้อมูล (สิ้นสุด)</InputLabel>
-                                    <DatePicker value={createdEnd} onChange={(val) => setCreatedEnd(val)} />
+                                    <DatePicker value={createdEnd} onChange={(val) => setCreatedEnd(val)} minDate={createdStart ?? undefined} />
                                 </div>
                                 <div className="w-full sm:w-1/2 md:w-1/4 p-2">
                                     <InputLabel shrink>สถานะ</InputLabel>

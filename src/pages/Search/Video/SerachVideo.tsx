@@ -427,11 +427,11 @@ const SerachVideo = () => {
                 </div>
                 <div className="w-full sm:w-1/3 p-2">
                   <Typography variant='caption'>วันที่เริ่มต้น</Typography>
-                  <DatePicker value={startDate} onChange={setStartDate} />
+                  <DatePicker value={startDate} onChange={setStartDate} maxDate={endDate ?? undefined} />
                 </div>
                 <div className="w-full sm:w-1/3 p-2">
                   <Typography variant='caption'>วันที่สิ้นสุด</Typography>
-                  <DatePicker value={endDate} onChange={setEndDate} />
+                  <DatePicker value={endDate} onChange={setEndDate} minDate={startDate ?? undefined} />
                 </div>
               </div>
               <div className="w-full flex justify-end bottom-0 absolute  p-2 items-end gap-2">
