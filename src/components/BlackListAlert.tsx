@@ -1,4 +1,4 @@
-import { Dialog, DialogTitle, DialogContent, IconButton, Typography } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, IconButton, Typography, Avatar } from "@mui/material";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import type { FC } from "react";
 
@@ -29,8 +29,8 @@ type BlackListAlertProps = {
 };
 
 const FallbackImage = ({ alt }: { alt: string }) => (
-  <div className="w-full h-[240px] bg-gray-200 flex items-center justify-center text-gray-500">
-    <Typography variant="body2">{alt}</Typography>
+  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+    <Avatar className="h-full w-auto"></Avatar>
   </div>
 );
 

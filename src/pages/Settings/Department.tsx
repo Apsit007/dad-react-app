@@ -182,7 +182,7 @@ export default function DepartmentPage() {
 
     return (
         <Box p={3}>
-            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark !mt-[5px]'>
                 จัดการข้อมูลหน่วยงาน
             </Typography>
             <Button

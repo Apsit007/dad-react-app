@@ -204,7 +204,7 @@ const VideoResultPage = () => {
         >
           <ArrowBackIosNewRoundedIcon />
         </IconButton>
-        <Typography variant="h5" sx={{ fontWeight: 'bold' }} className="text-primary-dark">
+        <Typography variant="h5" sx={{ fontWeight: 'bold' }} className="text-primary-dark !mt-[5px]">
           อัปโหลด VDO/ค้นหาด้วย VDO
         </Typography>
       </Box>

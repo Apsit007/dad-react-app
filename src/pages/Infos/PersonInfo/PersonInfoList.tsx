@@ -172,7 +172,7 @@ const PersonInfoList = () => {
                     <IconButton
                         size="small"
                         onClick={() => handleDelete(params.row.uid)}
-                        disabled={params.row.member_status === "active"}
+                        disabled={params.row.member_status != "terminated"}
                     >
                         <DeleteIcon fontSize="small" />
                     </IconButton>
@@ -491,7 +491,7 @@ const PersonInfoList = () => {
     return (
         <>
             <Box>
-                <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark !mt-[5px]'>
                     ข้อมูลบุคคล
                 </Typography>
 

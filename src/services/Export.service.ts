@@ -8,14 +8,11 @@ const THAI_FONT_FILE_NAME = "NotoSansThai.ttf";
 const THAI_FONT_URL = new URL("../assets/fonts/ttf/NotoSansThai.ttf", import.meta.url).href;
 
 const pdfMakeAny = pdfMake as any;
-pdfMakeAny.fonts = {
-  ...pdfMakeAny.fonts,
-  [THAI_FONT_FAMILY]: {
-    normal: THAI_FONT_FILE_NAME,
-    bold: THAI_FONT_FILE_NAME,
-    italics: THAI_FONT_FILE_NAME,
-    bolditalics: THAI_FONT_FILE_NAME,
-  },
+const THAI_FONT_DEFINITION = {
+  normal: THAI_FONT_FILE_NAME,
+  bold: THAI_FONT_FILE_NAME,
+  italics: THAI_FONT_FILE_NAME,
+  bolditalics: THAI_FONT_FILE_NAME,
 };
 
 const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
@@ -39,16 +36,32 @@ const ensureThaiFontLoaded = async (): Promise<void> => {
       }
       const buffer = await response.arrayBuffer();
       const base64 = arrayBufferToBase64(buffer);
-      if (typeof pdfMakeAny.addVirtualFileSystem === "function") {
+      const ensureFontsObject = () => {
+        pdfMakeAny.fonts = {
+          ...(pdfMakeAny.fonts ?? {}),
+          [THAI_FONT_FAMILY]: THAI_FONT_DEFINITION,
+        };
+      };
+
+      if (typeof pdfMakeAny.addFontContainer === "function") {
+        ensureFontsObject();
+        pdfMakeAny.addFontContainer({
+          vfs: {
+            [THAI_FONT_FILE_NAME]: base64,
+          },
+          fonts: {
+            [THAI_FONT_FAMILY]: THAI_FONT_DEFINITION,
+          },
+        });
+      } else if (typeof pdfMakeAny.addVirtualFileSystem === "function") {
+        ensureFontsObject();
         pdfMakeAny.addVirtualFileSystem({
           [THAI_FONT_FILE_NAME]: base64,
         });
       } else {
+        ensureFontsObject();
         const currentVfs = pdfMakeAny.vfs ?? {};
-        pdfMakeAny.vfs = {
-          ...currentVfs,
-          [THAI_FONT_FILE_NAME]: base64,
-        };
+        pdfMakeAny.vfs = { ...currentVfs, [THAI_FONT_FILE_NAME]: base64 };
       }
     })().catch((error) => {
       thaiFontPromise = null;
@@ -254,20 +267,32 @@ const exportPdf = async (
 
   // ✅ Header (แก้ให้แสดงวันที่ออกรายงานครบ)
   const now = dayjs().format("DD/MM/YYYY HH:mm:ss");
-  const total = paginationInfo?.rowCount ?? rows.length;
+  const total = Number.isFinite(paginationInfo?.rowCount)
+    ? Number(paginationInfo?.rowCount)
+    : rows.length;
+  const activePage = Number.isFinite(paginationInfo?.page)
+    ? Number(paginationInfo?.page)
+    : 0;
+  const activePageSize =
+    Number.isFinite(paginationInfo?.pageSize) && Number(paginationInfo?.pageSize) > 0
+      ? Number(paginationInfo?.pageSize)
+      : rows.length || 1;
 
-  const startIdx =
-    total === 0
-      ? 0
-      : paginationInfo
-        ? paginationInfo.page * paginationInfo.pageSize + 1
-        : 1;
-  const endIdx =
-    total === 0
-      ? 0
-      : paginationInfo
-        ? Math.min(startIdx + paginationInfo.pageSize - 1, total)
-        : rows.length;
+  const calcStartIdx = () => {
+    if (total === 0) return 0;
+    const idx = activePage * activePageSize + 1;
+    return Number.isFinite(idx) ? idx : 1;
+  };
+
+  const calcEndIdx = (startIdxValue: number) => {
+    if (total === 0) return 0;
+    const tentative = startIdxValue + activePageSize - 1;
+    if (!Number.isFinite(tentative)) return rows.length;
+    return Math.min(tentative, total);
+  };
+
+  const startIdx = calcStartIdx();
+  const endIdx = calcEndIdx(startIdx);
 
   const headerStack = [
     { text: `ประเภทรายงาน: ${fileName}`, bold: true, fontSize: 11, margin: [0, 0, 0, 2] },

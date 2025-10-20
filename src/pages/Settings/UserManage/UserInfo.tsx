@@ -271,7 +271,7 @@ const UserInfoPage = () => {
         {/* Left Column */}
         <div className="w-full lg:w-7/12 flex flex-col gap-6">
           <Paper elevation={2} sx={{ p: 3 }}>
-            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark !mt-[5px]'>
               ข้อมูลผู้ใช้ระบบ
             </Typography>
             <div className="flex flex-wrap -m-2">

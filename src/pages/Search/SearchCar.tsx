@@ -375,7 +375,7 @@ const SearchCar = () => {
 
     return (
         <Box>
-            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark !mt-[5px]'>
                 ค้นหารถ
             </Typography>
 

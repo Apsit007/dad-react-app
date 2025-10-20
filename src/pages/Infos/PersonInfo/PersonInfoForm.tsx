@@ -108,7 +108,11 @@ const PersonInfoForm = () => {
     const [departmentList, setDepartmentList] = useState<Department[]>([])
 
 
-
+    // ✅ กรองเฉพาะ visible = true
+    const visibleMemberGroups = useMemo(
+        () => memberGroups.filter((mg) => mg.visible === true),
+        [memberGroups]
+    );
 
     // 👉 โหลดข้อมูลถ้าเป็นโหมดแก้ไข
     useEffect(() => {
@@ -309,7 +313,7 @@ const PersonInfoForm = () => {
             newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
         }
 
-        const memberGroup = memberGroups.find(mg => mg.id === form.member_group_id);
+        const memberGroup = visibleMemberGroups.find(mg => mg.id === form.member_group_id);
         const isMemberType = memberGroup?.name_th === "สมาชิก";
 
         // ✅ เงื่อนไขเฉพาะสมาชิก
@@ -354,98 +358,113 @@ const PersonInfoForm = () => {
 
     // เวลา save
     const handleSave = async () => {
-        dialog.loading();
-        try {
-            if (!validateForm()) {
-                dialog.close()
-                return; // ❌ ถ้าไม่ผ่าน หยุดเลย
-            }
-
-            // ✅ เตรียม vehicle_uid_list
-            const vehicle_uid_list =
-                carRows.length > 0 ? carRows.map((c) => c.uid).join(",") : "";
-
-            let imageUrl = form.image_url;
-
-            // ✅ อัปโหลดรูปถ้ามี
-            if (selectedFile) {
-                const uploadRes = await FileUploadApi.upload(selectedFile);
-                if (uploadRes.success) {
-                    imageUrl = uploadRes.data[0].url;
-                } else {
-                    dialog.error("อัปโหลดรูปภาพไม่สำเร็จ");
-                    return;
+        dialog.confirm("คุณต้องการจะบันทึกข้อมูลใช่หรือไม่").then(async (res) => {
+            if (!res) return;
+            dialog.loading();
+            try {
+                if (!validateForm()) {
+                    dialog.close()
+                    return; // ❌ ถ้าไม่ผ่าน หยุดเลย
                 }
+
+                // ✅ เตรียม vehicle_uid_list
+                const vehicle_uid_list =
+                    carRows.length > 0 ? carRows.map((c) => c.uid).join(",") : "";
+
+                let imageUrl = form.image_url;
+
+                // ✅ อัปโหลดรูปถ้ามี
+                if (selectedFile) {
+                    const uploadRes = await FileUploadApi.upload(selectedFile);
+                    if (uploadRes.success) {
+                        imageUrl = uploadRes.data[0].url;
+                    } else {
+                        dialog.error("อัปโหลดรูปภาพไม่สำเร็จ");
+                        return;
+                    }
+                }
+
+
+                const payload: MemberPayload = {
+                    ...form,
+                    uid: uid || form.uid, // ✅ กรณี update ต้องมี uid
+                    image_url: imageUrl,
+                    vehicle_uid_list,
+                    creator_uid: form.creator_uid || currentUid,
+                    updater_uid: currentUid,
+                };
+
+                console.log("👉 payload", payload);
+                let res;
+                if (uid) {
+                    // ✅ update mode → uid อยู่ใน payload
+                    res = await MemberApi.update(payload);
+                } else {
+                    // ✅ create mode
+                    res = await MemberApi.create(payload);
+                }
+
+
+                if (res.success) {
+                    dialog.success("บันทึกข้อมูลสำเร็จ");
+                    navigate("/info/person"); // ✅ redirect ไปหน้า info/person
+                } else {
+                    dialog.error(res.message || "เกิดข้อผิดพลาด");
+                }
+            } catch (err) {
+                console.error("Save error:", err);
+                dialog.error("ไม่สามารถบันทึกข้อมูลได้");
             }
+        })
 
 
-            const payload: MemberPayload = {
-                ...form,
-                uid: uid || form.uid, // ✅ กรณี update ต้องมี uid
-                image_url: imageUrl,
-                vehicle_uid_list,
-                creator_uid: form.creator_uid || currentUid,
-                updater_uid: currentUid,
-            };
-
-            console.log("👉 payload", payload);
-            let res;
-            if (uid) {
-                // ✅ update mode → uid อยู่ใน payload
-                res = await MemberApi.update(payload);
-            } else {
-                // ✅ create mode
-                res = await MemberApi.create(payload);
-            }
-
-
-            if (res.success) {
-                dialog.success("บันทึกข้อมูลสำเร็จ");
-                navigate("/info/person"); // ✅ redirect ไปหน้า info/person
-            } else {
-                dialog.error(res.message || "เกิดข้อผิดพลาด");
-            }
-        } catch (err) {
-            console.error("Save error:", err);
-            dialog.error("ไม่สามารถบันทึกข้อมูลได้");
-        }
     };
     const handleBlackBtn = () => {
         navigate("/info/person");
     }
 
     const handleTerminateMember = async (uid: string) => {
-        dialog.loading();
-        try {
-            if (!uid) return;
-            const res = await MemberApi.terminate(uid);
-            if (res.success) {
-                dialog.success("บันทึกข้อมูลสำเร็จ");
+        dialog.confirm("คุณต้องการจะยกเลิกสมาชิกใช่หรือไม่").then(async (res) => {
+            if (!res) return;
+            try {
+                dialog.loading();
+                if (!uid) return;
+                const res = await MemberApi.terminate(uid);
+                if (res.success) {
+                    dialog.success("บันทึกข้อมูลสำเร็จ");
 
-                // ✅ reload ข้อมูลใหม่จาก API
-                const reload = await MemberApi.getById(uid);
-                if (reload.success && reload.data) {
-                    const person = reload.data[0];
-                    setForm(person);
+                    // ✅ reload ข้อมูลใหม่จาก API
+                    const reload = await MemberApi.getById(uid);
+                    if (reload.success && reload.data) {
+                        const person = reload.data[0];
+                        setForm(person);
 
-                    // ✅ update preview image
-                    if (person.image_url) {
-                        setSelectedImage(person.image_url);
+                        // ✅ update preview image
+                        if (person.image_url) {
+                            setSelectedImage(person.image_url);
+                        }
+                        // ✅ update รถ
+                        setCarRows(person.vehicles || []);
                     }
-                    // ✅ update รถ
-                    setCarRows(person.vehicles || []);
+                } else {
+                    dialog.error(res.message || "เกิดข้อผิดพลาด");
                 }
-            } else {
-                dialog.error(res.message || "เกิดข้อผิดพลาด");
+            } catch (err) {
+                console.error("Terminate error:", err);
+                dialog.close();
             }
-        } catch (err) {
-            console.error("Terminate error:", err);
-            dialog.close();
-        }
+        })
+
+
     };
 
     const handleRemoveCar = (uid: string) => {
-        setCarRows((prev) => prev.filter((c) => c.uid !== uid));
+        dialog.confirm("คุณต้องการจะลบข้อมูลรถใช่หรือไม่").then((res) => {
+            if (!res) return;
+            setCarRows((prev) => prev.filter((c) => c.uid !== uid));
+        })
+
+
     };
 
     const carColumns: GridColDef[] = [
@@ -644,7 +663,7 @@ const PersonInfoForm = () => {
                                         </Select>
                                     </div>
                                     <div className="w-full sm:w-[35%] p-2">
-                                        <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>เลขที่บัตรประชาชน</InputLabel>
+                                        <InputLabel shrink required={visibleMemberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>เลขที่บัตรประชาชน</InputLabel>
                                         <TextField
                                             value={form.idcard}
                                             onChange={(e) => handleChange("idcard", e.target.value)}
@@ -672,7 +691,7 @@ const PersonInfoForm = () => {
                                     </div>
 
                                     <div className="w-full sm:w-1/3 p-2">
-                                        <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>เบอร์โทร</InputLabel>
+                                        <InputLabel shrink required={visibleMemberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>เบอร์โทร</InputLabel>
                                         <TextField
                                             value={form.phone}
                                             onChange={(e) => handleChange("phone", e.target.value)}
@@ -700,7 +719,7 @@ const PersonInfoForm = () => {
                             <div className='w-full flex flex-row'>
 
                                 <div className="w-full p-2">
-                                    <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>สังกัดหน่วยงาน</InputLabel>
+                                    <InputLabel shrink required={visibleMemberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>สังกัดหน่วยงาน</InputLabel>
                                     <Autocomplete
                                         options={departmentList.map(d => ({
                                             id: d.uid,           // ใช้ uid เก็บค่า
@@ -728,7 +747,7 @@ const PersonInfoForm = () => {
                                     />
                                 </div>
                                 <div className="w-full p-2">
-                                    <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>เลขบัตรพนักงาน</InputLabel>
+                                    <InputLabel shrink required={visibleMemberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"}>เลขบัตรพนักงาน</InputLabel>
                                     <TextField
                                         value={form.emp_card_id}
                                         onChange={(e) => handleChange("emp_card_id", e.target.value)}
@@ -791,7 +810,7 @@ const PersonInfoForm = () => {
                                     disabled={isTerminated}
                                 >
                                     <MenuItem value={0}><em>เลือกประเภท</em></MenuItem>
-                                    {memberGroups
+                                    {visibleMemberGroups
                                         .filter((mg) => mg.name_en !== "Visitor") // 🔹 ตัด Visitor ออก
                                         .map((mg) => (
                                             <MenuItem key={mg.id} value={mg.id}>
@@ -810,7 +829,7 @@ const PersonInfoForm = () => {
                             </div>
                             <div className="w-full sm:w-1/2 flex">
                                 <div className='w-1/2 p-2'>
-                                    <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"} className='!text-white'>วันเริ่มต้น</InputLabel>
+                                    <InputLabel shrink required={visibleMemberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"} className='!text-white'>วันเริ่มต้น</InputLabel>
                                     <DatePicker
                                         value={form.start_date ? dayjs(form.start_date) : null}
                                         onChange={(date) =>
@@ -820,11 +839,11 @@ const PersonInfoForm = () => {
                                         slotProps={{
                                             textField: {
                                                 error:
-                                                    memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
+                                                    visibleMemberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
                                                         ? !!errors.start_date
                                                         : false,
                                                 helperText:
-                                                    memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
+                                                    visibleMemberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
                                                         ? errors.start_date
                                                         : "",
                                             },
@@ -832,7 +851,7 @@ const PersonInfoForm = () => {
                                     />
                                 </div>
                                 <div className='w-1/2 p-2'>
-                                    <InputLabel shrink required={memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"} className='!text-white'>วันสิ้นสุด</InputLabel>
+                                    <InputLabel shrink required={visibleMemberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"} className='!text-white'>วันสิ้นสุด</InputLabel>
                                     <DatePicker
                                         value={form.end_date ? dayjs(form.end_date) : null}
                                         onChange={(date) =>
@@ -842,11 +861,11 @@ const PersonInfoForm = () => {
                                         slotProps={{
                                             textField: {
                                                 error:
-                                                    memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
+                                                    visibleMemberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
                                                         ? !!errors.end_date
                                                         : false,
                                                 helperText:
-                                                    memberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
+                                                    visibleMemberGroups.find(mg => mg.id === form.member_group_id)?.name_th === "สมาชิก"
                                                         ? errors.end_date
                                                         : "",
                                             },

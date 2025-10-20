@@ -9,6 +9,7 @@ import BlackListAlert from '../components/BlackListAlert';
 import { SseService } from '../services/Sse.service';
 import { LprDataApi, type LprRecord } from '../services/LprData.service';
 import dayjs from 'dayjs';
+import dialog from '../services/dialog.service';
 
 // 1. กำหนดโครงสร้างคอลัมน์ (Columns)
 const columns: GridColDef[] = [
@@ -57,7 +58,7 @@ const columns: GridColDef[] = [
         renderCell: (params) => (
             <div className='flex w-full gap-2 h-full'>
                 <ImageTag tag={params.row.vehicle_group_en} img={params.row.overview_image_url} />
-                <ImageTag tag={params.row.member_group_en} img={params.row.driver_image_url} />
+                <ImageTag tag={params.row.driver_group_en} img={params.row.driver_image_url} />
                 <ImageTag tag={params.row.member_group_en} img={params.row.member_image_url} />
             </div>
         ),
@@ -175,20 +176,27 @@ const DashBoardPage = () => {
     const prevRowsRef = useRef<LprRecord[]>([]);
 
     const isFirstLoadRef = useRef(true); // ✅ บอกว่าโหลดครั้งแรกหรือยัง
+    const hasLeftFirstPageRef = useRef(false); // เคยออกจาก page 0 แล้วหรือยัง
 
+    const paginationRef = useRef(paginationModel);
+
+    // sync ref ทุกครั้งที่ paginationModel เปลี่ยน
+    useEffect(() => {
+        paginationRef.current = paginationModel;
+    }, [paginationModel]);
 
     useEffect(() => {
-        const sse = new SseService(); // ✅ ไม่ต้องส่ง url จะใช้จาก env
+
+        const sse = new SseService();
         sse.connect((msg) => {
             console.log("📥 Feed:", msg.data);
-            fetchData(paginationModel.page, paginationModel.pageSize);
+            const { page, pageSize } = paginationRef.current; // ✅ ใช้ค่าปัจจุบันจริง
+            fetchData(page, pageSize);
             setRefreshDashboard(prev => prev + 1);
         });
 
-        return () => {
-            sse.close();
-        };
-    }, []);
+        return () => sse.close();
+    }, []); // ⬅️ ไม่ต้องเพิ่ม dependency
 
 
     useEffect(() => {
@@ -226,18 +234,28 @@ const DashBoardPage = () => {
     }, [rows, paginationModel.page]);
 
     const fetchData = async (page: number, pageSize: number) => {
+        // dialog.loading();
         try {
-            // ✅ เงื่อนไขการส่ง includeFaceData
+            // ✅ เงื่อนไข includeFaceData ตามที่ต้องการ
             const includeFaceData =
-                page === 0 && !isFirstLoadRef.current ? true : false;
+                page === 0 &&
+                !isFirstLoadRef.current &&
+                !hasLeftFirstPageRef.current;
+
             const res = await LprDataApi.feed(page + 1, pageSize, includeFaceData);
+
             if (res.success) {
                 const newData = res.data;
 
-                // ✅ หา row ใหม่ โดยเทียบกับ prevRowsRef
+                // ✅ ถ้าเคยออกจากหน้าแรกแล้ว ให้จำไว้
+                if (page > 0) {
+                    hasLeftFirstPageRef.current = true;
+                }
+
+                // ✅ แสดงผลตามเดิม
                 const newHighlights: Record<string, boolean> = {};
-                newData.forEach(r => {
-                    if (!prevRowsRef.current.find(prev => prev.id === r.id)) {
+                newData.forEach((r) => {
+                    if (!prevRowsRef.current.find((prev) => prev.id === r.id)) {
                         newHighlights[r.id] = true;
                     }
                 });
@@ -249,8 +267,6 @@ const DashBoardPage = () => {
 
                 setRows(newData);
                 setRowCount(res.pagination?.countAll ?? 0);
-
-                // อัปเดต prevRowsRef
                 prevRowsRef.current = newData;
 
                 // ✅ หลังจากโหลดครั้งแรกแล้ว
@@ -258,11 +274,14 @@ const DashBoardPage = () => {
                     isFirstLoadRef.current = false;
                 }
 
+                // dialog.close();
             } else {
-                console.error('⚠️ list failed:', res.message);
+                // dialog.close();
+                console.error("⚠️ list failed:", res.message);
             }
         } catch (err: any) {
-            console.error('❌ API error:', err.message || err);
+            dialog.close();
+            console.error("❌ API error:", err.message || err);
         }
     };
 
@@ -283,7 +302,7 @@ const DashBoardPage = () => {
 
     return (
         <div className='flex flex-col  gap-4 h-full'>
-            <Typography variant='h5' className='text-primary-dark '>ข้อมูลการเข้า-ออกพื้นที่ ณ ปัจจุบัน</Typography>
+            <Typography variant='h5' className='text-primary-dark !mt-[5px] '>ข้อมูลการเข้า-ออกพื้นที่ ณ ปัจจุบัน</Typography>
             <div className="flex gap-4">
                 <InOutDashboard refreshKey={refreshDashboard} />
                 <div className="flex-1 flex flex-col min-w-0">
@@ -313,17 +332,17 @@ const DashBoardPage = () => {
                         province: alertData.region_th ?? '-',
                         brand: alertData.vehicle_make ?? '-',
                         color: alertData.vehicle_color_th ?? '-',
-                        imageUrl: alertData.overview_image_url, // รถ
+                        imageUrl: alertData.overview_image_url ?? null, // รถ
                     }}
                     member={{
                         fullName: `${alertData.member_firstname ?? ''} ${alertData.member_lastname ?? ''}`.trim() || '-',
                         agency: alertData.department_name ?? '-',
-                        imageUrl: alertData.member_image_url ?? "-", // ใช้รูปป้ายหรือ portrait ถ้ามี
+                        imageUrl: alertData.member_image_url ?? null, // ใช้รูปป้ายหรือ portrait ถ้ามี
                     }}
                     lpr={{
                         fullName: `${alertData.driver_firstname ?? ''} ${alertData.driver_lastname ?? ''}`.trim() || '-',
                         agency: alertData.department_name ?? '-',
-                        imageUrl: alertData.driver_image_url ?? "-", // ใช้รูปป้ายหรือ portrait ถ้ามี
+                        imageUrl: alertData.driver_image_url ?? null, // ใช้รูปป้ายหรือ portrait ถ้ามี
                     }}
                 />
             )}

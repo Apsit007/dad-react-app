@@ -430,6 +430,23 @@ const CarInfoList = () => {
     // --- Table Columns Definition ---
     const columns: GridColDef[] = [
         {
+            field: "actions",
+            headerName: "",
+            width: 100,
+            sortable: false,
+            align: "center",
+            renderCell: (params) => (
+                <div className="flex w-full h-full items-center justify-center gap-1">
+                    <IconButton size="small" onClick={() => handleEdit(params.row)}>
+                        <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => handleDelete(params.row.uid)}>
+                        <DeleteIcon fontSize="small" />
+                    </IconButton>
+                </div>
+            ),
+        },
+        {
             field: "rownumb",
             headerName: "ลำดับ",
             width: 80,
@@ -548,23 +565,7 @@ const CarInfoList = () => {
                 </div>
             ),
         },
-        {
-            field: "actions",
-            headerName: "",
-            width: 100,
-            sortable: false,
-            align: "center",
-            renderCell: (params) => (
-                <div className="flex w-full h-full items-center justify-center gap-1">
-                    <IconButton size="small" onClick={() => handleEdit(params.row)}>
-                        <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleDelete(params.row.uid)}>
-                        <DeleteIcon fontSize="small" />
-                    </IconButton>
-                </div>
-            ),
-        },
+
     ];
 
     // ✅ ฟังก์ชันเตรียมข้อมูลก่อน export
@@ -587,7 +588,7 @@ const CarInfoList = () => {
 
     return (
         <Box>
-            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark'>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark !mt-[5px]'>
                 ข้อมูลรถ
             </Typography>
             {/* The page title is now in the Navbar, so we can remove it from here */}
