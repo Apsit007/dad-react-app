@@ -11,7 +11,7 @@ import DataTable from '../../components/DataTable';
 import Popup from '../../components/Popup';
 import SettingsIcon from "@mui/icons-material/Settings"
 import PolygonCanvas from '../../components/PolygonCanvas';
-import { SettingApi } from '../../services/Setting.service';
+import { SettingApi, type BlacklistAccessValue, type GateAccessValue } from '../../services/Setting.service';
 import { CameraApi, type Camera } from '../../services/Camera.service';
 import { useSelector } from 'react-redux';
 import { selectGates } from '../../store/slices/masterdataSlice';
@@ -59,10 +59,15 @@ const SystemSettings = () => {
   const [rebooting, setRebooting] = useState(false);
   const [rebootCountdown, setRebootCountdown] = useState(0);
 
-  const [gateOptions, setGateOptions] = useState<{ face: boolean; plate: boolean; member: boolean }>({
+  const [gateOptions, setGateOptions] = useState<GateAccessValue>({
     face: false,
     plate: false,
     member: false,
+  });
+
+  const [blacklistOptions, setBlacklistOptions] = useState<BlacklistAccessValue>({
+    allow_enter: false,
+    allow_exit: false,
   });
 
   // โหลดค่ากล้องจาก API
@@ -101,13 +106,19 @@ const SystemSettings = () => {
     }
   }, [showSensorPopup]);
 
-  // โหลด Setting เงื่อนไขบัตร/ใบหน้า/ทะเบียน
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         const res = await SettingApi.get();
-        if (res.success && res.data) {
-          setGateOptions(res.data[0].setting_value);
+        if (res.success && Array.isArray(res.data)) {
+          res.data.forEach((s) => {
+            if (s.setting_code === "gate_access_options") {
+              setGateOptions(s.setting_value as GateAccessValue);
+            }
+            if (s.setting_code === "blacklist_access_options") {
+              setBlacklistOptions(s.setting_value as BlacklistAccessValue);
+            }
+          });
         }
       } catch (err) {
         console.error("โหลด setting ไม่ได้", err);
@@ -163,15 +174,35 @@ const SystemSettings = () => {
   };
 
   // handle check/uncheck
-  const handleChangeCheckbox = (field: keyof typeof gateOptions) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // const handleChangeCheckbox = (field: keyof typeof gateOptions) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const newValue = { ...gateOptions, [field]: e.target.checked };
+  //   setGateOptions(newValue);
+
+  //   try {
+  //     await SettingApi.update(newValue);
+  //     console.log("✅ PATCH updated:", newValue);
+  //   } catch (err) {
+  //     console.error("อัปเดต setting error:", err);
+  //   }
+  // };
+
+  const handleChangeGate = (field: keyof typeof gateOptions) => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = { ...gateOptions, [field]: e.target.checked };
     setGateOptions(newValue);
-
     try {
-      await SettingApi.update(newValue);
-      console.log("✅ PATCH updated:", newValue);
+      await SettingApi.update("gate_access_options", newValue);
     } catch (err) {
-      console.error("อัปเดต setting error:", err);
+      console.error("อัปเดต gate_access_options error:", err);
+    }
+  };
+
+  const handleChangeBlacklist = (field: keyof typeof blacklistOptions) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = { ...blacklistOptions, [field]: e.target.checked };
+    setBlacklistOptions(newValue);
+    try {
+      await SettingApi.update("blacklist_access_options", newValue);
+    } catch (err) {
+      console.error("อัปเดต blacklist_access_options error:", err);
     }
   };
 
@@ -227,16 +258,33 @@ const SystemSettings = () => {
         </div>
         <FormGroup row>
           <FormControlLabel
-            control={<Checkbox checked={gateOptions.member} onChange={handleChangeCheckbox("member")} />}
+            control={<Checkbox checked={gateOptions.member} onChange={handleChangeGate("member")} />}
             label="บัตร"
           />
           <FormControlLabel
-            control={<Checkbox checked={gateOptions.face} onChange={handleChangeCheckbox("face")} />}
+            control={<Checkbox checked={gateOptions.face} onChange={handleChangeGate("face")} />}
             label="ใบหน้าบุคคล"
           />
           <FormControlLabel
-            control={<Checkbox checked={gateOptions.plate} onChange={handleChangeCheckbox("plate")} />}
+            control={<Checkbox checked={gateOptions.plate} onChange={handleChangeGate("plate")} />}
             label="ป้ายทะเบียน"
+          />
+
+        </FormGroup>
+        <hr />
+        <div className='w-full mt-3'>
+          <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+            เปิดไม้กั้น กรณีต้องห้าม
+          </Typography>
+        </div>
+        <FormGroup row>
+          <FormControlLabel
+            control={<Checkbox checked={blacklistOptions.allow_enter} onChange={handleChangeBlacklist("allow_enter")} />}
+            label="ขาเข้า"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={blacklistOptions.allow_exit} onChange={handleChangeBlacklist("allow_exit")} />}
+            label="ขาออก"
           />
 
         </FormGroup>
