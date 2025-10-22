@@ -4,11 +4,11 @@ import { createPortal } from "react-dom";
 
 interface ImageViewerProps {
     open: boolean;
-    imgUrl: string | null;
+    imgUrls: string[];
     onClose: () => void;
 }
 
-const ImageViewer: React.FC<ImageViewerProps> = ({ open, imgUrl, onClose }) => {
+const ImageViewer: React.FC<ImageViewerProps> = ({ open, imgUrls, onClose }) => {
     // ปิดด้วยปุ่ม Esc
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
@@ -20,19 +20,27 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ open, imgUrl, onClose }) => {
         return () => window.removeEventListener("keydown", handleKey);
     }, [open, onClose]);
 
-    if (!open || !imgUrl) return null;
+    if (!open || !imgUrls.length) return null;
 
     const content = (
         <div
             className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm "
             onClick={onClose}
         >
-            <img
-                src={imgUrl}
-                alt="preview"
-                className="max-h-[90%] max-w-[90%] object-contain rounded-lg shadow-lg"
+            {/* กล่องรูปภาพ */}
+            <div
+                className="flex flex-wrap gap-4 justify-center items-center max-h-[90%] max-w-[90%] overflow-auto"
                 onClick={(e) => e.stopPropagation()} // กันคลิกทะลุ
-            />
+            >
+                {imgUrls.map((url, i) => (
+                    <img
+                        key={i}
+                        src={url}
+                        alt={`preview-${i}`}
+                        className="max-h-[80vh] max-w-[30%] object-contain rounded-lg shadow-lg"
+                    />
+                ))}
+            </div>
 
             {/* ปุ่มปิด */}
             <button

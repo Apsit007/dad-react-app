@@ -18,80 +18,9 @@ import { selectRegions, selectVehicleGroups } from '../../../store/slices/master
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import { exportData } from '../../../services/Export.service';
 import dayjs from 'dayjs';
+import ImageViewer from '../../../components/ImageViewer';
 
-const columns: GridColDef[] = [
 
-
-  {
-    field: 'images',
-    headerName: 'ภาพ',
-    flex: 2,
-    sortable: false,
-    headerAlign: 'center',
-    renderCell: (params) => (
-      <div className='flex w-full gap-2 h-full'>
-        <ImageTag tag={params.row.vehicle_group_en} img={params.row.overview_image_url} />
-        <ImageTag tag={params.row.vehicle_group_en} img={params.row.plate_image_url} />
-        <ImageTag tag={params.row.member_group_en} img={params.row.member_image_url} />
-      </div>
-    ),
-  },
-  {
-    field: 'plate',
-    headerName: 'เลขทะเบียน',
-    flex: 2,
-    headerAlign: 'center',
-    align: 'center'
-
-  },
-  {
-    field: 'region_th',
-    headerName: 'หมวดจังหวัด',
-    flex: 2,
-    headerAlign: 'center',
-    align: 'center'
-
-  },
-  { field: 'vehicle_make', headerName: 'ยี่ห้อ', flex: 1, headerAlign: 'center', align: 'center' },
-  { field: 'vehicle_color_th', headerName: 'สี', flex: 1, headerAlign: 'center', align: 'center' },
-  {
-    field: 'name',
-    headerName: 'ชื่อ-นามสกุล',
-    flex: 2,
-    headerAlign: 'center',
-    renderCell: (params) => (
-      <div className='flex justify-center items-center h-full'>
-        <Typography variant="body2" sx={{ color: params.row.member_group_en === 'blacklist' ? 'red' : 'inherit' }}>
-          {params.row.member_firstname || params.row.member_firstname ? params.row.member_firstname + ' ' + params.row.member_lastname : '-'}
-        </Typography>
-      </div>
-    )
-  },
-  {
-    field: 'department_name',
-    headerName: 'หน่วยงาน',
-    flex: 2,
-    headerAlign: 'center',
-    renderCell: (params) => (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          width: '100%',
-          textAlign: 'center',
-          whiteSpace: 'normal',
-          wordBreak: 'break-word',
-        }}
-      >
-        <Typography variant="body2" sx={{ lineHeight: 1.3 }}>
-          {params.value ?? '-'}
-        </Typography>
-      </div>
-    ),
-  },
-];
 
 // 🟢 สำหรับ PDF export (คอลัมน์เรียบง่าย)
 const columnsExport = [
@@ -122,6 +51,9 @@ const VideoResultPage = () => {
   const [sPlate, setSPlate] = useState<string>('');
   const [sRegionCode, setSRegionCode] = useState<string>('');
   const [sVehicleGroupId, setSVehicleGroupId] = useState<number | ''>('');
+
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerImages, setViewerImages] = useState<string[]>([]);
 
   const groups = useSelector(selectVehicleGroups);
   const regions = useSelector(selectRegions);
@@ -194,120 +126,218 @@ const VideoResultPage = () => {
     }));
   };
 
-  return (
-    <Box>
-      <Box className="flex items-center gap-2 mb-2" key={'back-btn-result'}>
-        <IconButton
-          onClick={() => navigate(-1)}
-          className="!text-primary"
-          size="small"
+  const columns: GridColDef[] = [
+
+
+    {
+      field: 'images',
+      headerName: 'ภาพ',
+      flex: 2,
+      sortable: false,
+      headerAlign: 'center',
+      renderCell: (params) => {
+        const overviewImg = params.row.overview_image_url ?? '';
+        const plateImg = params.row.plate_image_url ?? '';
+        const memberImg = params.row.member_image_url ?? '';
+
+        const imgList = [overviewImg, plateImg, memberImg].filter(Boolean);
+
+        return (
+          <div
+            className="flex w-full gap-2 h-full cursor-pointer"
+            onClick={() => {
+              if (imgList.length > 0) {
+                setViewerImages(imgList);
+                setViewerOpen(true);
+              }
+            }}
+          >
+            <ImageTag tag={params.row.vehicle_group_en} img={overviewImg} disableViewImg />
+            <ImageTag tag={params.row.vehicle_group_en} img={plateImg} disableViewImg />
+            <ImageTag tag={params.row.member_group_en} img={memberImg} disableViewImg />
+          </div>
+        );
+      },
+    },
+    {
+      field: 'plate',
+      headerName: 'เลขทะเบียน',
+      flex: 2,
+      headerAlign: 'center',
+      align: 'center'
+
+    },
+    {
+      field: 'region_th',
+      headerName: 'หมวดจังหวัด',
+      flex: 2,
+      headerAlign: 'center',
+      align: 'center'
+
+    },
+    { field: 'vehicle_make', headerName: 'ยี่ห้อ', flex: 1, headerAlign: 'center', align: 'center' },
+    { field: 'vehicle_color_th', headerName: 'สี', flex: 1, headerAlign: 'center', align: 'center' },
+    {
+      field: 'name',
+      headerName: 'ชื่อ-นามสกุล',
+      flex: 2,
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div className='flex justify-center items-center h-full'>
+          <Typography variant="body2" sx={{ color: params.row.member_group_en === 'blacklist' ? 'red' : 'inherit' }}>
+            {params.row.member_firstname || params.row.member_firstname ? params.row.member_firstname + ' ' + params.row.member_lastname : '-'}
+          </Typography>
+        </div>
+      )
+    },
+    {
+      field: 'department_name',
+      headerName: 'หน่วยงาน',
+      flex: 2,
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            width: '100%',
+            textAlign: 'center',
+            whiteSpace: 'normal',
+            wordBreak: 'break-word',
+          }}
         >
-          <ArrowBackIosNewRoundedIcon />
-        </IconButton>
-        <Typography variant="h5" sx={{ fontWeight: 'bold' }} className="text-primary-dark !mt-[5px]">
-          อัปโหลด VDO/ค้นหาด้วย VDO
-        </Typography>
+          <Typography variant="body2" sx={{ lineHeight: 1.3 }}>
+            {params.value ?? '-'}
+          </Typography>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <Box>
+        <Box className="flex items-center gap-2 mb-2" key={'back-btn-result'}>
+          <IconButton
+            onClick={() => navigate(-1)}
+            className="!text-primary"
+            size="small"
+          >
+            <ArrowBackIosNewRoundedIcon />
+          </IconButton>
+          <Typography variant="h5" sx={{ fontWeight: 'bold' }} className="text-primary-dark !mt-[5px]">
+            อัปโหลด VDO/ค้นหาด้วย VDO
+          </Typography>
+        </Box>
+
+        {/* Search Section */}
+        <Accordion defaultExpanded>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+            <Typography>Search</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ bgcolor: 'white' }}>
+            <div className="flex flex-wrap -m-2">
+
+              <div className="w-full sm:w-1/3 p-2">
+                <InputLabel shrink>หมายเลขทะเบียน</InputLabel>
+                <TextField placeholder="หมายเลขทะเบียน" fullWidth
+                  value={sPlate}
+                  onChange={(e) => setSPlate(e.target.value)}
+                />
+              </div>
+              <div className="w-full sm:w-1/3 p-2">
+                <InputLabel shrink>หมายเลขจังหวัด</InputLabel>
+                <Select
+                  value={sRegionCode}
+                  onChange={(e) => setSRegionCode(e.target.value as string)}
+                  displayEmpty
+                >
+                  <MenuItem value=""><em>ทุกจังหวัด</em></MenuItem>
+                  {regions.map(r => (
+                    <MenuItem key={r.id} value={r.region_code}>{r.name_th}</MenuItem>
+                  ))}
+                </Select>
+              </div>
+              <div className="w-full sm:w-1/3 p-2">
+                <InputLabel shrink>กลุ่มรถ</InputLabel>
+                <Select
+                  value={sVehicleGroupId}
+                  onChange={(e) => setSVehicleGroupId(e.target.value as unknown as number | '')}
+                  displayEmpty
+                >
+                  <MenuItem value=""><em>ทุกกลุ่ม</em></MenuItem>
+                  {groups.map(g => (
+                    <MenuItem key={g.id} value={g.id}>{g.name_th}  ({g.name_en})</MenuItem>
+                  ))}
+                </Select>
+              </div>
+            </div>
+            <div className="w-full flex justify-end gap-2 p-2">
+
+
+              <Button
+                variant="outlined"
+                startIcon={<CancelOutlinedIcon />}
+                className="!border-gray-400 !text-gray-600 hover:!bg-gray-100"
+                onClick={() => {
+                  setSPlate('');
+                  setSRegionCode('');
+                  setSVehicleGroupId('');
+                  fetchResults(); // โหลดใหม่โดยไม่กรอง
+                }}
+              >
+                Clear
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<SearchIcon />}
+                className="!bg-primary hover:!bg-primary-dark"
+                onClick={() => fetchResults()}
+              >
+                ค้นหา
+              </Button>
+            </div>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Export buttons + result count */}
+        <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+          <Button variant="outlined" className='!border-gold !text-primary' size="small"
+            startIcon={<img src='/icons/txt-file.png' />} onClick={() => handleExport("txt")}>TXT</Button>
+          <Button variant="outlined" className='!border-gold !text-primary' size="small"
+            startIcon={<img src='/icons/xls-file.png' />} onClick={() => handleExport("xlsx")}>XLS</Button>
+          <Button variant="outlined" className='!border-gold !text-primary' size="small"
+            startIcon={<img src='/icons/csv-file.png' />} onClick={() => handleExport("csv")}>CSV</Button>
+          <Button variant="outlined" className='!border-gold !text-primary' size="small"
+            startIcon={<img src='/icons/pdf-file.png' />} onClick={() => handleExport("pdf")}>PDF</Button>
+          <Box sx={{ flexGrow: 1 }} />
+          <Typography variant="body2" sx={{ alignSelf: 'center' }}>
+            ผลการค้นหา : {rowCount} รายการ
+          </Typography>
+        </Stack>
+
+        {/* DataTable */}
+        <div className="flex-1 flex flex-col">
+          <DataTable
+            getRowId={(r) => r.id}
+            rows={rows}
+            columns={columns}
+            paginationModel={paginationModel}
+            rowCount={rowCount}
+            onPaginationModelChange={handlePaginationChange}
+          />
+        </div>
       </Box>
+      <ImageViewer
+        open={viewerOpen}
+        imgUrls={viewerImages}
+        onClose={() => setViewerOpen(false)}
+      />
+    </>
 
-      {/* Search Section */}
-      <Accordion defaultExpanded>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-          <Typography>Search</Typography>
-        </AccordionSummary>
-        <AccordionDetails sx={{ bgcolor: 'white' }}>
-          <div className="flex flex-wrap -m-2">
-
-            <div className="w-full sm:w-1/3 p-2">
-              <InputLabel shrink>หมายเลขทะเบียน</InputLabel>
-              <TextField placeholder="หมายเลขทะเบียน" fullWidth
-                value={sPlate}
-                onChange={(e) => setSPlate(e.target.value)}
-              />
-            </div>
-            <div className="w-full sm:w-1/3 p-2">
-              <InputLabel shrink>หมายเลขจังหวัด</InputLabel>
-              <Select
-                value={sRegionCode}
-                onChange={(e) => setSRegionCode(e.target.value as string)}
-                displayEmpty
-              >
-                <MenuItem value=""><em>ทุกจังหวัด</em></MenuItem>
-                {regions.map(r => (
-                  <MenuItem key={r.id} value={r.region_code}>{r.name_th}</MenuItem>
-                ))}
-              </Select>
-            </div>
-            <div className="w-full sm:w-1/3 p-2">
-              <InputLabel shrink>กลุ่มรถ</InputLabel>
-              <Select
-                value={sVehicleGroupId}
-                onChange={(e) => setSVehicleGroupId(e.target.value as unknown as number | '')}
-                displayEmpty
-              >
-                <MenuItem value=""><em>ทุกกลุ่ม</em></MenuItem>
-                {groups.map(g => (
-                  <MenuItem key={g.id} value={g.id}>{g.name_th}  ({g.name_en})</MenuItem>
-                ))}
-              </Select>
-            </div>
-          </div>
-          <div className="w-full flex justify-end gap-2 p-2">
-
-
-            <Button
-              variant="outlined"
-              startIcon={<CancelOutlinedIcon />}
-              className="!border-gray-400 !text-gray-600 hover:!bg-gray-100"
-              onClick={() => {
-                setSPlate('');
-                setSRegionCode('');
-                setSVehicleGroupId('');
-                fetchResults(); // โหลดใหม่โดยไม่กรอง
-              }}
-            >
-              Clear
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<SearchIcon />}
-              className="!bg-primary hover:!bg-primary-dark"
-              onClick={() => fetchResults()}
-            >
-              ค้นหา
-            </Button>
-          </div>
-        </AccordionDetails>
-      </Accordion>
-
-      {/* Export buttons + result count */}
-      <Stack direction="row" spacing={1} sx={{ my: 2 }}>
-        <Button variant="outlined" className='!border-gold !text-primary' size="small"
-          startIcon={<img src='/icons/txt-file.png' />} onClick={() => handleExport("txt")}>TXT</Button>
-        <Button variant="outlined" className='!border-gold !text-primary' size="small"
-          startIcon={<img src='/icons/xls-file.png' />} onClick={() => handleExport("xlsx")}>XLS</Button>
-        <Button variant="outlined" className='!border-gold !text-primary' size="small"
-          startIcon={<img src='/icons/csv-file.png' />} onClick={() => handleExport("csv")}>CSV</Button>
-        <Button variant="outlined" className='!border-gold !text-primary' size="small"
-          startIcon={<img src='/icons/pdf-file.png' />} onClick={() => handleExport("pdf")}>PDF</Button>
-        <Box sx={{ flexGrow: 1 }} />
-        <Typography variant="body2" sx={{ alignSelf: 'center' }}>
-          ผลการค้นหา : {rowCount} รายการ
-        </Typography>
-      </Stack>
-
-      {/* DataTable */}
-      <div className="flex-1 flex flex-col">
-        <DataTable
-          getRowId={(r) => r.id}
-          rows={rows}
-          columns={columns}
-          paginationModel={paginationModel}
-          rowCount={rowCount}
-          onPaginationModelChange={handlePaginationChange}
-        />
-      </div>
-    </Box>
   );
 };
 

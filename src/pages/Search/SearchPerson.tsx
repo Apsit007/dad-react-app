@@ -17,6 +17,7 @@ import { selectMemberGroups } from '../../store/slices/masterdataSlice';
 import { exportData } from '../../services/Export.service';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import FileUploadApi from '../../services/FileUpload.service';
+import ImageViewer from '../../components/ImageViewer';
 
 const columnsExport = [
     { field: "overview_image", headerName: "ภาพรถ", width: 50 },
@@ -61,6 +62,10 @@ const SearchPerson = () => {
     });
     const [loading, setLoading] = useState(false);
     const [uploadedImageUrl, setUploadedImageUrl] = useState<string | undefined>(undefined);
+
+    const [viewerOpen, setViewerOpen] = useState(false);
+    const [viewerImages, setViewerImages] = useState<string[]>([]);
+
 
     const loadData = async (page = 1, limit = 10, imageUrl?: string) => {
         try {
@@ -210,22 +215,40 @@ const SearchPerson = () => {
             headerAlign: 'center',
             align: 'center',
             sortable: false,
-            renderCell: (params) => (
-                <div className="flex w-full gap-2 h-full p-[1px]">
-                    <ImageTag
-                        tag={params.row.vehicle_data?.vehicle_group_name_en ?? null}
-                        img={params.row.overview_image ?? ""}
-                    />
-                    <ImageTag
-                        tag={params.row.member_data?.member_group_name_en ?? null}
-                        img={params.row.face_url ?? ""}
-                    />
-                    <ImageTag
-                        tag={params.row.member_data?.member_group_name_en ?? null}
-                        img={params.row.fdlib_url ?? ""}
-                    />
-                </div>
-            ),
+            renderCell: (params) => {
+                const overviewImg = params.row.overview_image ?? "";
+                const driverImg = params.row.driver_image_url ?? "";
+                const memberImg = params.row.member_data?.member_image_url ?? "";
+                const imgList = [overviewImg, driverImg, memberImg].filter(Boolean);
+
+                return (
+                    <div
+                        className="flex w-full gap-2 h-full p-[1px] cursor-pointer"
+                        onClick={() => {
+                            if (imgList.length > 0) {
+                                setViewerImages(imgList);
+                                setViewerOpen(true);
+                            }
+                        }}
+                    >
+                        <ImageTag
+                            tag={params.row.vehicle_data?.vehicle_group_name_en ?? null}
+                            img={overviewImg}
+                            disableViewImg
+                        />
+                        <ImageTag
+                            tag={params.row?.driver_group_name_en ?? null}
+                            img={driverImg}
+                            disableViewImg
+                        />
+                        <ImageTag
+                            tag={params.row.member_data?.member_group_name_en ?? null}
+                            img={memberImg}
+                            disableViewImg
+                        />
+                    </div>
+                );
+            },
         },
         {
             field: 'name',
@@ -409,176 +432,183 @@ const SearchPerson = () => {
         }
     };
     return (
-        <Box>
-            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark !mt-[5px]'>
-                ค้นหาบุคคล
-            </Typography>
+        <>
+            <Box>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold' }} className='text-primary-dark !mt-[5px]'>
+                    ค้นหาบุคคล
+                </Typography>
 
-            <Accordion defaultExpanded>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography>Search</Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ bgcolor: 'white' }}>
-                    <div className="flex flex-wrap">
-                        <div className="w-full md:w-1/6 p-2 text-center">
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/png,image/jpeg"
-                                className="hidden"
-                                onChange={handleFileChange}
-                            />
-                            <Box sx={{ position: 'relative', width: 120, height: 150, m: 'auto' }}>
-                                {selectedImage ? (
-                                    <Avatar
-                                        variant="rounded"
-                                        src={selectedImage}
-                                        onClick={onPickFile}
-                                        sx={{ width: '100%', height: '100%', cursor: 'pointer' }}
-                                    />
-                                ) : (
-                                    <Box
-                                        role="button"
-                                        onClick={onPickFile}
-                                        className="flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 hover:bg-gray-50"
-                                        sx={{ width: '100%', height: '100%', borderRadius: 1 }}
-                                    >
-                                        <CloudUploadOutlinedIcon sx={{ color: 'text.secondary', mb: 1 }} />
-                                        <Typography variant="caption" color="text.secondary">Upload รูปภาพ</Typography>
-                                    </Box>
-                                )}
-                                {selectedImage && (
-                                    <button
-                                        type="button"
-                                        onClick={clearImage}
-                                        title="ล้างรูป"
-                                        className="absolute top-1 right-1 bg-white/90 hover:bg-white rounded-full shadow p-1"
-                                        style={{ lineHeight: 0 }}
-                                    >
-                                        <CloseRoundedIcon fontSize="small" />
-                                    </button>
-                                )}
-                            </Box>
-                        </div>
-                        <div className="w-full md:w-5/6 p-2">
-                            <div className="flex flex-wrap -m-2">
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption'>ชื่อ</Typography>
-                                    <TextField placeholder='ชื่อ' value={firstname} onChange={(e) => setFirstname(e.target.value)} />
-                                </div>
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption'>นามสกุล</Typography>
-                                    <TextField placeholder='นามสกุล' value={lastname} onChange={(e) => setLastname(e.target.value)} />
-                                </div>
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption'>ประเภทบุคคล</Typography>
-                                    <Select value={memberGroupId} onChange={(e) => setMemberGroupId(e.target.value)}>
-                                        <MenuItem value=""><em>ทุกประเภท</em></MenuItem>
-                                        {memberGroups.map((g) => (
-                                            <MenuItem key={g.id} value={g.id}>
-                                                {g.name_th}  ({g.name_en})
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </div>
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption'>รูปแบบการค้นหา</Typography>
-                                    <Select displayEmpty value={sDirection} onChange={(e) => setSDirection(e.target.value as unknown as string)}>
-                                        <MenuItem value=""><em>ทั้งหมด</em></MenuItem>
-                                        {searchType.map(g => (
-                                            <MenuItem key={g.id} value={g.value}>{g.label}</MenuItem>
-                                        ))}
-                                    </Select>
-                                </div>
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption'>วันที่เริ่มต้น</Typography>
-                                    <DateTimePicker sx={{ width: '100%' }} value={startDate} onChange={setStartDate} maxDateTime={endDate ?? undefined} />
-                                </div>
-                                <div className="w-full sm:w-1/3 p-2">
-                                    <Typography variant='caption'>วันที่สิ้นสุด</Typography>
-                                    <DateTimePicker sx={{ width: '100%' }} value={endDate} onChange={setEndDate} minDateTime={startDate ?? undefined} />
+                <Accordion defaultExpanded>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                        <Typography>Search</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ bgcolor: 'white' }}>
+                        <div className="flex flex-wrap">
+                            <div className="w-full md:w-1/6 p-2 text-center">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/png,image/jpeg"
+                                    className="hidden"
+                                    onChange={handleFileChange}
+                                />
+                                <Box sx={{ position: 'relative', width: 120, height: 150, m: 'auto' }}>
+                                    {selectedImage ? (
+                                        <Avatar
+                                            variant="rounded"
+                                            src={selectedImage}
+                                            onClick={onPickFile}
+                                            sx={{ width: '100%', height: '100%', cursor: 'pointer' }}
+                                        />
+                                    ) : (
+                                        <Box
+                                            role="button"
+                                            onClick={onPickFile}
+                                            className="flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-300 hover:bg-gray-50"
+                                            sx={{ width: '100%', height: '100%', borderRadius: 1 }}
+                                        >
+                                            <CloudUploadOutlinedIcon sx={{ color: 'text.secondary', mb: 1 }} />
+                                            <Typography variant="caption" color="text.secondary">Upload รูปภาพ</Typography>
+                                        </Box>
+                                    )}
+                                    {selectedImage && (
+                                        <button
+                                            type="button"
+                                            onClick={clearImage}
+                                            title="ล้างรูป"
+                                            className="absolute top-1 right-1 bg-white/90 hover:bg-white rounded-full shadow p-1"
+                                            style={{ lineHeight: 0 }}
+                                        >
+                                            <CloseRoundedIcon fontSize="small" />
+                                        </button>
+                                    )}
+                                </Box>
+                            </div>
+                            <div className="w-full md:w-5/6 p-2">
+                                <div className="flex flex-wrap -m-2">
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption'>ชื่อ</Typography>
+                                        <TextField placeholder='ชื่อ' value={firstname} onChange={(e) => setFirstname(e.target.value)} />
+                                    </div>
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption'>นามสกุล</Typography>
+                                        <TextField placeholder='นามสกุล' value={lastname} onChange={(e) => setLastname(e.target.value)} />
+                                    </div>
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption'>ประเภทบุคคล</Typography>
+                                        <Select value={memberGroupId} onChange={(e) => setMemberGroupId(e.target.value)}>
+                                            <MenuItem value=""><em>ทุกประเภท</em></MenuItem>
+                                            {memberGroups.map((g) => (
+                                                <MenuItem key={g.id} value={g.id}>
+                                                    {g.name_th}  ({g.name_en})
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </div>
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption'>รูปแบบการค้นหา</Typography>
+                                        <Select displayEmpty value={sDirection} onChange={(e) => setSDirection(e.target.value as unknown as string)}>
+                                            <MenuItem value=""><em>ทั้งหมด</em></MenuItem>
+                                            {searchType.map(g => (
+                                                <MenuItem key={g.id} value={g.value}>{g.label}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </div>
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption'>วันที่เริ่มต้น</Typography>
+                                        <DateTimePicker sx={{ width: '100%' }} value={startDate} onChange={setStartDate} maxDateTime={endDate ?? undefined} />
+                                    </div>
+                                    <div className="w-full sm:w-1/3 p-2">
+                                        <Typography variant='caption'>วันที่สิ้นสุด</Typography>
+                                        <DateTimePicker sx={{ width: '100%' }} value={endDate} onChange={setEndDate} minDateTime={startDate ?? undefined} />
+                                    </div>
                                 </div>
                             </div>
+                            <div className="w-full flex justify-end p-2  gap-2">
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<CancelOutlinedIcon />}
+                                    className="!border-gray-400 !text-gray-600 hover:!bg-gray-100"
+                                    onClick={handleClear}
+                                >
+                                    Clear
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<SearchIcon />}
+                                    className='!bg-primary hover:!bg-primary-dark'
+                                    onClick={handleSearch}
+                                    disabled={loading}
+                                >
+                                    {loading ? 'กำลังค้นหา...' : 'ค้นหา'}
+                                </Button>
+                            </div>
                         </div>
-                        <div className="w-full flex justify-end p-2  gap-2">
-                            <Button
-                                variant="outlined"
-                                startIcon={<CancelOutlinedIcon />}
-                                className="!border-gray-400 !text-gray-600 hover:!bg-gray-100"
-                                onClick={handleClear}
-                            >
-                                Clear
-                            </Button>
-                            <Button
-                                variant="contained"
-                                startIcon={<SearchIcon />}
-                                className='!bg-primary hover:!bg-primary-dark'
-                                onClick={handleSearch}
-                                disabled={loading}
-                            >
-                                {loading ? 'กำลังค้นหา...' : 'ค้นหา'}
-                            </Button>
-                        </div>
-                    </div>
-                </AccordionDetails>
-            </Accordion>
+                    </AccordionDetails>
+                </Accordion>
 
-            {/* --- Toolbar --- */}
-            <Stack direction="row" spacing={1} sx={{ my: 2 }}>
-                <Button
-                    variant="outlined"
-                    className="!border-gold !text-primary"
-                    size="small"
-                    startIcon={<img src="/icons/txt-file.png" />}
-                    onClick={() => handleExport("txt")}
-                >
-                    TXT
-                </Button>
-                <Button
-                    variant="outlined"
-                    className="!border-gold !text-primary"
-                    size="small"
-                    startIcon={<img src="/icons/xls-file.png" />}
-                    onClick={() => handleExport("xlsx")}
-                >
-                    XLS
-                </Button>
-                <Button
-                    variant="outlined"
-                    className="!border-gold !text-primary"
-                    size="small"
-                    startIcon={<img src="/icons/csv-file.png" />}
-                    onClick={() => handleExport("csv")}
-                >
-                    CSV
-                </Button>
-                <Button
-                    variant="outlined"
-                    className="!border-gold !text-primary"
-                    size="small"
-                    startIcon={<img src="/icons/pdf-file.png" />}
-                    onClick={() => handleExport("pdf")}
-                >
-                    PDF
-                </Button>
-                <Box sx={{ flexGrow: 1 }} />
-                <Typography variant="body2" sx={{ alignSelf: "center" }}>
-                    ผลการค้นหา : {rowCount} รายการ
-                </Typography>
-            </Stack>
+                {/* --- Toolbar --- */}
+                <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+                    <Button
+                        variant="outlined"
+                        className="!border-gold !text-primary"
+                        size="small"
+                        startIcon={<img src="/icons/txt-file.png" />}
+                        onClick={() => handleExport("txt")}
+                    >
+                        TXT
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        className="!border-gold !text-primary"
+                        size="small"
+                        startIcon={<img src="/icons/xls-file.png" />}
+                        onClick={() => handleExport("xlsx")}
+                    >
+                        XLS
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        className="!border-gold !text-primary"
+                        size="small"
+                        startIcon={<img src="/icons/csv-file.png" />}
+                        onClick={() => handleExport("csv")}
+                    >
+                        CSV
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        className="!border-gold !text-primary"
+                        size="small"
+                        startIcon={<img src="/icons/pdf-file.png" />}
+                        onClick={() => handleExport("pdf")}
+                    >
+                        PDF
+                    </Button>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <Typography variant="body2" sx={{ alignSelf: "center" }}>
+                        ผลการค้นหา : {rowCount} รายการ
+                    </Typography>
+                </Stack>
 
-            <div className="flex-1 flex flex-col ">
-                <DataTable
-                    rows={rows}
-                    columns={columns}
-                    paginationModel={paginationModel}
-                    rowCount={rowCount}
-                    onPaginationModelChange={handlePageChange}
-                    getRowId={(row) => row.id}
-                />
-            </div>
-        </Box>
+                <div className="flex-1 flex flex-col ">
+                    <DataTable
+                        rows={rows}
+                        columns={columns}
+                        paginationModel={paginationModel}
+                        rowCount={rowCount}
+                        onPaginationModelChange={handlePageChange}
+                        getRowId={(row) => row.id}
+                    />
+                </div>
+            </Box>
+            <ImageViewer
+                open={viewerOpen}
+                imgUrls={viewerImages}
+                onClose={() => setViewerOpen(false)}
+            />
+        </>
     );
 };
 

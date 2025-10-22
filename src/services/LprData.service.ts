@@ -1,6 +1,7 @@
 // src/services/LprData.service.ts
 import type { ApiResponse } from "./ApiResponse";
 import http from "./http";
+import type { GateAccessValue } from "./Setting.service";
 
 // --- Response types ---
 export interface data {
@@ -57,8 +58,9 @@ export interface LprRecord {
     datetime_in: string;
     datetime_out: string;
     lprId: string;
-
+    acces_config: GateAccessValue;
 }
+
 
 export type LprVehicleFilter = Partial<{
     plate_prefix: string;

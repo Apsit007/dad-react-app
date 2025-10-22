@@ -6,6 +6,7 @@ type ImageTagProps = {
     type?: 'car' | 'person' | null
     tag?: "visitor" | "member" | "blacklist" | "guest" | "watchlist" | "vip" | null;
     img: string;
+    disableViewImg?: boolean;
 }
 
 const bgcolor: Record<string, string> = {
@@ -18,7 +19,7 @@ const bgcolor: Record<string, string> = {
     none: '#9E9E9E'
 }
 
-const ImageTag = ({ tag, img }: ImageTagProps) => {
+const ImageTag = ({ tag, img, disableViewImg }: ImageTagProps) => {
     const [openImageViewer, setOpenImageViewer] = useState(false);
     const [backgroundColor, setBackgroundColor] = useState<string>(bgcolor.none);
     const [viewImgUrl, setViewImgUrl] = useState<string>('')
@@ -50,11 +51,13 @@ const ImageTag = ({ tag, img }: ImageTagProps) => {
                     {(tag ?? "visitor").charAt(0).toUpperCase() + (tag ?? "visitor").slice(1)}
                 </Typography>
             </div>
-            <ImageViewer
-                open={openImageViewer}
-                imgUrl={viewImgUrl}
-                onClose={() => setOpenImageViewer(false)}
-            />
+            {!disableViewImg &&
+                <ImageViewer
+                    open={openImageViewer}
+                    imgUrls={[viewImgUrl]}
+                    onClose={() => setOpenImageViewer(false)}
+                />
+            }
         </>
     );
 }
