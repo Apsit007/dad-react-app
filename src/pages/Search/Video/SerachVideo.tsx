@@ -410,6 +410,7 @@ const SerachVideo = () => {
               >
                 <CloudUploadOutlinedIcon sx={{ color: 'text.secondary', mb: 1 }} />
                 <Typography variant='caption' color='text.secondary'>Upload VDO</Typography>
+                <Typography variant='caption' color='text.secondary'>รองรับไฟล์ MP4,MPEG,AVI,WMV</Typography>
                 {selectedVideo && (
                   <Typography variant='caption' sx={{ mt: 1 }} color='text.secondary'>
                     {selectedVideo.name}
