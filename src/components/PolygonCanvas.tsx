@@ -4,6 +4,7 @@ import { Stage, Layer, Line, Image as KonvaImage, Circle } from "react-konva";
 
 interface PolygonCanvasProps {
     imageUrl: string;
+    maskUrl?: string;
     polygon: number[]; // พิกัดจริง (1920x1080)
     setPolygon: (points: number[]) => void;
     drawing?: boolean;
@@ -11,6 +12,7 @@ interface PolygonCanvasProps {
 
 const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     imageUrl,
+    maskUrl,
     polygon,
     setPolygon,
     drawing,
@@ -21,6 +23,7 @@ const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
     const imageHeight = 1080;
 
     const [img, setImg] = useState<HTMLImageElement | null>(null);
+    const [mask, setMask] = useState<HTMLCanvasElement | null>(null);
     const [isClosed, setIsClosed] = useState(false);
 
     // อัตราส่วนการย่อภาพ
@@ -33,6 +36,45 @@ const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
         image.src = imageUrl;
         image.onload = () => setImg(image);
     }, [imageUrl]);
+
+    // โหลด mask → แปลงสีขาวให้เป็นสีเขียวโปร่งแสง
+    useEffect(() => {
+        if (!maskUrl) return;
+        const image = new window.Image();
+        image.crossOrigin = "anonymous";
+        image.src = maskUrl;
+        image.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = image.width;
+            canvas.height = image.height;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
+
+            ctx.drawImage(image, 0, 0);
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+
+            // loop pixel
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const isWhite = r > 200 && g > 200 && b > 200;
+                if (isWhite) {
+                    // สีขาว → เขียวโปร่งแสง
+                    data[i] = 0;
+                    data[i + 1] = 255;
+                    data[i + 2] = 0;
+                    data[i + 3] = 120; // alpha 0–255
+                } else {
+                    // สีดำ → โปร่งใส
+                    data[i + 3] = 0;
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+            setMask(canvas);
+        };
+    }, [maskUrl]);
 
     // ฟังก์ชันคำนวณระยะ (ในพิกัดจริง)
     const getDistance = (x1: number, y1: number, x2: number, y2: number) =>
@@ -77,7 +119,14 @@ const PolygonCanvas: React.FC<PolygonCanvasProps> = ({
             <Layer>
                 {/* แสดงภาพพื้นหลัง */}
                 {img && <KonvaImage image={img} width={displayWidth} height={displayHeight} />}
-
+                {mask && (
+                    <KonvaImage
+                        image={mask}
+                        width={displayWidth}
+                        height={displayHeight}
+                        opacity={0.6}
+                    />
+                )}
                 {/* polygon */}
                 <Line
                     points={displayPoints}

@@ -71,7 +71,7 @@ const VideoResultPage = () => {
       dialog.loading("กำลังโหลดข้อมูลผลลัพธ์...");
       const res = await LprDataApi.getVideoResults({
         video_id, // 🟢 จำเป็น
-        plate: sPlate || undefined, // 🔸 กรองตามหมายเลขทะเบียน
+        plate: sPlate ? sPlate + "*" : undefined, // 🔸 กรองตามหมายเลขทะเบียน
         region_code: sRegionCode || undefined, // 🔸 กรองตามจังหวัด
         vehicle_group_id: sVehicleGroupId === '' ? undefined : Number(sVehicleGroupId), // 🔸 กรองตามกลุ่มรถ
         page: page + 1, // backend เริ่มนับจาก 1

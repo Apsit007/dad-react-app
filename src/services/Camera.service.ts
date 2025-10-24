@@ -62,6 +62,12 @@ export interface RebootCameraResponse {
   camera_uid: string;
   rebootIssuedAt: string;
 }
+
+export interface GetMaskResponse {
+  success: boolean;
+  message: string;
+  data?: string; // mask image เป็น base64 หรือ URL
+}
 /**
  * Camera API
  * Example: GET /smartgate-api/v0/cameras/get?page=1&limit=10
@@ -123,6 +129,13 @@ export const CameraApi = {
     const res = await http.post<RebootCameraResponse>(
       '/smartgate-api/v0/cameras/reboot-engine',
       { camera_uid } // ✅ ส่งใน body แทน query string
+    );
+    return res.data;
+  },
+
+  async getMask(camera_uid: string): Promise<GetMaskResponse> {
+    const res = await http.get<GetMaskResponse>(
+      `/smartgate-api/v0/cameras/get-mask?camera_uid=${camera_uid}`
     );
     return res.data;
   }

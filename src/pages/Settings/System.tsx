@@ -17,6 +17,7 @@ import { useSelector } from 'react-redux';
 import { selectGates } from '../../store/slices/masterdataSlice';
 import dialog from '../../services/dialog.service';
 import RestartAltIcon from "@mui/icons-material/RestartAlt"
+import http from '../../services/http';
 
 
 // ✅ type สำหรับ DataTable โดยเฉพาะ
@@ -51,9 +52,9 @@ const SystemSettings = () => {
   const [drawing, setDrawing] = useState(false);
   const [editingCamera, setEditingCamera] = useState<CameraRow | null>(null);
   const [lastImageUrl, setLastImageUrl] = useState<string | null>(null);
+  const [maskUrl, setMaskUrl] = useState<string | null>(null);
 
   const gates = useSelector(selectGates);
-
 
   const [cameras, setCameras] = useState<CameraRow[]>([]); // ✅ state สำหรับเก็บกล้องจาก API
   const [rebooting, setRebooting] = useState(false);
@@ -97,12 +98,37 @@ const SystemSettings = () => {
   }, []);
 
   useEffect(() => {
+    const loadLastImageAndMask = async () => {
+      if (!selectedCamera) return;
+      try {
+        const [imageRes, maskRes] = await Promise.all([
+          CameraApi.getLastImage(selectedCamera.camera_uid),
+          http.get(`/smartgate-api/v0/cameras/get-mask?camera_uid=${selectedCamera.camera_uid}`, {
+            responseType: "blob",
+          }),
+        ]);
+
+        if (imageRes.success && imageRes.imageUrl) setLastImageUrl(imageRes.imageUrl);
+
+        if (maskRes.data instanceof Blob) {
+          const maskUrl = URL.createObjectURL(maskRes.data);
+          setMaskUrl(maskUrl);
+        }
+      } catch (err) {
+        console.error("โหลดภาพล่าสุดหรือ mask ไม่สำเร็จ", err);
+      }
+    };
+    loadLastImageAndMask();
+  }, [selectedCamera]);
+
+  useEffect(() => {
     if (!showSensorPopup) {
       // ✅ รีเซ็ต canvas เมื่อ popup ปิด
       setPolygon([]);
       setDrawing(false);
       setSelectedCamera(null);
       setLastImageUrl(null);
+      setMaskUrl(null);
     }
   }, [showSensorPopup]);
 
@@ -514,6 +540,7 @@ const SystemSettings = () => {
             <div className='flex justify-center w-full'>
               <PolygonCanvas
                 imageUrl={lastImageUrl || "/imgs/car_mock_img.png"}
+                maskUrl={maskUrl || undefined}
                 polygon={polygon}
                 setPolygon={setPolygon}
                 drawing={drawing}

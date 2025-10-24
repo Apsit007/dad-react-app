@@ -73,8 +73,8 @@ const SearchPerson = () => {
                 page,
                 limit,
                 orderBy: "id.desc",
-                firstname: firstname || undefined,
-                lastname: lastname || undefined,
+                firstname: firstname ? `${firstname}*` : undefined,
+                lastname: lastname ? `${lastname}*` : undefined,
                 member_group_id: memberGroupId || undefined,
                 direction: sDirection || undefined,
                 image_url: imageUrl || undefined, // ✅ เพิ่มตรงนี้
@@ -218,7 +218,7 @@ const SearchPerson = () => {
             renderCell: (params) => {
                 const overviewImg = params.row.overview_image ?? "";
                 const driverImg = params.row.driver_image_url ?? "";
-                const memberImg = params.row.member_data?.member_image_url ?? "";
+                const memberImg = params.row.fdlib_url ?? "";
                 const imgList = [overviewImg, driverImg, memberImg].filter(Boolean);
 
                 return (
@@ -242,7 +242,8 @@ const SearchPerson = () => {
                             disableViewImg
                         />
                         <ImageTag
-                            tag={params.row.member_data?.member_group_name_en ?? null}
+                            // tag={params.row.member_data?.member_group_name_en ?? null}
+                            tag={params.row.driver_group_name_en ?? null}
                             img={memberImg}
                             disableViewImg
                         />
@@ -386,10 +387,12 @@ const SearchPerson = () => {
                 r.similarity != null && !isNaN(Number(r.similarity))
                     ? `${(Number(r.similarity) * 100).toFixed(2)}%`
                     : "-",
+            ประเภทกลุ่มรถ: r.vehicle_data?.vehicle_group_name_th ?? "ทั่วไป",
             หน่วยงาน: r.member_data?.department_name ?? "-",
             เลขทะเบียน: r.plate ?? "-",
             ยี่ห้อ: r.vehicle_make_name_en ?? "-",
             สี: r.vehicle_color_name_th ?? "-",
+            ประเภทบุคคล: r.driver_group_name_th ?? "ทั่วไป",
             "วันเวลาเข้า": r.date_time_in ? dayjs(r.date_time_in).format("DD/MM/YYYY HH:mm:ss") : "-",
             "เวลาออก": r.date_time_out ? dayjs(r.date_time_out).format("DD/MM/YYYY HH:mm:ss") : "-",
         }));

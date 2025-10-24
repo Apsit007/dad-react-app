@@ -17,21 +17,41 @@ const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  // ✅ ฟังก์ชันหาหน้าแรกที่ user มีสิทธิ์
+  const getFirstAllowedRoute = (permissions: Record<string, boolean>): string => {
+    const routeMap = [
+      { permission: 'dashboard', path: '/dashboard' },
+      { permission: 'person_search', path: '/search/person' },
+      { permission: 'car_search', path: '/search/car' },
+      { permission: 'video_search', path: '/search/video' },
+      { permission: 'car_manage', path: '/carinfo' },
+      { permission: 'person_manage', path: '/personinfo' },
+      { permission: 'system_manage', path: '/settings' },
+      { permission: 'user_manage', path: '/user' },
+      { permission: 'department_manage', path: '/department' },
+    ];
+
+    const allowed = routeMap.find((r) => permissions[r.permission]);
+    return allowed ? allowed.path : '/no-access'; // fallback ถ้าไม่มีสิทธิ์เลย
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     dialog.loading('กำลังเข้าสู่ระบบ...'); // 🔹 show loading
 
     dispatch(login({ username, password }))
       .unwrap()
-      .then(() => {
+      .then((res) => {
         // ✅ โหลด masterdata ทั้งหมดหลัง login สำเร็จ
+        const permissions = res?.user?.permissions || {};
+
         dispatch(fetchAllMasterdata())
           .unwrap()
           .finally(() => {
             dialog.close();
             dialog.success('เข้าสู่ระบบสำเร็จ').then(() => {
-              navigate('/dashboard');
+              const firstRoute = getFirstAllowedRoute(permissions);
+              navigate(firstRoute, { replace: true });
             });
           });
       })
@@ -40,6 +60,8 @@ const LoginPage = () => {
         dialog.error(err || 'ไม่สามารถเข้าสู่ระบบได้');
       });
   };
+
+
   return (
     <Box className="min-h-screen" sx={{ bgcolor: '#2E6F69' }} display="flex" alignItems="center" justifyContent="center" p={2}>
       <Paper elevation={6} sx={{ width: 420, borderRadius: 2, p: 4, pt: 0 }}>

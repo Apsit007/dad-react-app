@@ -98,6 +98,8 @@ export interface FaceData {
     lpr_id: string;
     date_time_in: string;
     date_time_out: string;
+    driver_group_name_th: string;
+
 }
 
 
