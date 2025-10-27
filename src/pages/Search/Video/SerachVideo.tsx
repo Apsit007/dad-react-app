@@ -51,7 +51,8 @@ const SerachVideo = () => {
   const [videoNameSearch, setVideoNameSearch] = useState("");
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
-
+  // ✅ เก็บ filter ล่าสุด
+  const [lastFilter, setLastFilter] = useState<Record<string, any>>({});
   // ===== Table States =====
   const [rows, setRows] = useState<VideoHistoryRecord[]>([]);
   const [rowCount, setRowCount] = useState<number | undefined>(0);
@@ -89,34 +90,59 @@ const SerachVideo = () => {
     return () => sse.close();
   }, []);
 
+  // ✅ ฟังก์ชันสร้าง filter object (ส่งเฉพาะ key ที่มีค่า)
+  const buildVideoFilter = () => {
+    const filter: Record<string, any> = {};
+
+    if (videoNameSearch.trim()) filter.title = videoNameSearch.trim() + "*"; // ใช้ wildcard เหมือนระบบอื่น
+    if (startDate) filter.start_date = startDate.startOf("day").toISOString();
+    if (endDate) filter.end_date = endDate.endOf("day").toISOString();
+
+    return filter;
+  };
+
   // ========================= LOAD HISTORY =========================
-  const handleSearch = async (
+  const handleSearch = () => {
+    const filter = buildVideoFilter();
+    setLastFilter(filter);
+    const newPagination = { page: 0, pageSize: paginationModel.pageSize };
+    setPaginationModel(newPagination);
+    loadHistory(newPagination.page, newPagination.pageSize, filter);
+  };
+
+  const loadHistory = async (
     page = paginationModel.page,
-    pageSize = paginationModel.pageSize
+    pageSize = paginationModel.pageSize,
+    filter: Record<string, any> = lastFilter
   ) => {
     try {
-      const res = await VideoHistoryApi.getHistory({
-        page: page + 1,
-        limit: pageSize,
-        orderBy: "id.desc",
-      });
+      const res = await VideoHistoryApi.getHistory(
+        page + 1, // ✅ backend เริ่มนับจาก 1
+        pageSize,
+        "id.desc",
+        filter
+      );
+
       if (res.success) {
         setRows(res.data);
         setRowCount(res.pagination?.countAll ?? 0);
+      } else {
+        console.error("⚠️ getHistory failed:", res.message);
       }
     } catch (err) {
       console.error("❌ load history error:", err);
     }
   };
 
+
   useEffect(() => {
-    handleSearch();
+    loadHistory(0, paginationModel.pageSize, {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePaginationChange = (model: { page: number; pageSize: number }) => {
     setPaginationModel(model);
-    handleSearch(model.page, model.pageSize);
+    loadHistory(model.page, model.pageSize, lastFilter);
   };
   // ========================= UPLOAD LOGIC =========================
   const onPickFile = () => fileInputRef.current?.click();
@@ -169,8 +195,14 @@ const SerachVideo = () => {
   const handleClear = () => {
     setStartDate(null);
     setEndDate(null);
-    setVideoNameSearch('')
-    handleSearch();
+    setVideoNameSearch("");
+
+    const clearedFilter = {};
+    setLastFilter(clearedFilter);
+
+    const newPagination = { page: 0, pageSize: paginationModel.pageSize };
+    setPaginationModel(newPagination);
+    loadHistory(newPagination.page, newPagination.pageSize, clearedFilter);
   };
 
 
