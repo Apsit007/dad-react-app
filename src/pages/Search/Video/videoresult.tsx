@@ -19,6 +19,14 @@ import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import { exportData } from '../../../services/Export.service';
 import dayjs from 'dayjs';
 import ImageViewer from '../../../components/ImageViewer';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField as MuiTextField,
+} from '@mui/material';
+
 
 
 
@@ -59,6 +67,72 @@ const VideoResultPage = () => {
 
   const groups = useSelector(selectVehicleGroups);
   const regions = useSelector(selectRegions);
+
+  // --- Export Dialog States ---
+  const [openExportDialog, setOpenExportDialog] = useState(false);
+  const [exportType, setExportType] = useState<"txt" | "xlsx" | "csv" | "pdf" | null>(null);
+  const [exportLimit, setExportLimit] = useState<number>(100);
+  const [loading, setLoading] = useState(false);
+
+
+  // ✅ เปิด popup export
+  const openExportPopup = (type: "txt" | "xlsx" | "csv" | "pdf") => {
+    setExportType(type);
+    setOpenExportDialog(true);
+  };
+
+  // ✅ เมื่อยืนยันใน popup
+  const handleConfirmExport = async () => {
+    if (!exportLimit || exportLimit <= 0) {
+      dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      dialog.loading("กำลังดึงข้อมูลสำหรับส่งออก...");
+
+      // ✅ รวม filter ปัจจุบันทั้งหมด
+      const params = {
+        video_id,
+        plate: sPlate ? sPlate + "*" : undefined,
+        region_code: sRegionCode || undefined,
+        vehicle_group_id: sVehicleGroupId === '' ? undefined : Number(sVehicleGroupId),
+        page: 1,
+        limit: exportLimit,
+        orderBy: "id.desc",
+      };
+
+      const res = await LprDataApi.getVideoResults(params);
+      dialog.close();
+
+      if (!res.success || !res.data?.length) {
+        dialog.warning("ไม่พบข้อมูลสำหรับส่งออก");
+        return;
+      }
+
+      const data = res.data || [];
+
+      if (exportType === "pdf") {
+        const processedRows = data.map((r, i) => ({
+          ...r,
+          licensePlate: `${r.plate || ""} ${r.region_th || ""}`,
+          name: `${r.member_firstname || ""} ${r.member_lastname || ""}`.trim() || "-",
+        }));
+        exportData(processedRows, "pdf", "video_result_list", columnsExport);
+      } else {
+        exportData(prepareExportRows(data), exportType!, "video_result_list");
+      }
+
+    } catch (err) {
+      dialog.close();
+      console.error("❌ Export error:", err);
+      dialog.error("เกิดข้อผิดพลาดในการส่งออกข้อมูล");
+    } finally {
+      setLoading(false);
+      setOpenExportDialog(false);
+    }
+  };
 
   useEffect(() => {
     if (video_id) {
@@ -308,7 +382,7 @@ const VideoResultPage = () => {
         </Accordion>
 
         {/* Export buttons + result count */}
-        <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+        {/* <Stack direction="row" spacing={1} sx={{ my: 2 }}>
           <Button variant="outlined" className='!border-gold !text-primary' size="small"
             startIcon={<img src='/icons/txt-file.png' />} onClick={() => handleExport("txt")}>TXT</Button>
           <Button variant="outlined" className='!border-gold !text-primary' size="small"
@@ -321,7 +395,51 @@ const VideoResultPage = () => {
           <Typography variant="body2" sx={{ alignSelf: 'center' }}>
             ผลการค้นหา : {rowCount} รายการ
           </Typography>
+        </Stack> */}
+
+        <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+          <Button
+            variant="outlined"
+            className='!border-gold !text-primary'
+            size="small"
+            startIcon={<img src='/icons/txt-file.png' />}
+            onClick={() => openExportPopup("txt")}
+          >
+            TXT
+          </Button>
+          <Button
+            variant="outlined"
+            className='!border-gold !text-primary'
+            size="small"
+            startIcon={<img src='/icons/xls-file.png' />}
+            onClick={() => openExportPopup("xlsx")}
+          >
+            XLS
+          </Button>
+          <Button
+            variant="outlined"
+            className='!border-gold !text-primary'
+            size="small"
+            startIcon={<img src='/icons/csv-file.png' />}
+            onClick={() => openExportPopup("csv")}
+          >
+            CSV
+          </Button>
+          <Button
+            variant="outlined"
+            className='!border-gold !text-primary'
+            size="small"
+            startIcon={<img src='/icons/pdf-file.png' />}
+            onClick={() => openExportPopup("pdf")}
+          >
+            PDF
+          </Button>
+          <Box sx={{ flexGrow: 1 }} />
+          <Typography variant="body2" sx={{ alignSelf: 'center' }}>
+            ผลการค้นหา : {rowCount} รายการ
+          </Typography>
         </Stack>
+
 
         {/* DataTable */}
         <div className="flex-1 flex flex-col">
@@ -334,12 +452,38 @@ const VideoResultPage = () => {
             onPaginationModelChange={handlePaginationChange}
           />
         </div>
-      </Box>
+      </Box >
       <ImageViewer
         open={viewerOpen}
         imgUrls={viewerImages}
         onClose={() => setViewerOpen(false)}
       />
+      <Dialog open={openExportDialog} onClose={() => setOpenExportDialog(false)}>
+        <DialogTitle>กำหนดจำนวนรายการที่ต้องการส่งออก</DialogTitle>
+        <DialogContent>
+          <MuiTextField
+            label="จำนวนรายการ"
+            type="number"
+            fullWidth
+            value={exportLimit}
+            onChange={(e) => setExportLimit(Number(e.target.value))}
+            inputProps={{ min: 1 }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenExportDialog(false)}>ยกเลิก</Button>
+          <Button
+            onClick={handleConfirmExport}
+            variant="contained"
+            className="!bg-primary hover:!bg-primary-dark"
+            disabled={loading}
+          >
+            {loading ? "กำลังส่งออก..." : "ตกลง"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </>
 
   );

@@ -17,6 +17,14 @@ import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import dayjs from 'dayjs';
 import { exportData } from '../../services/Export.service';
 import ImageViewer from '../../components/ImageViewer';
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField as MuiTextField,
+} from '@mui/material';
+import dialog from '../../services/dialog.service';
 
 
 
@@ -134,6 +142,12 @@ const SearchCar = () => {
     const colors = useSelector(selectVehicleColors);
     const groups = useSelector(selectVehicleGroups);
 
+    // --- state สำหรับ export dialog ---
+    const [openExportDialog, setOpenExportDialog] = useState(false);
+    const [exportType, setExportType] = useState<"txt" | "xlsx" | "csv" | "pdf" | null>(null);
+    const [exportLimit, setExportLimit] = useState<number>(100);
+    const [loading, setLoading] = useState(false);
+
     // options ของยี่ห้อ
     const searchMakeOptions = useMemo(
         () =>
@@ -143,6 +157,74 @@ const SearchCar = () => {
             })),
         [makes]
     );
+
+    // ✅ เปิด popup export
+    const openExportPopup = (type: "txt" | "xlsx" | "csv" | "pdf") => {
+        setExportType(type);
+        setOpenExportDialog(true);
+    };
+
+    // ✅ เมื่อยืนยันใน popup
+    const handleConfirmExport = async () => {
+        if (!exportLimit || exportLimit <= 0) {
+            dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            // ✅ รวม filter ปัจจุบันทั้งหมด
+            const params = {
+                plate_prefix: sPlatePrefix ? `${sPlatePrefix}*` : undefined,
+                plate_number: sPlateNumber ? `${sPlateNumber}*` : undefined,
+                region_code: sRegionCode || undefined,
+                vehicle_make: sVehicleMake || undefined,
+                vehicle_color: sVehicleColor || undefined,
+                direction: sDirection || undefined,
+                vehicle_group_id: sVehicleGroupId || undefined,
+                start_date: sStartDate ? sStartDate.startOf('minute').toISOString() : undefined,
+                end_date: sEndDate ? sEndDate.endOf('minute').toISOString() : undefined,
+                page: 1,
+                limit: exportLimit, // ✅ ใช้ค่าที่กรอก
+                orderBy: 'id.desc',
+            };
+
+            const res = await LprDataApi.searchVehicles(params);
+            if (!res.success) {
+                dialog.error("ไม่สามารถดึงข้อมูลสำหรับส่งออกได้");
+                return;
+            }
+
+            const data = res.data || [];
+            if (!data.length) {
+                dialog.warning("ไม่มีข้อมูลให้ส่งออก");
+                return;
+            }
+
+            // ✅ เตรียมข้อมูล export
+            if (exportType === "pdf") {
+                const processedRows = data.map((r, i) => ({
+                    ...r,
+                    licensePlate: r.plate
+                        ? `${r.plate}\n${r.region_th || "-"}`
+                        : "-",
+                    name: `${r.member_firstname || ""} ${r.member_lastname || ""}`.trim() ?? "-",
+                    datetime_out: r.datetime_out ? dayjs(r.datetime_out).format("DD/MM/YYYY HH:mm:ss") : "",
+                    datetime_in: r.datetime_in ? dayjs(r.datetime_in).format("DD/MM/YYYY HH:mm:ss") : "",
+                }));
+                exportData(processedRows, "pdf", "car_in/out_list", columnsExport);
+            } else {
+                exportData(prepareExportRows(data), exportType!, "car_in/out_list");
+            }
+        } catch (err) {
+            console.error("❌ Export error:", err);
+            dialog.error("เกิดข้อผิดพลาดในการส่งออก");
+        } finally {
+            setLoading(false);
+            setOpenExportDialog(false);
+        }
+    };
 
     // === 2. ฟังก์ชันยิง API ===
     const handleSearch = async (page = paginationModel.page, pageSize = paginationModel.pageSize) => {
@@ -550,7 +632,7 @@ const SearchCar = () => {
                         className="!border-gold !text-primary"
                         size="small"
                         startIcon={<img src="/icons/txt-file.png" />}
-                        onClick={() => exportData(prepareExportRows(rows), "txt", "car_in/out_list")}
+                        onClick={() => openExportPopup("txt")}
                     >
                         TXT
                     </Button>
@@ -559,7 +641,7 @@ const SearchCar = () => {
                         className="!border-gold !text-primary"
                         size="small"
                         startIcon={<img src="/icons/xls-file.png" />}
-                        onClick={() => exportData(prepareExportRows(rows), "xlsx", "car_in/out_list")}
+                        onClick={() => openExportPopup("xlsx")}
                     >
                         XLS
                     </Button>
@@ -568,27 +650,16 @@ const SearchCar = () => {
                         className="!border-gold !text-primary"
                         size="small"
                         startIcon={<img src="/icons/csv-file.png" />}
-                        onClick={() => exportData(prepareExportRows(rows), "csv", "car_in/out_list")}
+                        onClick={() => openExportPopup("csv")}
                     >
                         CSV
                     </Button>
                     <Button
                         variant="outlined"
-                        className='!border-gold !text-primary'
+                        className="!border-gold !text-primary"
                         size="small"
-                        startIcon={<img src='/icons/pdf-file.png' />}
-                        onClick={() => {
-                            // 👉 process rows ก่อน export
-                            const processedRows = rows.map((r, i) => ({
-                                ...r,
-                                licensePlate: `${r.plate || ""} ${r.region_th || ""}`,
-                                name: `${r.member_firstname || ""} ${r.member_lastname || ""}`.trim() ?? "-",
-                                datetime_out: r.datetime_out ? dayjs(r.datetime_out).format("DD/MM/YYYY HH:mm:ss") : "",
-                                datetime_in: r.datetime_in ? dayjs(r.datetime_in).format("DD/MM/YYYY HH:mm:ss") : "",
-                            }));
-
-                            exportData(processedRows, "pdf", "car_in/out_list", columnsExport);
-                        }}
+                        startIcon={<img src="/icons/pdf-file.png" />}
+                        onClick={() => openExportPopup("pdf")}
                     >
                         PDF
                     </Button>
@@ -597,6 +668,7 @@ const SearchCar = () => {
                         ผลการค้นหา : {rowCount} รายการ
                     </Typography>
                 </Stack>
+
 
                 <DataTable
                     getRowId={(row) => row.id}
@@ -612,6 +684,32 @@ const SearchCar = () => {
                 imgUrls={viewerImages}
                 onClose={() => setViewerOpen(false)}
             />
+            <Dialog open={openExportDialog} onClose={() => setOpenExportDialog(false)}>
+                <DialogTitle>กำหนดจำนวนรายการที่ต้องการส่งออก</DialogTitle>
+                <DialogContent>
+                    <MuiTextField
+                        label="จำนวนรายการ"
+                        type="number"
+                        fullWidth
+                        value={exportLimit}
+                        onChange={(e) => setExportLimit(Number(e.target.value))}
+                        inputProps={{ min: 1 }}
+                        sx={{ mt: 1 }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenExportDialog(false)}>ยกเลิก</Button>
+                    <Button
+                        onClick={handleConfirmExport}
+                        variant="contained"
+                        className="!bg-primary hover:!bg-primary-dark"
+                        disabled={loading}
+                    >
+                        {loading ? "กำลังส่งออก..." : "ตกลง"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
         </>
     );
 };

@@ -29,6 +29,15 @@ import { exportData } from '../../../services/Export.service';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../store';
 
+import {
+    Dialog as MuiDialog,
+    DialogTitle as MuiDialogTitle,
+    DialogContent as MuiDialogContent,
+    DialogActions as MuiDialogActions,
+    TextField as MuiTextField,
+} from '@mui/material';
+
+
 
 
 
@@ -141,6 +150,64 @@ const CarInfoList = () => {
     const [regionError, setRegionError] = useState<string>('');
     const [colorError, setColorError] = useState<string>('');
     const [groupError, setGroupError] = useState<string>('');
+
+    // ✅ Export popup state
+    const [openExportDialog, setOpenExportDialog] = useState(false);
+    const [exportType, setExportType] = useState<"txt" | "xlsx" | "csv" | "pdf" | null>(null);
+    const [exportLimit, setExportLimit] = useState<number>(100);
+    const [exportLoading, setExportLoading] = useState(false);
+
+
+    // ✅ เปิด popup export
+    const openExportPopup = (type: "txt" | "xlsx" | "csv" | "pdf") => {
+        setExportType(type);
+        setOpenExportDialog(true);
+    };
+
+    // ✅ เมื่อยืนยันใน popup
+    const handleConfirmExport = async () => {
+        if (!exportLimit || exportLimit <= 0) {
+            dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
+            return;
+        }
+
+        try {
+            setExportLoading(true);
+            dialog.loading("กำลังดึงข้อมูลสำหรับส่งออก...");
+
+            const res = await VehicleApi.list(
+                1,
+                exportLimit,
+                "uid.asc",
+                lastFilter // ✅ ใช้ filter ล่าสุดที่ผู้ใช้ค้นหาไว้
+            );
+
+            dialog.close();
+
+            if (!res.success || !res.data?.length) {
+                dialog.warning("ไม่พบข้อมูลสำหรับส่งออก");
+                return;
+            }
+
+            const data = res.data;
+
+            if (exportType === "pdf") {
+                const exportRows = prepareExportRows(data);
+                const filteredRows = exportRows.map(({ ลำดับ, ...rest }) => rest);
+                exportData(filteredRows, "pdf", "vehicle_list");
+            } else {
+                exportData(prepareExportRows(data), exportType!, "vehicle_list");
+            }
+        } catch (err) {
+            dialog.close();
+            console.error("❌ Export error:", err);
+            dialog.error("เกิดข้อผิดพลาดในการส่งออกข้อมูล");
+        } finally {
+            setExportLoading(false);
+            setOpenExportDialog(false);
+        }
+    };
+
 
     // ✅ ฟังก์ชันดึงข้อมูล
     const fetchData = async (page: number, pageSize: number, filter: VehicleListFilter) => {
@@ -728,7 +795,7 @@ const CarInfoList = () => {
                 </AccordionDetails>
             </Accordion>
 
-            <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+            {/* <Stack direction="row" spacing={1} sx={{ my: 2 }}>
                 <Button
                     variant="contained"
                     size="small"
@@ -787,7 +854,65 @@ const CarInfoList = () => {
                 <Typography variant="body2" sx={{ alignSelf: "center" }}>
                     ผลการค้นหา : {rowCount} รายการ
                 </Typography>
+            </Stack> */}
+
+            <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+                <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<AddIcon />}
+                    className="!bg-gold hover:!bg-gold-dark"
+                    onClick={handleOpenCarForm}
+                >
+                    ทะเบียนรถ
+                </Button>
+
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/txt-file.png" />}
+                    onClick={() => openExportPopup("txt")}
+                >
+                    TXT
+                </Button>
+
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/xls-file.png" />}
+                    onClick={() => openExportPopup("xlsx")}
+                >
+                    XLS
+                </Button>
+
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/csv-file.png" />}
+                    onClick={() => openExportPopup("csv")}
+                >
+                    CSV
+                </Button>
+
+                <Button
+                    variant="outlined"
+                    className="!border-gold !text-primary"
+                    size="small"
+                    startIcon={<img src="/icons/pdf-file.png" />}
+                    onClick={() => openExportPopup("pdf")}
+                >
+                    PDF
+                </Button>
+
+                <Box sx={{ flexGrow: 1 }} />
+                <Typography variant="body2" sx={{ alignSelf: "center" }}>
+                    ผลการค้นหา : {rowCount} รายการ
+                </Typography>
             </Stack>
+
 
             <DataTable
                 getRowId={(row) => row.uid}
@@ -1096,6 +1221,32 @@ const CarInfoList = () => {
                 </DialogContent>
 
             </Dialog >
+            <MuiDialog open={openExportDialog} onClose={() => setOpenExportDialog(false)}>
+                <MuiDialogTitle>กำหนดจำนวนรายการที่ต้องการส่งออก</MuiDialogTitle>
+                <MuiDialogContent>
+                    <MuiTextField
+                        label="จำนวนรายการ"
+                        type="number"
+                        fullWidth
+                        value={exportLimit}
+                        onChange={(e) => setExportLimit(Number(e.target.value))}
+                        inputProps={{ min: 1 }}
+                        sx={{ mt: 1 }}
+                    />
+                </MuiDialogContent>
+                <MuiDialogActions>
+                    <Button onClick={() => setOpenExportDialog(false)}>ยกเลิก</Button>
+                    <Button
+                        onClick={handleConfirmExport}
+                        variant="contained"
+                        className="!bg-primary hover:!bg-primary-dark"
+                        disabled={exportLoading}
+                    >
+                        {exportLoading ? "กำลังส่งออก..." : "ตกลง"}
+                    </Button>
+                </MuiDialogActions>
+            </MuiDialog>
+
         </Box >
     );
 };

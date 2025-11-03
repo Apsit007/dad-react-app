@@ -1,5 +1,5 @@
 // src/pages/SearchPerson.tsx
-import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Avatar, Stack } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, TextField, Select, MenuItem, Button, Box, Avatar, Stack, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
@@ -66,6 +66,81 @@ const SearchPerson = () => {
     const [viewerOpen, setViewerOpen] = useState(false);
     const [viewerImages, setViewerImages] = useState<string[]>([]);
 
+    const [openExportDialog, setOpenExportDialog] = useState(false);
+    const [exportType, setExportType] = useState<"txt" | "xlsx" | "csv" | "pdf" | null>(null);
+    const [exportLimit, setExportLimit] = useState<number>(100);
+
+    // ✅ เปิด popup
+    const openExportPopup = (type: "txt" | "xlsx" | "csv" | "pdf") => {
+        setExportType(type);
+        setOpenExportDialog(true);
+    };
+    // ✅ เมื่อยืนยันใน popup
+    const handleConfirmExport = async () => {
+        if (!exportLimit || exportLimit <= 0) {
+            dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            const params = {
+                page: 1,
+                limit: exportLimit,
+                orderBy: "id.desc",
+                firstname: firstname ? `${firstname}*` : undefined,
+                lastname: lastname ? `${lastname}*` : undefined,
+                member_group_id: memberGroupId || undefined,
+                direction: sDirection || undefined,
+                image_url: uploadedImageUrl || undefined,
+                start_date: startDate ? startDate.toISOString() : undefined,
+                end_date: endDate ? endDate.toISOString() : undefined,
+            };
+
+            const res = await FaceDataApi.search(params);
+            if (res.success) {
+                const data = res.data || [];
+
+                if (exportType === "pdf") {
+                    const processedRows = data.map((r: FaceData) => ({
+                        ...r,
+                        name: r.member_data
+                            ? `${r.member_data.title ?? ""}${r.member_data.firstname ?? ""} ${r.member_data.lastname ?? ""}`.trim()
+                            : "-",
+                        similarity:
+                            r.similarity != null && !isNaN(Number(r.similarity))
+                                ? `${(Number(r.similarity) * 100).toFixed(2)}%`
+                                : "-",
+                        department: r.member_data?.department_name ?? "-",
+                        licensePlate: r.plate
+                            ? `${r.plate}\n${r.region_name_th || "-"}`
+                            : "-",
+                        vehicle_make_name_en: r.vehicle_make_name_en ?? "-",
+                        vehicle_color_name_th: r.vehicle_color_name_th ?? "-",
+                        date_time_in: r.date_time_in
+                            ? dayjs(r.date_time_in).format("DD/MM/YYYY HH:mm:ss")
+                            : "-",
+                        date_time_out: r.date_time_out
+                            ? dayjs(r.date_time_out).format("DD/MM/YYYY HH:mm:ss")
+                            : "-",
+                    }));
+
+                    exportData(processedRows, "pdf", "ค้นหาบุคคล", columnsExport);
+                } else {
+                    exportData(prepareExportRows(data), exportType!, "face_data");
+                }
+            } else {
+                dialog.error("ไม่สามารถดึงข้อมูลสำหรับส่งออกได้");
+            }
+        } catch (err) {
+            console.error("❌ Export error:", err);
+            dialog.error("เกิดข้อผิดพลาดในการส่งออก");
+        } finally {
+            setLoading(false);
+            setOpenExportDialog(false);
+        }
+    };
 
     const loadData = async (page = 1, limit = 10, imageUrl?: string) => {
         try {
@@ -418,7 +493,10 @@ const SearchPerson = () => {
                         ? `${(Number(r.similarity) * 100).toFixed(2)}%`
                         : "-",
                 department: r.member_data?.department_name ?? "-",
-                licensePlate: r.plate ?? "-",
+                // licensePlate: r.plate ?? "-",
+                licensePlate: r.plate
+                    ? `${r.plate}\n${r.region_name_th || "-"}`
+                    : "-",
                 vehicle_make_name_en: r.vehicle_make_name_en ?? "-",
                 vehicle_color_name_th: r.vehicle_color_name_th ?? "-",
                 date_time_in: r.date_time_in
@@ -559,7 +637,7 @@ const SearchPerson = () => {
                         className="!border-gold !text-primary"
                         size="small"
                         startIcon={<img src="/icons/txt-file.png" />}
-                        onClick={() => handleExport("txt")}
+                        onClick={() => openExportPopup("txt")}
                     >
                         TXT
                     </Button>
@@ -568,7 +646,7 @@ const SearchPerson = () => {
                         className="!border-gold !text-primary"
                         size="small"
                         startIcon={<img src="/icons/xls-file.png" />}
-                        onClick={() => handleExport("xlsx")}
+                        onClick={() => openExportPopup("xlsx")}
                     >
                         XLS
                     </Button>
@@ -577,7 +655,7 @@ const SearchPerson = () => {
                         className="!border-gold !text-primary"
                         size="small"
                         startIcon={<img src="/icons/csv-file.png" />}
-                        onClick={() => handleExport("csv")}
+                        onClick={() => openExportPopup("csv")}
                     >
                         CSV
                     </Button>
@@ -586,7 +664,7 @@ const SearchPerson = () => {
                         className="!border-gold !text-primary"
                         size="small"
                         startIcon={<img src="/icons/pdf-file.png" />}
-                        onClick={() => handleExport("pdf")}
+                        onClick={() => openExportPopup("pdf")}
                     >
                         PDF
                     </Button>
@@ -612,6 +690,30 @@ const SearchPerson = () => {
                 imgUrls={viewerImages}
                 onClose={() => setViewerOpen(false)}
             />
+            <Dialog open={openExportDialog} onClose={() => setOpenExportDialog(false)}>
+                <DialogTitle>กำหนดจำนวนรายการที่ต้องการส่งออก</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        label="จำนวนรายการ"
+                        type="number"
+                        fullWidth
+                        value={exportLimit}
+                        onChange={(e) => setExportLimit(Number(e.target.value))}
+                        inputProps={{ min: 1 }}
+                        sx={{ mt: 1 }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenExportDialog(false)}>ยกเลิก</Button>
+                    <Button
+                        onClick={handleConfirmExport}
+                        variant="contained"
+                        className="!bg-primary hover:!bg-primary-dark"
+                    >
+                        ตกลง
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 };
