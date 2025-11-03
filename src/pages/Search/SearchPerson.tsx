@@ -232,7 +232,7 @@ const SearchPerson = () => {
                         }}
                     >
                         <ImageTag
-                            tag={params.row.vehicle_data?.vehicle_group_name_en ?? null}
+                            tag={params.row.vehicle_group_name_en ?? null}
                             img={overviewImg}
                             disableViewImg
                         />
@@ -434,6 +434,7 @@ const SearchPerson = () => {
             exportData(prepareExportRows(rows), type, "face_data");
         }
     };
+
     return (
         <>
             <Box>

@@ -61,6 +61,10 @@ const PersonInfoForm = () => {
         deleted: false,
         start_date: "",
         end_date: "",
+        create_name: "",
+        update_name: "",
+        created_at: "",
+        updated_at: "",
     });
 
     // ✅ เช็คสถานะ terminate
@@ -467,6 +471,42 @@ const PersonInfoForm = () => {
 
     };
 
+    const handleChangeCard = async (uid: string) => {
+        dialog.confirm("คุณต้องการเปลี่ยนบัตรใหม่ใช่หรือไม่?").then(async (res) => {
+            if (!res) return;
+            try {
+                dialog.loading();
+                const response = await MemberApi.changeCard(uid);
+
+                if (response.success) {
+                    dialog.success("เปลี่ยนบัตรสำเร็จ");
+
+                    // ✅ Reload ข้อมูลใหม่จาก backend
+                    const reload = await MemberApi.getById(uid);
+                    if (reload.success && reload.data) {
+                        const person = reload.data[0];
+                        setForm(person);
+
+                        // ✅ update รูปถ้ามี
+                        if (person.image_url) {
+                            setSelectedImage(person.image_url);
+                        }
+
+                        // ✅ update รายการรถ
+                        setCarRows(person.vehicles || []);
+                    }
+                } else {
+                    dialog.error(response.message || "ไม่สามารถเปลี่ยนบัตรได้");
+                }
+            } catch (err) {
+                console.error("Change card error:", err);
+                dialog.error("เกิดข้อผิดพลาดในการเปลี่ยนบัตร");
+            } finally {
+                dialog.close();
+            }
+        });
+    };
+
     const carColumns: GridColDef[] = [
         {
             field: 'rownumb',
@@ -777,19 +817,19 @@ const PersonInfoForm = () => {
                         <div className="flex flex-wrap -m-2">
                             <div className="w-full sm:w-1/2 p-2">
                                 <InputLabel shrink>ผู้บันทึกข้อมูล</InputLabel>
-                                <TextField disabled />
+                                <TextField disabled value={form.create_name} />
                             </div>
                             <div className="w-full sm:w-1/2 p-2">
                                 <InputLabel shrink>วันที่บันทึกข้อมูล</InputLabel>
-                                <DatePicker disabled />
+                                <DatePicker disabled value={dayjs(form.created_at)} />
                             </div>
                             <div className="w-full sm:w-1/2 p-2">
                                 <InputLabel shrink>ผู้แก้ไขข้อมูล</InputLabel>
-                                <TextField disabled />
+                                <TextField disabled value={form.update_name} />
                             </div>
                             <div className="w-full sm:w-1/2 p-2">
                                 <InputLabel shrink>วันที่แก้ไขข้อมูล</InputLabel>
-                                <DatePicker disabled />
+                                <DatePicker disabled value={dayjs(form.updated_at)} />
                             </div>
                         </div>
                     </Paper>
@@ -875,7 +915,8 @@ const PersonInfoForm = () => {
                             </div>
                             {uid && <>
                                 <div className="w-full flex gap-2 justify-end p-2 mt-auto">
-                                    <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<EditSquareIcon fontWeight="small" />} disabled={isTerminated}>
+                                    <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<EditSquareIcon fontWeight="small" />} disabled={isTerminated}
+                                        onClick={() => handleChangeCard(uid)}>
                                         เปลี่ยนบัตร
                                     </Button>
                                     <Button variant="outlined" size="small" className='!border-gold !text-primary !bg-white' startIcon={<CancelOutlinedIcon fontWeight="small" />} disabled={isTerminated}

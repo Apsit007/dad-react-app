@@ -31,7 +31,9 @@ const columnsExport = [
   { field: 'region_th', headerName: 'หมวดจังหวัด' },
   { field: 'vehicle_make', headerName: 'ยี่ห้อ' },
   { field: 'vehicle_color_th', headerName: 'สี' },
+  { field: 'vehicle_group_th', headerName: 'ประเภทกลุ่มรถ' },
   { field: 'name', headerName: 'ชื่อ-นามสกุล' },
+  { field: 'member_group_th', headerName: 'ประเภทบุคคล' },
   { field: 'department_name', headerName: 'หน่วยงาน' },
 ];
 
@@ -105,7 +107,7 @@ const VideoResultPage = () => {
       const processedRows = rows.map((r, i) => ({
         ...r,
         licensePlate: `${r.plate || ""} ${r.region_th || ""}`,
-        name: `${r.member_firstname || ""} ${r.member_lastname || ""}`,
+        name: `${r.member_firstname || ""} ${r.member_lastname || ""}`.trim() || "-",
       }));
       exportData(processedRows, "pdf", "video_result_list", columnsExport);
     } else {
@@ -117,10 +119,12 @@ const VideoResultPage = () => {
   const prepareExportRows = (rows: any[]) => {
     return rows.map((r, i) => ({
       ลำดับ: i + 1,
-      "เลขทะเบียน": `${r.plate ?? '-'} ${r.region_th ?? ''}`.trim(),
+      "เลขทะเบียน": `${r.plate ?? '-'} ${r.region_th ?? ''}`.trim() || "-",
       "ยี่ห้อ": r.vehicle_make ?? "-",
       "สี": r.vehicle_color_th ?? "-",
+      "ประเภทกลุ่มรถ": r.vehicle_group_th ?? "-",
       "ชื่อ-นามสกุล": `${r.member_firstname ?? ''} ${r.member_lastname ?? ''}`.trim() || "-",
+      "ประเภทบุคคล": r.member_group_th ?? "-",
       "หน่วยงาน": r.department_name ?? "-",
       "วันที่บันทึก": r.created_at ? dayjs(r.created_at).format("DD/MM/YYYY HH:mm:ss") : "-",
     }));

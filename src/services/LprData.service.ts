@@ -59,6 +59,7 @@ export interface LprRecord {
     datetime_out: string;
     lprId: string;
     acces_config: GateAccessValue;
+    access_permission: string;
 }
 
 

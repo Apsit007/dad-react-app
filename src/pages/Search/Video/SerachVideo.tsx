@@ -491,7 +491,10 @@ const SerachVideo = () => {
         </AccordionDetails>
       </Accordion>
 
-      <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+
+      {/* ไม่ต้องมี export */}
+      
+      {/* <Stack direction="row" spacing={1} sx={{ my: 2 }}>
         <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/txt-file.png' />}
           onClick={() => exportData(prepareExportRows(rows), "txt", "upload video")}>TXT</Button>
         <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/xls-file.png' />}
@@ -502,7 +505,7 @@ const SerachVideo = () => {
         <Typography variant="body2" sx={{ alignSelf: 'center' }}>
           ผลการค้นหา : {rowCount} รายการ
         </Typography>
-      </Stack>
+      </Stack> */}
 
       <div className="flex-1 flex flex-col ">
         <DataTable

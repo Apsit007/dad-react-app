@@ -30,6 +30,10 @@ export interface MemberPayload {
     updater_uid: string;
     start_date: string;
     end_date: string;
+    update_name?: string;
+    create_name?: string;
+    created_at?: string;
+    updated_at?: string;
 
 }
 
@@ -175,6 +179,20 @@ export const MemberApi = {
     terminate: async (uid: string): Promise<ApiResponse<null>> => {
         const url = `/smartgate-api/v0/members/terminate?uids=${uid}`;
         const res = await http.post<ApiResponse<null>>(url);
+        return res.data;
+    },
+    // 👉 Change Card
+    changeCard: async (member_uid: string): Promise<ApiResponse<{
+        member_uid: string;
+        new_card_code: string;
+        new_card_number: string;
+    }>> => {
+        const url = `/smartgate-api/v0/members/change-card`;
+        const res = await http.post<ApiResponse<{
+            member_uid: string;
+            new_card_code: string;
+            new_card_number: string;
+        }>>(url, { member_uid });
         return res.data;
     },
 };

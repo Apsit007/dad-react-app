@@ -235,6 +235,8 @@ const exportPdf = async (
       useCols.map(async (f) => {
         const raw = r[f];
         const value = safeValue(raw);
+
+        // 🖼️ ถ้าเป็น field รูปภาพ (มี URL)
         if (
           (f.toLowerCase().includes("image") ||
             f.toLowerCase().includes("face") ||
@@ -244,11 +246,44 @@ const exportPdf = async (
         ) {
           try {
             const base64 = await getBase64FromUrl(raw);
-            return { image: base64, fit: [45, 45], alignment: "center" };
+
+            // 🏷️ ใช้ tag จากข้อมูลจริงของ row
+            let tagLabel = "";
+            if (f.toLowerCase().includes("overview")) {
+              tagLabel = r.vehicle_group_name_en || "";
+            } else if (f.toLowerCase().includes("driver")) {
+              tagLabel = r.driver_group_name_en || "";
+            } else if (f.toLowerCase().includes("fdlib")) {
+              // ถ้ามี member group name ใช้แทน
+              tagLabel =
+                r.member_data?.member_group_name_en ||
+                r.driver_group_name_en ||
+                "Visitor";
+            }
+
+            return {
+              stack: [
+                {
+                  image: base64,
+                  fit: [45, 45],
+                  alignment: "center",
+                  margin: [0, 0, 0, 2],
+                },
+                {
+                  text: tagLabel || "Visitor",
+                  fontSize: 7,
+                  color: "#444",
+                  alignment: "center",
+                },
+              ],
+              alignment: "center",
+            };
           } catch {
             return { text: "-", alignment: "center" };
           }
         }
+
+        // 🔹 กรณีทั่วไป (ไม่ใช่รูปภาพ)
         return { text: value, style: "tableBody", alignment: "center" };
       })
     );

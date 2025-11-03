@@ -24,21 +24,25 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ open, imgUrls, onClose }) => 
 
     const content = (
         <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm "
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
             onClick={onClose}
         >
             {/* กล่องรูปภาพ */}
             <div
                 className="flex flex-wrap gap-4 justify-center items-center max-h-[90%] max-w-[90%] overflow-auto"
-                onClick={(e) => e.stopPropagation()} // กันคลิกทะลุ
+                onClick={(e) => e.stopPropagation()}
             >
                 {imgUrls.map((url, i) => (
-                    <img
+                    <div
                         key={i}
-                        src={url}
-                        alt={`preview-${i}`}
-                        className="max-h-[80vh] max-w-[30%] object-contain rounded-lg shadow-lg"
-                    />
+                        className="flex items-center justify-center bg-neutral-900 rounded-lg shadow-lg w-[450px] h-[450px]"
+                    >
+                        <img
+                            src={url}
+                            alt={`preview-${i}`}
+                            className="max-w-full max-h-full object-contain"
+                        />
+                    </div>
                 ))}
             </div>
 
@@ -51,7 +55,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ open, imgUrls, onClose }) => 
             </button>
         </div>
     );
-
     return createPortal(content, document.body);
 };
 

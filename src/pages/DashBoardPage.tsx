@@ -202,18 +202,18 @@ const DashBoardPage = () => {
             ),
         },
         {
-            field: 'access_config',
+            field: 'access_permission',
             headerName: 'เงื่อนไขเปิดไม้กั้น',
             flex: 1.5,
             headerAlign: 'center',
             align: 'center',
-            renderCell: (params) => (
-                <div className='flex flex-col justify-center items-center h-full'>
-                    <Typography variant="body2">บัตร {params.value.member ? <CheckIcon fontWeight="small" /> : <CloseIcon fontWeight="small" />}</Typography>
-                    <Typography variant="body2">ใบหน้าบุคคล {params.value.face ? <CheckIcon fontWeight="small" /> : <CloseIcon fontWeight="small" />}</Typography>
-                    <Typography variant="body2">ป้ายทะเบียน {params.value.plate ? <CheckIcon fontWeight="small" /> : <CloseIcon fontWeight="small" />}</Typography>
-                </div>
-            ),
+            // renderCell: (params) => (
+            //     <div className='flex flex-col justify-center items-center h-full'>
+            //         <Typography variant="body2">บัตร {params.value.member ? <CheckIcon fontWeight="small" /> : <CloseIcon fontWeight="small" />}</Typography>
+            //         <Typography variant="body2">ใบหน้าบุคคล {params.value.face ? <CheckIcon fontWeight="small" /> : <CloseIcon fontWeight="small" />}</Typography>
+            //         <Typography variant="body2">ป้ายทะเบียน {params.value.plate ? <CheckIcon fontWeight="small" /> : <CloseIcon fontWeight="small" />}</Typography>
+            //     </div>
+            // ),
         },
         {
             field: 'images',
