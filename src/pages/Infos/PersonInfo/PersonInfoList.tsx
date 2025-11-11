@@ -158,29 +158,49 @@ const PersonInfoList = () => {
         loadData();
     }, [])
 
-    const loadData = async (page = 1, limit = 10) => {
-        try {
-            const res = await MemberApi.search(page, limit, "id", false, {
-                firstname: firstname ? `${firstname}*` : undefined,
-                lastname: lastname ? `${lastname}*` : undefined,
-                dep_uid: dep || undefined,
-                member_group_id: memberGroupId || undefined,
-                start_date: createdStart ? dayjs(createdStart).startOf("day").format('YYYY-MM-DD HH:mm:ss') : undefined,
-                end_date: createdEnd ? dayjs(createdEnd).endOf("day").format('YYYY-MM-DD HH:mm:ss') : undefined,
-                member_status: status || undefined,
-            });
-
-            if (res.success) {
-                setRows(res.data || []);
-                setRowCount(res.pagination?.countAll || 0);
-            } else {
-                setRows([]);
-                setRowCount(0);
+    // ✅ โหลดข้อมูล โดยรับ filters จากภายนอก
+    const loadData = useCallback(
+        async (
+            page = 1,
+            limit = 10,
+            filters?: {
+                firstname?: string;
+                lastname?: string;
+                dep?: string | null;
+                member_group_id?: number | "";
+                createdStart?: Dayjs | null;
+                createdEnd?: Dayjs | null;
+                status?: string;
             }
-        } catch (err) {
-            console.error("❌ Load members error:", err);
-        }
-    };
+        ) => {
+            try {
+                const res = await MemberApi.search(page, limit, "id", false, {
+                    firstname: filters?.firstname ? `${filters.firstname}*` : undefined,
+                    lastname: filters?.lastname ? `${filters.lastname}*` : undefined,
+                    dep_uid: filters?.dep || undefined,
+                    member_group_id: filters?.member_group_id || undefined,
+                    start_date: filters?.createdStart
+                        ? dayjs(filters.createdStart).startOf("day").format("YYYY-MM-DD HH:mm:ss")
+                        : undefined,
+                    end_date: filters?.createdEnd
+                        ? dayjs(filters.createdEnd).endOf("day").format("YYYY-MM-DD HH:mm:ss")
+                        : undefined,
+                    member_status: filters?.status || undefined,
+                });
+
+                if (res.success) {
+                    setRows(res.data || []);
+                    setRowCount(res.pagination?.countAll || 0);
+                } else {
+                    setRows([]);
+                    setRowCount(0);
+                }
+            } catch (err) {
+                console.error("❌ Load members error:", err);
+            }
+        },
+        []
+    );
 
 
 
@@ -203,20 +223,37 @@ const PersonInfoList = () => {
         }
     };
 
-    // 👉 กดค้นหา
+    // 👉 ค้นหา
     const handleSearch = () => {
-        setPaginationModel({ page: 0, pageSize: paginationModel.pageSize }); // reset page = 0
-        loadData(1, paginationModel.pageSize);
+        setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
+        loadData(1, paginationModel.pageSize, {
+            firstname,
+            lastname,
+            dep,
+            member_group_id: memberGroupId,
+            createdStart,
+            createdEnd,
+            status,
+        });
     };
 
-    // 👉 เปลี่ยนหน้า pagination
+    // 👉 เปลี่ยนหน้า
     const handlePageChange = (model: GridPaginationModel) => {
         setPaginationModel(model);
-        loadData(model.page + 1, model.pageSize);
+        loadData(model.page + 1, model.pageSize, {
+            firstname,
+            lastname,
+            dep,
+            member_group_id: memberGroupId,
+            createdStart,
+            createdEnd,
+            status,
+        });
     };
 
     // 👉 เคลียร์ค่า filter
-    const handleClear = () => {
+    // 👉 เคลียร์ filter ทั้งหมด
+    const handleClear = async () => {
         setFirstname("");
         setLastname("");
         setStatus("");
@@ -227,7 +264,19 @@ const PersonInfoList = () => {
         setRows([]);
         setRowCount(0);
         setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
+
+        // ✅ โหลดใหม่ด้วยค่า filters ว่างทั้งหมด
+        await loadData(1, paginationModel.pageSize, {
+            firstname: "",
+            lastname: "",
+            dep: null,
+            member_group_id: "",
+            createdStart: null,
+            createdEnd: null,
+            status: "",
+        });
     };
+
 
     // --- Table Columns Definition ---
     const columns: GridColDef[] = [

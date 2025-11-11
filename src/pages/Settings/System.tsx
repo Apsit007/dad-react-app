@@ -300,17 +300,17 @@ const SystemSettings = () => {
         <hr />
         <div className='w-full mt-3'>
           <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
-            เปิดไม้กั้น กรณีต้องห้าม
+            เงื่อนไขการเข้าออกพื้นที่ กรณีต้องห้าม
           </Typography>
         </div>
         <FormGroup row>
           <FormControlLabel
             control={<Checkbox checked={blacklistOptions.allow_enter} onChange={handleChangeBlacklist("allow_enter")} />}
-            label="ขาเข้า"
+            label="เปิดไม้กั้นขาเข้า"
           />
           <FormControlLabel
             control={<Checkbox checked={blacklistOptions.allow_exit} onChange={handleChangeBlacklist("allow_exit")} />}
-            label="ขาออก"
+            label="เปิดไม้กั้นขาออก"
           />
 
         </FormGroup>

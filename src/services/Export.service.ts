@@ -1,8 +1,9 @@
 ﻿// src/services/Export.service.ts
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
-import pdfMake from "pdfmake/build/pdfmake";
-
+// import pdfMake from "pdfmake/build/pdfmake";
+import pdfMake from "pdfmake/build/pdfmake.min";
+import JSZip from "jszip"; // ✅ npm i jszip
 const THAI_FONT_FAMILY = "NotoSansThai";
 const THAI_FONT_FILE_NAME = "NotoSansThai.ttf";
 const THAI_FONT_URL = new URL("../assets/fonts/ttf/NotoSansThai.ttf", import.meta.url).href;
@@ -14,6 +15,8 @@ const THAI_FONT_DEFINITION = {
   italics: THAI_FONT_FILE_NAME,
   bolditalics: THAI_FONT_FILE_NAME,
 };
+
+const MAX_ROWS_PER_BATCH = 300;
 
 const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
   let binary = "";
@@ -154,7 +157,12 @@ export const exportData = async (
     }
 
     case "pdf": {
-      await exportPdf(rows, fileName, columns, paginationInfo);
+      // await exportPdf(rows, fileName, columns, paginationInfo);
+      if (rows.length > 2000) {
+        await exportLargePdf(rows, fileName, columns, paginationInfo);
+      } else {
+        await exportPdf(rows, fileName, columns, paginationInfo);
+      }
       break;
     }
 
@@ -250,14 +258,15 @@ const exportPdf = async (
             // 🏷️ ใช้ tag จากข้อมูลจริงของ row
             let tagLabel = "";
             if (f.toLowerCase().includes("overview")) {
-              tagLabel = r.vehicle_group_name_en || "";
-            } else if (f.toLowerCase().includes("driver")) {
-              tagLabel = r.driver_group_name_en || "";
-            } else if (f.toLowerCase().includes("fdlib")) {
+              tagLabel = r.vehicle_group_name_en || r.vehicle_group_en || "";
+            } else if (f.toLowerCase().includes("driver") || f.toLowerCase().includes("face")) {
+              tagLabel = r.driver_group_name_en || r.driver_group_en || "";
+            } else if (f.toLowerCase().includes("fdlib") || f.toLowerCase().includes("member")) {
               // ถ้ามี member group name ใช้แทน
               tagLabel =
                 r.member_data?.member_group_name_en ||
                 r.driver_group_name_en ||
+                r.member_group_en ||
                 "Visitor";
             }
 
@@ -265,7 +274,8 @@ const exportPdf = async (
               stack: [
                 {
                   image: base64,
-                  fit: [45, 45],
+                  width: 45,
+                  height: 45,
                   alignment: "center",
                   margin: [0, 0, 0, 2],
                 },
@@ -277,6 +287,7 @@ const exportPdf = async (
                 },
               ],
               alignment: "center",
+              margin: [0, 2, 0, 2],
             };
           } catch {
             return { text: "-", alignment: "center" };
@@ -339,10 +350,6 @@ const exportPdf = async (
     pageSize: "A4",
     pageOrientation: "landscape",
     pageMargins: [20, 80, 20, 20],
-    // ✅ ใช้ function ได้ใน 0.3.x แล้ว
-    // pageMargins: (pageNumber: number) => {
-    //   return pageNumber === 1 ? [20, 80, 20, 20] : [20, 20, 20, 20];
-    // },
 
     header: (pageNumber: number) => {
       if (pageNumber === 1) {
@@ -357,26 +364,194 @@ const exportPdf = async (
 
     content: [
       {
+        stack: [
+          {
+            table: {
+              headerRows: 1,
+              widths,
+              body: tableBody,
+              dontBreakRows: true, // ✅ บังคับไม่ให้แยกแถว
+            },
+            layout: {
+              hLineWidth: () => 0.5,
+              vLineWidth: () => 0.5,
+              paddingLeft: () => 2,
+              paddingRight: () => 2,
+              paddingTop: () => 3,
+              paddingBottom: () => 3,
+              fillColor: (rowIndex: number) =>
+                rowIndex === 0 ? "#f5f5f5" : null,
+              minCellHeight: 65, // ✅ ความสูงเท่ากันทุกแถว
+              dontBreakRows: true,
+              keepWithHeaderRows: 1, // ✅ ยกทั้งแถวขึ้นหน้าถัดไป
+            },
+          },
+        ],
+        // ✅ สำคัญ! ตัวนี้ทำให้ pdfMake รู้ว่าห้ามแยก stack นี้ข้ามหน้า
+        dontBreakRows: true,
+        keepTogether: true,
+      },
+    ],
+
+    defaultStyle: {
+      font: THAI_FONT_FAMILY,
+      fontSize: 8,
+      alignment: "center",
+      valign: "middle",
+    },
+  };
+
+
+  (pdfMake as any).createPdf(docDefinition).download(`${fileName}.pdf`);
+};
+
+// ✅ ฟังก์ชันหลัก
+export const exportLargePdf = async (
+  rows: any[],
+  fileName: string,
+  columns?: { field: string; headerName?: string; width?: number }[],
+  paginationInfo?: any,
+  onProgress?: (current: number, total: number) => void
+) => {
+  await ensureThaiFontLoaded();
+
+  const totalParts = Math.ceil(rows.length / MAX_ROWS_PER_BATCH);
+  const zip = new JSZip(); // ✅ ZIP object
+
+  for (let i = 0; i < rows.length; i += MAX_ROWS_PER_BATCH) {
+    const partRows = rows.slice(i, i + MAX_ROWS_PER_BATCH);
+    const partIndex = Math.floor(i / MAX_ROWS_PER_BATCH) + 1;
+    console.log(`📄 สร้าง PDF ส่วนที่ ${partIndex}/${totalParts} ...`);
+    onProgress?.(partIndex - 1, totalParts);
+
+    try {
+      const pdfBytes = await createPartialPdf(partRows, fileName, columns, paginationInfo, partIndex);
+      // ✅ แปลง buffer ให้ชัดเจน
+      const arrayBuffer = pdfBytes.buffer as ArrayBuffer;
+      zip.file(`${fileName}_part${partIndex}.pdf`, arrayBuffer, { binary: true });
+      onProgress?.(partIndex, totalParts);
+    } catch (err) {
+      console.error(`❌ สร้าง PDF ส่วนที่ ${partIndex} ล้มเหลว`, err);
+    }
+  }
+
+  console.log("📦 กำลังบีบอัด ZIP ...");
+  const zipBlob = await zip.generateAsync({
+    type: "blob",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 }, // 1=เร็ว, 9=เล็กสุด
+  });
+  const now = dayjs().format("YYYYMMDD_HHmmss");
+  const zipName = `${fileName}_${now}.zip`;
+
+  // ✅ ดาวน์โหลดไฟล์ ZIP
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = zipName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  console.log("✅ สร้าง ZIP สำเร็จ:", zipName);
+  onProgress?.(totalParts, totalParts);
+};
+
+
+// ✅ ฟังก์ชันย่อย สร้าง PDF ย่อยแต่ละชุด (return Uint8Array)
+const createPartialPdf = async (
+  rows: any[],
+  fileName: string,
+  columns?: { field: string; headerName?: string; width?: number }[],
+  paginationInfo?: any,
+  partIndex?: number
+): Promise<Uint8Array> => {
+  await ensureThaiFontLoaded();
+
+  const safeValue = (v: any): string => {
+    if (v === undefined || v === null || v === "") return "-";
+    return String(v);
+  };
+
+  const filteredCols =
+    columns?.filter(
+      (c) => !["actions", "rownumb"].includes(c.field.toLowerCase())
+    ) ?? Object.keys(rows[0]).map((f) => ({ field: f, headerName: f }));
+
+  const headers = ["ลำดับ", ...filteredCols.map((c) => c.headerName || c.field)];
+  const useCols = filteredCols.map((c) => c.field);
+
+  const tableBody: any[] = [
+    headers.map((h) => ({ text: h, style: "tableHeader", alignment: "center" })),
+  ];
+
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const cells = useCols.map((f) => ({
+      text: safeValue(r[f]),
+      alignment: "center",
+      style: "tableBody",
+    }));
+    tableBody.push([{ text: String(i + 1), alignment: "center" }, ...cells]);
+  }
+
+  const widths = [30, ...filteredCols.map(() => "*")];
+
+  const now = dayjs().format("DD/MM/YYYY HH:mm:ss");
+  const docDefinition = {
+    pageSize: "A4",
+    pageOrientation: "landscape",
+    pageMargins: [20, 70, 20, 20],
+    header: [
+      {
+        text: `รายงาน: ${fileName} (ส่วนที่ ${partIndex})`,
+        bold: true,
+        fontSize: 11,
+        margin: [20, 15, 0, 0],
+      },
+      { text: `วันที่: ${now}`, fontSize: 9, margin: [20, 0, 0, 5] },
+    ],
+    content: [
+      {
         table: {
           headerRows: 1,
           widths,
           body: tableBody,
         },
         layout: {
-          hLineWidth: () => 0.5,
-          vLineWidth: () => 0.5,
-          paddingLeft: () => 2,
-          paddingRight: () => 2,
-          paddingTop: () => 3,
-          paddingBottom: () => 3,
+          fillColor: (rowIndex: number) => (rowIndex === 0 ? "#f5f5f5" : null),
+          hLineWidth: () => 0.3,
+          vLineWidth: () => 0.3,
         },
       },
     ],
     defaultStyle: {
-      font: THAI_FONT_FAMILY,
+      font: "NotoSansThai",
       fontSize: 8,
     },
   };
 
-  (pdfMake as any).createPdf(docDefinition).download(`${fileName}.pdf`);
+  // ✅ ป้องกันการค้าง: timeout 45s + reject ได้
+  console.log(`🧩 เริ่มสร้าง PDF ส่วนที่ ${partIndex}, จำนวนแถว ${rows.length}`);
+
+  return new Promise((resolve, reject) => {
+    const pdf = (pdfMake as any).createPdf(docDefinition);
+    const timeout = setTimeout(() => {
+      reject(new Error(`Timeout while generating part ${partIndex}`));
+    }, 120000);
+
+    try {
+      pdf.getBlob((blob: Blob) => {
+        clearTimeout(timeout);
+        blob.arrayBuffer().then((buffer) => {
+          resolve(new Uint8Array(buffer));
+        });
+      });
+    } catch (err) {
+      clearTimeout(timeout);
+      reject(err);
+    }
+  });
 };
+

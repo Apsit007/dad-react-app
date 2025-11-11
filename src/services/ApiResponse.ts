@@ -11,5 +11,6 @@ export interface ApiResponse<T> {
         count: number;
         countAll: number;
     };
+    conflictingFields: any;
     data: T;
 }

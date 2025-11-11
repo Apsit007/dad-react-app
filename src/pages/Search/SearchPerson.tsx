@@ -8,7 +8,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import DataTable from '../../components/DataTable';
 import { type GridColDef, type GridPaginationModel } from '@mui/x-data-grid';
 import ImageTag from '../../components/ImageTag';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import dialog from '../../services/dialog.service';
 import dayjs, { Dayjs } from 'dayjs';
 import { FaceDataApi, type FaceData } from '../../services/FaceData.service';
@@ -65,6 +65,7 @@ const SearchPerson = () => {
 
     const [viewerOpen, setViewerOpen] = useState(false);
     const [viewerImages, setViewerImages] = useState<string[]>([]);
+    const [viewerImagesType, setViewerImagesType] = useState<string[]>([]);
 
     const [openExportDialog, setOpenExportDialog] = useState(false);
     const [exportType, setExportType] = useState<"txt" | "xlsx" | "csv" | "pdf" | null>(null);
@@ -119,10 +120,10 @@ const SearchPerson = () => {
                         vehicle_make_name_en: r.vehicle_make_name_en ?? "-",
                         vehicle_color_name_th: r.vehicle_color_name_th ?? "-",
                         date_time_in: r.date_time_in
-                            ? dayjs(r.date_time_in).format("DD/MM/YYYY HH:mm:ss")
+                            ? ` ${dayjs(r.date_time_in).format("DD/MM/YYYY")}\n${dayjs(r.date_time_in).format("HH:mm:ss")}`
                             : "-",
                         date_time_out: r.date_time_out
-                            ? dayjs(r.date_time_out).format("DD/MM/YYYY HH:mm:ss")
+                            ? ` ${dayjs(r.date_time_out).format("DD/MM/YYYY")}\n${dayjs(r.date_time_out).format("HH:mm:ss")}`
                             : "-",
                     }));
 
@@ -142,31 +143,48 @@ const SearchPerson = () => {
         }
     };
 
-    const loadData = async (page = 1, limit = 10, imageUrl?: string) => {
-        try {
-            const params = {
-                page,
-                limit,
-                orderBy: "id.desc",
-                firstname: firstname ? `${firstname}*` : undefined,
-                lastname: lastname ? `${lastname}*` : undefined,
-                member_group_id: memberGroupId || undefined,
-                direction: sDirection || undefined,
-                image_url: imageUrl || undefined, // ✅ เพิ่มตรงนี้
-                start_date: startDate ? startDate.toISOString() : undefined,
-                end_date: endDate ? endDate.toISOString() : undefined,
-            };
-
-            const res = await FaceDataApi.search(params);
-            if (res.success) {
-                setRows(res.data || []);
-                setRowCount(res.pagination?.countAll || 0);
+    // ✅ ใช้ useCallback เพื่อให้ loadData อ้างอิง state ล่าสุดเสมอ
+    const loadData = useCallback(
+        async (
+            page = 1,
+            limit = 10,
+            filters?: {
+                firstname?: string;
+                lastname?: string;
+                member_group_id?: number | "";
+                direction?: string;
+                start_date?: Dayjs | null;
+                end_date?: Dayjs | null;
+                image_url?: string;
             }
-        } catch (err) {
-            console.error("❌ Load face-data error:", err);
-            dialog.error("โหลดข้อมูลไม่สำเร็จ");
-        }
-    };
+        ) => {
+            try {
+                const params = {
+                    page,
+                    limit,
+                    orderBy: "id.desc",
+                    firstname: filters?.firstname ? `${filters.firstname}*` : undefined,
+                    lastname: filters?.lastname ? `${filters.lastname}*` : undefined,
+                    member_group_id: filters?.member_group_id || undefined,
+                    direction: filters?.direction || undefined,
+                    image_url: filters?.image_url || undefined,
+                    start_date: filters?.start_date ? filters.start_date.toISOString() : undefined,
+                    end_date: filters?.end_date ? filters.end_date.toISOString() : undefined,
+                };
+
+                const res = await FaceDataApi.search(params);
+                if (res.success) {
+                    setRows(res.data || []);
+                    setRowCount(res.pagination?.countAll || 0);
+                }
+            } catch (err) {
+                console.error("❌ Load face-data error:", err);
+                dialog.error("โหลดข้อมูลไม่สำเร็จ");
+            }
+        },
+        []
+    );
+
 
     useEffect(() => {
         loadData(1, paginationModel.pageSize);
@@ -230,7 +248,15 @@ const SearchPerson = () => {
             setPaginationModel(newModel);
 
             // ✅ เรียก loadData พร้อมส่ง image_url ถ้ามี
-            await loadData(1, newModel.pageSize, imageUrl);
+            await loadData(1, newModel.pageSize, {
+                firstname,
+                lastname,
+                member_group_id: memberGroupId,
+                direction: sDirection,
+                start_date: startDate,
+                end_date: endDate,
+                image_url: imageUrl,
+            });
         } catch (err) {
             console.error("❌ Search error:", err);
             dialog.error("เกิดข้อผิดพลาดในการค้นหา");
@@ -242,11 +268,18 @@ const SearchPerson = () => {
     // 👉 เปลี่ยนหน้า pagination
     const handlePageChange = (model: GridPaginationModel) => {
         setPaginationModel(model);
-        loadData(model.page + 1, model.pageSize, uploadedImageUrl);
+        loadData(model.page + 1, model.pageSize, {
+            firstname,
+            lastname,
+            member_group_id: memberGroupId,
+            direction: sDirection,
+            start_date: startDate,
+            end_date: endDate,
+            image_url: uploadedImageUrl,
+        });
     };
 
-    // 👉 clear filter
-    const handleClear = () => {
+    const handleClear = async () => {
         setFirstname("");
         setLastname("");
         setMemberGroupId("");
@@ -255,12 +288,20 @@ const SearchPerson = () => {
         setEndDate(null);
         setRows([]);
         setRowCount(0);
+        clearImage();
+        setUploadedImageUrl(undefined);
         setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
 
-        clearImage();
-        setUploadedImageUrl(undefined); // ✅ ล้าง URL ที่อัปโหลดไว้ด้วย
-
-        loadData(1, paginationModel.pageSize);
+        // ✅ โหลดใหม่ด้วย params ที่ว่าง ไม่พึ่ง state เดิมเลย
+        await loadData(1, paginationModel.pageSize, {
+            firstname: "",
+            lastname: "",
+            member_group_id: "",
+            direction: "",
+            start_date: null,
+            end_date: null,
+            image_url: undefined,
+        });
     };
 
     // --- Data for Table ---
@@ -294,7 +335,14 @@ const SearchPerson = () => {
                 const overviewImg = params.row.overview_image ?? "";
                 const driverImg = params.row.driver_image_url ?? "";
                 const memberImg = params.row.fdlib_url ?? "";
-                const imgList = [overviewImg, driverImg, memberImg].filter(Boolean);
+                const imgList = [overviewImg, driverImg, memberImg]
+
+
+                const vehicleType = params.row.vehicle_group_name_en;
+                const driverType = params.row.driver_group_name_en;
+                const memberType = params.row.driver_group_name_en;
+
+                const TypeList = [vehicleType, driverType, memberType]
 
                 return (
                     <div
@@ -302,6 +350,7 @@ const SearchPerson = () => {
                         onClick={() => {
                             if (imgList.length > 0) {
                                 setViewerImages(imgList);
+                                setViewerImagesType(TypeList)
                                 setViewerOpen(true);
                             }
                         }}
@@ -458,16 +507,16 @@ const SearchPerson = () => {
             ชื่อ: r.member_data
                 ? `${r.member_data.title ?? ""}${r.member_data.firstname ?? ""} ${r.member_data.lastname ?? ""}`.trim()
                 : "-",
+            ประเภทบุคคล: r.driver_group_name_th ?? "ทั่วไป",
             "% ความคล้ายคลึง":
                 r.similarity != null && !isNaN(Number(r.similarity))
                     ? `${(Number(r.similarity) * 100).toFixed(2)}%`
                     : "-",
-            ประเภทกลุ่มรถ: r.vehicle_data?.vehicle_group_name_th ?? "ทั่วไป",
             หน่วยงาน: r.member_data?.department_name ?? "-",
             เลขทะเบียน: r.plate ?? "-",
             ยี่ห้อ: r.vehicle_make_name_en ?? "-",
             สี: r.vehicle_color_name_th ?? "-",
-            ประเภทบุคคล: r.driver_group_name_th ?? "ทั่วไป",
+            ประเภทกลุ่มรถ: r.vehicle_group_name_th ?? "ทั่วไป",
             "วันเวลาเข้า": r.date_time_in ? dayjs(r.date_time_in).format("DD/MM/YYYY HH:mm:ss") : "-",
             "เวลาออก": r.date_time_out ? dayjs(r.date_time_out).format("DD/MM/YYYY HH:mm:ss") : "-",
         }));
@@ -688,6 +737,7 @@ const SearchPerson = () => {
             <ImageViewer
                 open={viewerOpen}
                 imgUrls={viewerImages}
+                title={viewerImagesType}
                 onClose={() => setViewerOpen(false)}
             />
             <Dialog open={openExportDialog} onClose={() => setOpenExportDialog(false)}>

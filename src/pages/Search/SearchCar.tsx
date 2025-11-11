@@ -99,9 +99,9 @@ const prepareExportRows = (rows: LprRecord[]) => {
             "จังหวัด": region,
             "ยี่ห้อ": r.vehicle_make ?? "-",
             "สี": r.vehicle_color_th ?? "-",
-            "ประเภทบุคคล": r.member_group_th ?? "ทั่วไป",
-            "ชื่อ-นามสกุล": fullname,
             "ประเภทกลุ่มรถ": r.vehicle_group_th ?? "ทั่วไป",
+            "ชื่อ-นามสกุล": fullname,
+            "ประเภทบุคคล": r.member_group_th ?? "ทั่วไป",
             "หน่วยงาน": r.department_name ?? "-",
             "วันเวลาเข้า": datetimeIn,
             "เวลาออก": datetimeOut,
@@ -135,6 +135,7 @@ const SearchCar = () => {
 
     const [viewerOpen, setViewerOpen] = useState(false);
     const [viewerImages, setViewerImages] = useState<string[]>([]);
+    const [viewerImagesType, setViewerImagesType] = useState<string[]>([]);
     // ✅ state เก็บ filter ล่าสุด
 
     const regions = useSelector(selectRegions);
@@ -165,6 +166,71 @@ const SearchCar = () => {
     };
 
     // ✅ เมื่อยืนยันใน popup
+    // const handleConfirmExport = async () => {
+    //     if (!exportLimit || exportLimit <= 0) {
+    //         dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
+    //         return;
+    //     }
+
+    //     try {
+    //         setLoading(true);
+
+    //         // ✅ รวม filter ปัจจุบันทั้งหมด
+    //         const params = {
+    //             plate_prefix: sPlatePrefix ? `${sPlatePrefix}*` : undefined,
+    //             plate_number: sPlateNumber ? `${sPlateNumber}*` : undefined,
+    //             region_code: sRegionCode || undefined,
+    //             vehicle_make: sVehicleMake || undefined,
+    //             vehicle_color: sVehicleColor || undefined,
+    //             direction: sDirection || undefined,
+    //             vehicle_group_id: sVehicleGroupId || undefined,
+    //             start_date: sStartDate ? sStartDate.startOf('minute').toISOString() : undefined,
+    //             end_date: sEndDate ? sEndDate.endOf('minute').toISOString() : undefined,
+    //             page: 1,
+    //             limit: exportLimit, // ✅ ใช้ค่าที่กรอก
+    //             orderBy: 'id.desc',
+    //         };
+
+    //         const res = await LprDataApi.searchVehicles(params);
+    //         if (!res.success) {
+    //             dialog.error("ไม่สามารถดึงข้อมูลสำหรับส่งออกได้");
+    //             return;
+    //         }
+
+    //         const data = res.data || [];
+    //         if (!data.length) {
+    //             dialog.warning("ไม่มีข้อมูลให้ส่งออก");
+    //             return;
+    //         }
+
+    //         // ✅ เตรียมข้อมูล export
+    //         if (exportType === "pdf") {
+    //             const processedRows = data.map((r, i) => ({
+    //                 ...r,
+    //                 licensePlate: r.plate
+    //                     ? `${r.plate}\n${r.region_th || "-"}`
+    //                     : "-",
+    //                 name: `${r.member_firstname || ""} ${r.member_lastname || ""}`.trim() ?? "-",
+    //                 datetime_out: r.datetime_out ?
+    //                     ` ${dayjs(r.datetime_out).format("DD/MM/YYYY")}\n${dayjs(r.datetime_out).format("HH:mm:ss")}`
+    //                     : "",
+    //                 datetime_in: r.datetime_in ?
+    //                     ` ${dayjs(r.datetime_in).format("DD/MM/YYYY")}\n${dayjs(r.datetime_in).format("HH:mm:ss")}`
+    //                     : "",
+    //             }));
+    //             exportData(processedRows, "pdf", "car_in/out_list", columnsExport);
+    //         } else {
+    //             exportData(prepareExportRows(data), exportType!, "car_in/out_list");
+    //         }
+    //     } catch (err) {
+    //         console.error("❌ Export error:", err);
+    //         dialog.error("เกิดข้อผิดพลาดในการส่งออก");
+    //     } finally {
+    //         setLoading(false);
+    //         setOpenExportDialog(false);
+    //     }
+    // };
+
     const handleConfirmExport = async () => {
         if (!exportLimit || exportLimit <= 0) {
             dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
@@ -173,9 +239,10 @@ const SearchCar = () => {
 
         try {
             setLoading(true);
+            const BATCH_SIZE = 1000;
 
             // ✅ รวม filter ปัจจุบันทั้งหมด
-            const params = {
+            const baseParams = {
                 plate_prefix: sPlatePrefix ? `${sPlatePrefix}*` : undefined,
                 plate_number: sPlateNumber ? `${sPlateNumber}*` : undefined,
                 region_code: sRegionCode || undefined,
@@ -183,39 +250,69 @@ const SearchCar = () => {
                 vehicle_color: sVehicleColor || undefined,
                 direction: sDirection || undefined,
                 vehicle_group_id: sVehicleGroupId || undefined,
-                start_date: sStartDate ? sStartDate.startOf('minute').toISOString() : undefined,
-                end_date: sEndDate ? sEndDate.endOf('minute').toISOString() : undefined,
-                page: 1,
-                limit: exportLimit, // ✅ ใช้ค่าที่กรอก
-                orderBy: 'id.desc',
+                start_date: sStartDate ? sStartDate.startOf("minute").toISOString() : undefined,
+                end_date: sEndDate ? sEndDate.endOf("minute").toISOString() : undefined,
+                orderBy: "id.desc",
             };
 
-            const res = await LprDataApi.searchVehicles(params);
-            if (!res.success) {
-                dialog.error("ไม่สามารถดึงข้อมูลสำหรับส่งออกได้");
-                return;
+            // 🔹 คำนวณจำนวนรอบที่ต้องยิง API
+            const totalRounds = Math.ceil(exportLimit / BATCH_SIZE);
+            const allData: any[] = [];
+
+
+            for (let i = 0; i < totalRounds; i++) {
+                const page = i + 1;
+                const remaining = exportLimit - allData.length;
+                const limit = Math.min(BATCH_SIZE, remaining);
+
+                const res = await LprDataApi.searchVehicles({
+                    ...baseParams,
+                    page,
+                    limit,
+                });
+
+                if (!res.success) {
+                    dialog.error(`เกิดข้อผิดพลาดในรอบที่ ${page}`);
+                    break;
+                }
+
+                const batch = res.data || [];
+                allData.push(...batch);
+
+                // dialog.info(`✅ โหลดข้อมูลรอบ ${page}/${totalRounds} สำเร็จ (${allData.length}/${exportLimit})`);
+
+                // ถ้าข้อมูลหมดก่อนถึง limit ให้หยุด
+                if (batch.length < BATCH_SIZE) break;
             }
 
-            const data = res.data || [];
-            if (!data.length) {
+            if (allData.length === 0) {
                 dialog.warning("ไม่มีข้อมูลให้ส่งออก");
                 return;
             }
 
             // ✅ เตรียมข้อมูล export
             if (exportType === "pdf") {
-                const processedRows = data.map((r, i) => ({
+                const processedRows = allData.map((r, i) => ({
                     ...r,
-                    licensePlate: r.plate
-                        ? `${r.plate}\n${r.region_th || "-"}`
-                        : "-",
+                    licensePlate: r.plate ? `${r.plate}\n${r.region_th || "-"}` : "-",
                     name: `${r.member_firstname || ""} ${r.member_lastname || ""}`.trim() ?? "-",
-                    datetime_out: r.datetime_out ? dayjs(r.datetime_out).format("DD/MM/YYYY HH:mm:ss") : "",
-                    datetime_in: r.datetime_in ? dayjs(r.datetime_in).format("DD/MM/YYYY HH:mm:ss") : "",
+                    datetime_out: r.datetime_out
+                        ? ` ${dayjs(r.datetime_out).format("DD/MM/YYYY")}\n${dayjs(r.datetime_out).format("HH:mm:ss")}`
+                        : "",
+                    datetime_in: r.datetime_in
+                        ? ` ${dayjs(r.datetime_in).format("DD/MM/YYYY")}\n${dayjs(r.datetime_in).format("HH:mm:ss")}`
+                        : "",
                 }));
-                exportData(processedRows, "pdf", "car_in/out_list", columnsExport);
+
+                // 🔸 export PDF (รองรับ batch ใหญ่)
+                await exportData(processedRows, "pdf", "car_in_out_list", columnsExport, {
+                    page: 0,
+                    pageSize: processedRows.length,
+                    rowCount: processedRows.length,
+                });
             } else {
-                exportData(prepareExportRows(data), exportType!, "car_in/out_list");
+                // 🔹 export Excel / CSV / TXT
+                await exportData(prepareExportRows(allData), exportType!, "car_in_out_list");
             }
         } catch (err) {
             console.error("❌ Export error:", err);
@@ -225,6 +322,8 @@ const SearchCar = () => {
             setOpenExportDialog(false);
         }
     };
+
+
 
     // === 2. ฟังก์ชันยิง API ===
     const handleSearch = async (page = paginationModel.page, pageSize = paginationModel.pageSize) => {
@@ -312,14 +411,20 @@ const SearchCar = () => {
                 const overviewImg = params.row.overview_image_url ?? "";
                 const driverImg = params.row.driver_image_url ?? "";
                 const memberImg = params.row.member_image_url ?? "";
-                const imgList = [overviewImg, driverImg, memberImg].filter(Boolean);
+                const imgList = [overviewImg, driverImg, memberImg]
 
+                const vehicleType = params.row.vehicle_group_en;
+                const driverType = params.row.driver_group_en;
+                const memberType = params.row.member_group_en;
+
+                const TypeList = [vehicleType, driverType, memberType]
                 return (
                     <div
                         className="flex w-full gap-2 h-full p-[1px] cursor-pointer"
                         onClick={() => {
                             if (imgList.length > 0) {
                                 setViewerImages(imgList);
+                                setViewerImagesType(TypeList);
                                 setViewerOpen(true);
                             }
                         }}
@@ -456,7 +561,7 @@ const SearchCar = () => {
                 <div className="w-full h-full flex justify-center items-center">
                     <Typography variant="body2">
                         {params.value
-                            ? dayjs(params.value).format("DD/MM/YYYY HH:mm")
+                            ? dayjs(params.value).format("DD/MM/YYYY HH:mm:ss")
                             : "-"}
                     </Typography>
                 </div>
@@ -473,7 +578,7 @@ const SearchCar = () => {
                 <div className="w-full h-full flex justify-center items-center">
                     <Typography variant="body2">
                         {params.value
-                            ? dayjs(params.value).format("DD/MM/YYYY HH:mm")
+                            ? dayjs(params.value).format("DD/MM/YYYY HH:mm:ss")
                             : "-"}
                     </Typography>
                 </div>
@@ -682,6 +787,7 @@ const SearchCar = () => {
             <ImageViewer
                 open={viewerOpen}
                 imgUrls={viewerImages}
+                title={viewerImagesType}
                 onClose={() => setViewerOpen(false)}
             />
             <Dialog open={openExportDialog} onClose={() => setOpenExportDialog(false)}>

@@ -24,11 +24,11 @@ const LoginPage = () => {
       { permission: 'person_search', path: '/search/person' },
       { permission: 'car_search', path: '/search/car' },
       { permission: 'video_search', path: '/search/video' },
-      { permission: 'car_manage', path: '/carinfo' },
-      { permission: 'person_manage', path: '/personinfo' },
-      { permission: 'system_manage', path: '/settings' },
-      { permission: 'user_manage', path: '/user' },
-      { permission: 'department_manage', path: '/department' },
+      { permission: 'car_manage', path: '/info/car' },
+      { permission: 'person_manage', path: '/info/person' },
+      { permission: 'system_manage', path: '/settings/system' },
+      { permission: 'user_manage', path: '/settings/usermanage' },
+      { permission: 'department_manage', path: '/settings/department' },
     ];
 
     const allowed = routeMap.find((r) => permissions[r.permission]);

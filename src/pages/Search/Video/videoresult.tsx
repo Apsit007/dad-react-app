@@ -34,7 +34,7 @@ import {
 const columnsExport = [
   { field: 'overview_image_url', headerName: 'ภาพรถ' },
   { field: 'plate_image_url', headerName: 'ภาพทะเบียน' },
-  { field: 'member_image_url', headerName: 'ภาพคนขับ' },
+  { field: 'member_image_url', headerName: 'ภาพบุคคลที่ลงทะเบียน' },
   { field: 'plate', headerName: 'เลขทะเบียน' },
   { field: 'region_th', headerName: 'หมวดจังหวัด' },
   { field: 'vehicle_make', headerName: 'ยี่ห้อ' },
@@ -64,6 +64,7 @@ const VideoResultPage = () => {
 
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerImages, setViewerImages] = useState<string[]>([]);
+  const [viewerImagesType, setViewerImagesType] = useState<string[]>([]);
 
   const groups = useSelector(selectVehicleGroups);
   const regions = useSelector(selectRegions);
@@ -200,7 +201,7 @@ const VideoResultPage = () => {
       "ชื่อ-นามสกุล": `${r.member_firstname ?? ''} ${r.member_lastname ?? ''}`.trim() || "-",
       "ประเภทบุคคล": r.member_group_th ?? "-",
       "หน่วยงาน": r.department_name ?? "-",
-      "วันที่บันทึก": r.created_at ? dayjs(r.created_at).format("DD/MM/YYYY HH:mm:ss") : "-",
+      // "วันที่บันทึก": r.created_at ? dayjs(r.created_at).format("DD/MM/YYYY HH:mm:ss") : "-",
     }));
   };
 
@@ -218,7 +219,13 @@ const VideoResultPage = () => {
         const plateImg = params.row.plate_image_url ?? '';
         const memberImg = params.row.member_image_url ?? '';
 
-        const imgList = [overviewImg, plateImg, memberImg].filter(Boolean);
+        const imgList = [overviewImg, plateImg, memberImg]
+
+        const vehicleType = params.row.vehicle_group_en;
+        const vehicleplateType = params.row.vehicle_group_en;
+        const memberType = params.row.member_group_en;
+
+        const TypeList = [vehicleType, vehicleplateType, memberType]
 
         return (
           <div
@@ -226,6 +233,7 @@ const VideoResultPage = () => {
             onClick={() => {
               if (imgList.length > 0) {
                 setViewerImages(imgList);
+                setViewerImagesType(TypeList)
                 setViewerOpen(true);
               }
             }}
@@ -456,6 +464,7 @@ const VideoResultPage = () => {
       <ImageViewer
         open={viewerOpen}
         imgUrls={viewerImages}
+        title={viewerImagesType}
         onClose={() => setViewerOpen(false)}
       />
       <Dialog open={openExportDialog} onClose={() => setOpenExportDialog(false)}>

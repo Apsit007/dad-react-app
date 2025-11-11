@@ -145,6 +145,7 @@ const UserInfoPage = () => {
     if (!form.lastname) newErrors.lastname = "กรุณากรอกนามสกุล";
     if (!form.gender) newErrors.gender = "กรุณาเลือกเพศ";
     if (!form.dob) newErrors.dob = "กรุณาเลือกวันเกิด";
+    if (!form.email) newErrors.email = "กรุณากรอก Email";
 
     if (!form.idcard) {
       newErrors.idcard = "กรุณากรอกเลขบัตรประชาชน";
@@ -214,18 +215,41 @@ const UserInfoPage = () => {
         res = await UserApi.create(currentPayload);
       }
 
+      // ✅ ตรวจสอบกรณีซ้ำ (409 Conflict)
+      if (res.statusCode === 409) {
+        const conflicts = res.conflictingFields || {};
+        let msg = "ข้อมูลซ้ำในระบบ: ";
+        if (conflicts.username) msg += `Username (${conflicts.username}) `;
+        if (conflicts.idcard) msg += `เลขบัตรประชาชน (${conflicts.idcard}) `;
+        if (conflicts.email) msg += `Email (${conflicts.email}) `;
+        dialog.warning(msg.trim());
+        return;
+      }
+
       if (res.success) {
         dialog.success(uid ? "แก้ไขข้อมูลสำเร็จ" : "เพิ่มผู้ใช้สำเร็จ");
         navigate("/settings/usermanage/userlist");
       } else {
         dialog.error(res.message || "ไม่สามารถบันทึกได้");
       }
-    } catch (err) {
-      dialog.error("เกิดข้อผิดพลาดระหว่างบันทึก");
+    } catch (err: any) {
+      // ✅ handle error จาก axios
+      if (err.response?.status === 409) {
+        const data = err.response.data;
+        const conflicts = data.conflictingFields || {};
+        let msg = "ข้อมูลซ้ำในระบบ: ";
+        if (conflicts.username) msg += `Username (${conflicts.username}) `;
+        if (conflicts.idcard) msg += `เลขบัตรประชาชน (${conflicts.idcard}) `;
+        if (conflicts.email) msg += `Email (${conflicts.email}) `;
+        dialog.warning(msg.trim());
+      } else {
+        dialog.error("เกิดข้อผิดพลาดระหว่างบันทึก");
+      }
     } finally {
-      dialog.close();
+      // dialog.close();
     }
   };
+
 
   // columns for permission table
   const permColumns: GridColDef[] = [
@@ -367,7 +391,7 @@ const UserInfoPage = () => {
                     />
                   </div>
                   <div className="w-full sm:w-2/3 p-2">
-                    <InputLabel shrink>Email</InputLabel>
+                    <InputLabel shrink required>Email</InputLabel>
                     <TextField
                       value={form.email}
                       onChange={(e) => handleChange("email", e.target.value)}

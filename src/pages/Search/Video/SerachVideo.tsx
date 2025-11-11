@@ -153,6 +153,9 @@ const SerachVideo = () => {
     if (!validateFile(file)) return;
 
     setSelectedVideo(file);
+
+    // ✅ reset value เพื่อให้สามารถเลือกไฟล์เดิมได้ในอนาคต
+    e.target.value = '';
   };
 
   const handleUpload = async () => {
@@ -164,14 +167,26 @@ const SerachVideo = () => {
       setUploadProgress(0);
       setUploadResult(null);
 
-      await LprDataApi.uploadVideo(selectedVideo, videoName, user.uid!, (p) =>
+      const res = await LprDataApi.uploadVideo(selectedVideo, videoName, user.uid!, (p) =>
         setUploadProgress(p)
       );
+
+      if (res.success) {
+        setUploadProgress(100);
+        setUploadResult(res.fileInfo);
+        setIsUploading(false); // ✅ ปลดล็อก overlay ทันที
+        // dialog.success("✅ อัปโหลดเสร็จสมบูรณ์");
+        handleSearch(); // ✅ รีเฟรชตาราง
+      } else {
+        // dialog.warning(res.message || "อัปโหลดไม่สำเร็จ");
+        setIsUploading(false);
+      }
     } catch (err) {
       dialog.error("เกิดข้อผิดพลาดระหว่างอัปโหลด");
       setIsUploading(false);
     }
   };
+
 
 
   const validateFile = (file: File) => {
@@ -493,7 +508,7 @@ const SerachVideo = () => {
 
 
       {/* ไม่ต้องมี export */}
-      
+
       {/* <Stack direction="row" spacing={1} sx={{ my: 2 }}>
         <Button variant="outlined" className='!border-gold !text-primary' size="small" startIcon={<img src='/icons/txt-file.png' />}
           onClick={() => exportData(prepareExportRows(rows), "txt", "upload video")}>TXT</Button>
@@ -518,25 +533,53 @@ const SerachVideo = () => {
         />
       </div>
 
-      <Popup title="อัพไฟล์วิดีโอ" show={showUploadPopup} onClose={() => setShowUploadPopup(false)}>
-        <Box sx={{ minWidth: 420 }}>
+      <Popup
+        title="อัพไฟล์วิดีโอ"
+        show={showUploadPopup}
+        onClose={() => {
+          if (isUploading) return; // ❌ ห้ามปิด popup ระหว่างอัปโหลด
+          setShowUploadPopup(false);
+        }}
+      >
+        <Box sx={{ minWidth: 420, position: "relative" }}>
+          {/* ✅ Mask Overlay ระหว่าง Upload */}
+          {isUploading && (
+            <div
+              className="absolute inset-0 bg-white/70 z-50 flex flex-col items-center justify-center cursor-not-allowed"
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              <Typography variant="body2" color="text.secondary">
+                กำลังอัปโหลด กรุณารอสักครู่...
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={uploadProgress}
+                sx={{ width: "80%", mt: 2 }}
+              />
+            </div>
+          )}
+
+          {/* ✅ เนื้อหา popup ปกติ */}
           <div className="flex flex-col gap-5">
             {/* ชื่อไฟล์ */}
             <div>
-              <Typography variant='body2' className='!text-primary !mb-3'>อัพโหลดวิดีโอ</Typography>
-              <div className='w-1/3 flex gap-2'>
+              <Typography variant="body2" className="!text-primary !mb-3">
+                อัพโหลดวิดีโอ
+              </Typography>
+              <div className="w-1/3 flex gap-2">
                 <TextField
                   fullWidth
-                  value={selectedVideo?.name || ''}
-                  placeholder='ยังไม่ได้เลือกไฟล์'
+                  value={selectedVideo?.name || ""}
+                  placeholder="ยังไม่ได้เลือกไฟล์"
                   InputProps={{ readOnly: true }}
                 />
                 <Button
-                  variant='contained'
-                  className='!bg-primary hover:!bg-primary-dark'
+                  variant="contained"
+                  className="!bg-primary hover:!bg-primary-dark"
                   onClick={onPickFile}
-                  startIcon={<ArrowForwardIosRoundedIcon fontSize='small' />}
-                  disabled={isUploading} // 🔒 ระหว่างอัปโหลดเลือกไฟล์ไม่ได้
+                  startIcon={<ArrowForwardIosRoundedIcon fontSize="small" />}
+                  disabled={isUploading} // 🔒 ห้ามเลือกไฟล์ใหม่
                 >
                   เลือก
                 </Button>
@@ -545,38 +588,27 @@ const SerachVideo = () => {
 
             {/* ชื่อวิดีโอ */}
             <div>
-              <Typography variant='body2' className='!text-primary !mb-3'>ชื่อวิดีโอ</Typography>
+              <Typography variant="body2" className="!text-primary !mb-3">
+                ชื่อวิดีโอ
+              </Typography>
               <TextField
-                placeholder='ชื่อวิดีโอ'
+                placeholder="ชื่อวิดีโอ"
                 value={videoName}
                 onChange={(e) => setVideoName(e.target.value)}
-                disabled={isUploading}
+                disabled={isUploading} // 🔒 ห้ามพิมพ์ชื่อ
               />
             </div>
 
-            {/* แถบสถานะอัปโหลด */}
-            {isUploading && (
-              <Box sx={{ width: '100%' }}>
+            {/* แถบสถานะ */}
+            {/* {isUploading && (
+              <Box sx={{ width: "100%" }}>
                 <Typography variant="caption">กำลังอัปโหลด... {uploadProgress}%</Typography>
                 <LinearProgress variant="determinate" value={uploadProgress} sx={{ mt: 1 }} />
               </Box>
-            )}
-
-            {/* แสดงผลเมื่ออัปโหลดเสร็จ */}
-            {uploadResult && (
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body2" color="primary">
-                  ✅ อัปโหลดสำเร็จ:{" "}
-                  <a href={uploadResult.url} target="_blank" rel="noreferrer">
-                    {uploadResult.originalName}
-                  </a>
-                </Typography>
-              </Box>
-            )}
+            )} */}
 
             {/* ปุ่มด้านล่าง */}
             <div className="flex justify-end gap-2 pt-2">
-              {/* 🔸 ก่อนเริ่มอัปโหลด */}
               {!isUploading && !uploadResult && (
                 <>
                   <Button
@@ -598,19 +630,6 @@ const SerachVideo = () => {
                 </>
               )}
 
-              {/* 🔸 ระหว่างอัปโหลด (0–99%) */}
-              {isUploading && uploadProgress < 100 && (
-                <Button
-                  variant="outlined"
-                  className="!border-gray-400 !text-gray-600 hover:!bg-gray-100"
-                  startIcon={<CancelOutlinedIcon />}
-                  onClick={() => dialog.warning("ไม่สามารถยกเลิกการอัปโหลดได้ขณะนี้")}
-                >
-                  ยกเลิก
-                </Button>
-              )}
-
-              {/* 🔸 หลังอัปโหลดครบ 100% หรือมีผลลัพธ์ */}
               {(uploadProgress >= 100 || uploadResult) && (
                 <Button
                   variant="contained"
@@ -621,17 +640,18 @@ const SerachVideo = () => {
                     setUploadProgress(0);
                     setSelectedVideo(null);
                     setVideoName("");
-                    handleSearch(); // ✅ รีเฟรชตาราง
+                    setUploadResult(null)
+                    handleSearch();
                   }}
                 >
                   ปิด
                 </Button>
               )}
             </div>
-
           </div>
         </Box>
       </Popup>
+
 
 
     </Box>

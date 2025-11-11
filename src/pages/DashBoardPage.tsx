@@ -42,6 +42,7 @@ const DashBoardPage = () => {
 
     const [viewerOpen, setViewerOpen] = useState(false);
     const [viewerImages, setViewerImages] = useState<string[]>([]);
+    const [viewerImagesType, setViewerImagesType] = useState<string[]>([]);
 
     // sync ref ทุกครั้งที่ paginationModel เปลี่ยน
     useEffect(() => {
@@ -226,7 +227,14 @@ const DashBoardPage = () => {
                 const driverImg = params.row.driver_image_url;
                 const memberImg = params.row.member_image_url;
 
-                const imgList = [vehicleImg, driverImg, memberImg].filter(Boolean);
+                const imgList = [vehicleImg, driverImg, memberImg]
+
+                const vehicleType = params.row.vehicle_group_en;
+                const driverType = params.row.driver_group_en;
+                const memberType = params.row.member_group_en;
+
+                const TypeList = [vehicleType, driverType, memberType]
+
 
                 return (
                     <div
@@ -234,6 +242,7 @@ const DashBoardPage = () => {
                         onClick={() => {
                             if (imgList.length > 0) {
                                 setViewerImages(imgList);
+                                setViewerImagesType(TypeList);
                                 setViewerOpen(true);
                             }
                         }}
@@ -389,6 +398,7 @@ const DashBoardPage = () => {
             <ImageViewer
                 open={viewerOpen}
                 imgUrls={viewerImages}
+                title={viewerImagesType}
                 onClose={() => setViewerOpen(false)}
             />
         </>

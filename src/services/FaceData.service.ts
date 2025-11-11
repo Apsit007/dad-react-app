@@ -99,6 +99,7 @@ export interface FaceData {
     date_time_in: string;
     date_time_out: string;
     driver_group_name_th: string;
+    vehicle_group_name_th: string;
 
 }
 
