@@ -157,12 +157,12 @@ export const exportData = async (
     }
 
     case "pdf": {
-      // await exportPdf(rows, fileName, columns, paginationInfo);
-      if (rows.length > 2000) {
-        await exportLargePdf(rows, fileName, columns, paginationInfo);
-      } else {
-        await exportPdf(rows, fileName, columns, paginationInfo);
-      }
+      await exportPdf(rows, fileName, columns, paginationInfo);
+      // if (rows.length > 2000) {
+      //   await exportLargePdf(rows, fileName, columns, paginationInfo);
+      // } else {
+      //   await exportPdf(rows, fileName, columns, paginationInfo);
+      // }
       break;
     }
 
@@ -421,7 +421,7 @@ export const exportLargePdf = async (
   for (let i = 0; i < rows.length; i += MAX_ROWS_PER_BATCH) {
     const partRows = rows.slice(i, i + MAX_ROWS_PER_BATCH);
     const partIndex = Math.floor(i / MAX_ROWS_PER_BATCH) + 1;
-    console.log(`📄 สร้าง PDF ส่วนที่ ${partIndex}/${totalParts} ...`);
+    //console.log(`📄 สร้าง PDF ส่วนที่ ${partIndex}/${totalParts} ...`);
     onProgress?.(partIndex - 1, totalParts);
 
     try {
@@ -435,7 +435,7 @@ export const exportLargePdf = async (
     }
   }
 
-  console.log("📦 กำลังบีบอัด ZIP ...");
+  //console.log("📦 กำลังบีบอัด ZIP ...");
   const zipBlob = await zip.generateAsync({
     type: "blob",
     compression: "DEFLATE",
@@ -454,7 +454,7 @@ export const exportLargePdf = async (
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  console.log("✅ สร้าง ZIP สำเร็จ:", zipName);
+  //console.log("✅ สร้าง ZIP สำเร็จ:", zipName);
   onProgress?.(totalParts, totalParts);
 };
 
@@ -533,7 +533,7 @@ const createPartialPdf = async (
   };
 
   // ✅ ป้องกันการค้าง: timeout 45s + reject ได้
-  console.log(`🧩 เริ่มสร้าง PDF ส่วนที่ ${partIndex}, จำนวนแถว ${rows.length}`);
+  //console.log(`🧩 เริ่มสร้าง PDF ส่วนที่ ${partIndex}, จำนวนแถว ${rows.length}`);
 
   return new Promise((resolve, reject) => {
     const pdf = (pdfMake as any).createPdf(docDefinition);

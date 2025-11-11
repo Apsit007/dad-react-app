@@ -121,7 +121,7 @@ const PersonInfoForm = () => {
     // 👉 โหลดข้อมูลถ้าเป็นโหมดแก้ไข
     useEffect(() => {
         if (uid) {
-            console.log(uid);
+            //console.log(uid);
             MemberApi.getById(uid).then((res) => {
                 if (res.success && res.data) {
                     const person = res.data[0];
@@ -398,7 +398,7 @@ const PersonInfoForm = () => {
                     updater_uid: currentUid,
                 };
 
-                console.log("👉 payload", payload);
+                //console.log("👉 payload", payload);
                 let res;
                 if (uid) {
                     // ✅ update mode → uid อยู่ใน payload

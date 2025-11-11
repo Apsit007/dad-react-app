@@ -804,7 +804,7 @@ const SearchCar = () => {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenExportDialog(false)}>ยกเลิก</Button>
+                    <Button onClick={() => setOpenExportDialog(false)} disabled={loading}>ยกเลิก</Button>
                     <Button
                         onClick={handleConfirmExport}
                         variant="contained"

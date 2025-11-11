@@ -206,7 +206,7 @@ const SystemSettings = () => {
 
   //   try {
   //     await SettingApi.update(newValue);
-  //     console.log("✅ PATCH updated:", newValue);
+  //     //console.log("✅ PATCH updated:", newValue);
   //   } catch (err) {
   //     console.error("อัปเดต setting error:", err);
   //   }
@@ -363,7 +363,7 @@ const SystemSettings = () => {
 
             const res = await CameraApi.update(editingCamera.raw.camera_uid, payload);
             if (res.success) {
-              console.log("✅ อัปเดตกล้องสำเร็จ:", res.data);
+              //console.log("✅ อัปเดตกล้องสำเร็จ:", res.data);
               setShowCameraPopup(false);
 
               // โหลดใหม่หลังอัปเดต
@@ -499,7 +499,7 @@ const SystemSettings = () => {
                   try {
                     const res = await CameraApi.rebootCamera(selectedCamera.camera_uid);
                     if (res.success) {
-                      console.log("✅ รีบูตกล้องสำเร็จ:", res);
+                      //console.log("✅ รีบูตกล้องสำเร็จ:", res);
                       dialog.success(`รีบูตกล้องสำเร็จ: `);
                     } else {
                       dialog.error("รีบูตไม่สำเร็จ: " + res.message);
@@ -585,7 +585,7 @@ const SystemSettings = () => {
                     const maskRes = await CameraApi.drawMask(payload);
 
                     if (maskRes.success) {
-                      console.log("✅ บันทึก Polygon สำเร็จ:", maskRes.message);
+                      //console.log("✅ บันทึก Polygon สำเร็จ:", maskRes.message);
 
                       // ✅ 2. รีบูตกล้องหลังบันทึกสำเร็จ
                       setRebooting(true);
@@ -604,7 +604,7 @@ const SystemSettings = () => {
 
                       const rebootRes = await CameraApi.rebootCamera(selectedCamera.camera_uid);
                       if (rebootRes.success) {
-                        console.log("♻️ รีบูตกล้องสำเร็จ:", rebootRes.message);
+                        //console.log("♻️ รีบูตกล้องสำเร็จ:", rebootRes.message);
                         dialog.confirm(`✅ บันทึกสำเร็จและรีบูตกล้องแล้ว\n${rebootRes.message}`);
                       } else {
                         dialog.error("บันทึกสำเร็จแต่รีบูตไม่สำเร็จ: " + rebootRes.message);

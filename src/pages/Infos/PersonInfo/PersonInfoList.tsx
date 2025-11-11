@@ -86,6 +86,62 @@ const PersonInfoList = () => {
     };
 
     // ✅ เมื่อยืนยันใน popup
+    // const handleConfirmExport = async () => {
+    //     if (!exportLimit || exportLimit <= 0) {
+    //         dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
+    //         return;
+    //     }
+
+    //     try {
+    //         setExportLoading(true);
+    //         dialog.loading("กำลังดึงข้อมูลสำหรับส่งออก...");
+
+    //         // ดึงข้อมูลใหม่ตามจำนวนที่ระบุ
+    //         const res = await MemberApi.search(1, exportLimit, "id", false, {
+    //             firstname: firstname ? `${firstname}*` : undefined,
+    //             lastname: lastname ? `${lastname}*` : undefined,
+    //             dep_uid: dep || undefined,
+    //             member_group_id: memberGroupId || undefined,
+    //             start_date: createdStart
+    //                 ? dayjs(createdStart).startOf("day").format("YYYY-MM-DD HH:mm:ss")
+    //                 : undefined,
+    //             end_date: createdEnd
+    //                 ? dayjs(createdEnd).endOf("day").format("YYYY-MM-DD HH:mm:ss")
+    //                 : undefined,
+    //             member_status: status || undefined,
+    //         });
+
+    //         dialog.close();
+
+    //         if (!res.success || !res.data?.length) {
+    //             dialog.warning("ไม่พบข้อมูลสำหรับส่งออก");
+    //             return;
+    //         }
+
+    //         const data = res.data;
+
+    //         if (exportType === "pdf") {
+    //             const processedRows = data.map((r) => ({
+    //                 ...r,
+    //                 fullname: `${r.firstname || ""} ${r.lastname || ""}`,
+    //                 end_date: r.end_date ? dayjs(r.end_date).format("DD/MM/YYYY") : "",
+    //                 created_at: r.created_at ? dayjs(r.created_at).format("DD/MM/YYYY") : "",
+    //             }));
+
+    //             exportData(processedRows, "pdf", "member_list", columns);
+    //         } else {
+    //             exportData(prepareExportRows(data), exportType!, "member_list");
+    //         }
+    //     } catch (err) {
+    //         dialog.close();
+    //         console.error("❌ Export error:", err);
+    //         dialog.error("เกิดข้อผิดพลาดในการส่งออกข้อมูล");
+    //     } finally {
+    //         setExportLoading(false);
+    //         setOpenExportDialog(false);
+    //     }
+    // };
+    // ✅ Export หลายรอบ (batch export)
     const handleConfirmExport = async () => {
         if (!exportLimit || exportLimit <= 0) {
             dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
@@ -96,44 +152,64 @@ const PersonInfoList = () => {
             setExportLoading(true);
             dialog.loading("กำลังดึงข้อมูลสำหรับส่งออก...");
 
-            // ดึงข้อมูลใหม่ตามจำนวนที่ระบุ
-            const res = await MemberApi.search(1, exportLimit, "id", false, {
-                firstname: firstname ? `${firstname}*` : undefined,
-                lastname: lastname ? `${lastname}*` : undefined,
-                dep_uid: dep || undefined,
-                member_group_id: memberGroupId || undefined,
-                start_date: createdStart
-                    ? dayjs(createdStart).startOf("day").format("YYYY-MM-DD HH:mm:ss")
-                    : undefined,
-                end_date: createdEnd
-                    ? dayjs(createdEnd).endOf("day").format("YYYY-MM-DD HH:mm:ss")
-                    : undefined,
-                member_status: status || undefined,
-            });
+            const BATCH_SIZE = 1000;
+            const totalRounds = Math.ceil(exportLimit / BATCH_SIZE);
+            const allData: Member[] = [];
+
+            for (let i = 0; i < totalRounds; i++) {
+                const page = i + 1;
+                const remaining = exportLimit - allData.length;
+                const limit = Math.min(BATCH_SIZE, remaining);
+
+                const res = await MemberApi.search(page, limit, "id", false, {
+                    firstname: firstname ? `${firstname}*` : undefined,
+                    lastname: lastname ? `${lastname}*` : undefined,
+                    dep_uid: dep || undefined,
+                    member_group_id: memberGroupId || undefined,
+                    start_date: createdStart
+                        ? dayjs(createdStart).startOf("day").format("YYYY-MM-DD HH:mm:ss")
+                        : undefined,
+                    end_date: createdEnd
+                        ? dayjs(createdEnd).endOf("day").format("YYYY-MM-DD HH:mm:ss")
+                        : undefined,
+                    member_status: status || undefined,
+                });
+
+                if (!res.success) {
+                    dialog.error(`เกิดข้อผิดพลาดในรอบที่ ${page}`);
+                    break;
+                }
+
+                const batch = res.data || [];
+                allData.push(...batch);
+
+                // ถ้าข้อมูลหมดก่อนถึง batch size ให้หยุดเลย
+                if (batch.length < BATCH_SIZE) break;
+            }
 
             dialog.close();
 
-            if (!res.success || !res.data?.length) {
-                dialog.warning("ไม่พบข้อมูลสำหรับส่งออก");
+            if (allData.length === 0) {
+                dialog.warning("ไม่มีข้อมูลให้ส่งออก");
                 return;
             }
 
-            const data = res.data;
-
+            // ✅ เตรียมข้อมูลก่อน export
             if (exportType === "pdf") {
-                const processedRows = data.map((r) => ({
+                const processedRows = allData.map((r) => ({
                     ...r,
-                    fullname: `${r.firstname || ""} ${r.lastname || ""}`,
+                    fullname: `${r.firstname || ""} ${r.lastname || ""}`.trim(),
                     end_date: r.end_date ? dayjs(r.end_date).format("DD/MM/YYYY") : "",
                     created_at: r.created_at ? dayjs(r.created_at).format("DD/MM/YYYY") : "",
                 }));
 
-                exportData(processedRows, "pdf", "member_list", columns);
+                await exportData(processedRows, "pdf", "member_list");
             } else {
-                exportData(prepareExportRows(data), exportType!, "member_list");
+                await exportData(prepareExportRows(allData), exportType!, "member_list");
             }
+
+            dialog.success("ส่งออกข้อมูลสำเร็จ");
         } catch (err) {
-            dialog.close();
             console.error("❌ Export error:", err);
             dialog.error("เกิดข้อผิดพลาดในการส่งออกข้อมูล");
         } finally {

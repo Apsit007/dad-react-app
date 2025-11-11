@@ -95,7 +95,7 @@ const CustomDataGrid = (props: CustomDataGridProps) => {
                     ...props.sx,
                 }}
                 onPaginationModelChange={(model, details) => {
-                    console.log('Page:', model.page, 'Limit:', model.pageSize);
+                    //console.log('Page:', model.page, 'Limit:', model.pageSize);
                     props.onPaginationModelChange?.(model, details);
                 }}
             />

@@ -15,7 +15,7 @@ http.interceptors.request.use(async (config) => {
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
-    console.log("👉 Sending request with token:", token.slice(0, 20) + "...");
+    //console.log("👉 Sending request with token:", token.slice(0, 20) + "...");
   }
   return config;
 });

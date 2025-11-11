@@ -36,7 +36,7 @@ export class VideoUploadSseService extends SseService<UploadProgressEvent> {
   ) {
     this.connect((msg: SseMessage<UploadProgressEvent>) => {
       if (msg.data?.event === "upload-progress") {
-        console.log("🎬 [SSE Upload]", msg.data);
+        //console.log("🎬 [SSE Upload]", msg.data);
         onProgress(msg.data);
       }
     }, onError);

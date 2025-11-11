@@ -53,7 +53,7 @@ const DashBoardPage = () => {
 
         const sse = new SseService();
         sse.connect((msg) => {
-            console.log("📥 Feed:", msg.data);
+            //console.log("📥 Feed:", msg.data);
             const { page, pageSize } = paginationRef.current; // ✅ ใช้ค่าปัจจุบันจริง
             fetchData(page, pageSize);
             setRefreshDashboard(prev => prev + 1);

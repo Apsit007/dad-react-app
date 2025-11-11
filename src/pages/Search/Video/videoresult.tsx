@@ -82,7 +82,7 @@ const VideoResultPage = () => {
     setOpenExportDialog(true);
   };
 
-  // ✅ เมื่อยืนยันใน popup
+  // ✅ Export หลายรอบ (batch export)
   const handleConfirmExport = async () => {
     if (!exportLimit || exportLimit <= 0) {
       dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
@@ -93,40 +93,59 @@ const VideoResultPage = () => {
       setLoading(true);
       dialog.loading("กำลังดึงข้อมูลสำหรับส่งออก...");
 
-      // ✅ รวม filter ปัจจุบันทั้งหมด
-      const params = {
-        video_id,
-        plate: sPlate ? sPlate + "*" : undefined,
-        region_code: sRegionCode || undefined,
-        vehicle_group_id: sVehicleGroupId === '' ? undefined : Number(sVehicleGroupId),
-        page: 1,
-        limit: exportLimit,
-        orderBy: "id.desc",
-      };
+      const BATCH_SIZE = 1000;
+      const totalRounds = Math.ceil(exportLimit / BATCH_SIZE);
+      const allData: any[] = [];
 
-      const res = await LprDataApi.getVideoResults(params);
+      for (let i = 0; i < totalRounds; i++) {
+        const page = i + 1;
+        const remaining = exportLimit - allData.length;
+        const limit = Math.min(BATCH_SIZE, remaining);
+
+        const params = {
+          video_id,
+          plate: sPlate ? sPlate + "*" : undefined,
+          region_code: sRegionCode || undefined,
+          vehicle_group_id: sVehicleGroupId === '' ? undefined : Number(sVehicleGroupId),
+          page,
+          limit,
+          orderBy: "id.desc",
+        };
+
+        const res = await LprDataApi.getVideoResults(params);
+        if (!res.success) {
+          dialog.error(`เกิดข้อผิดพลาดในการโหลดรอบที่ ${page}`);
+          break;
+        }
+
+        const batch = res.data || [];
+        allData.push(...batch);
+
+        // ✅ หยุดทันทีถ้าข้อมูลหมด
+        if (batch.length < BATCH_SIZE) break;
+      }
+
       dialog.close();
 
-      if (!res.success || !res.data?.length) {
-        dialog.warning("ไม่พบข้อมูลสำหรับส่งออก");
+      if (allData.length === 0) {
+        dialog.warning("ไม่มีข้อมูลให้ส่งออก");
         return;
       }
 
-      const data = res.data || [];
-
+      // ✅ เตรียมข้อมูลก่อน export
       if (exportType === "pdf") {
-        const processedRows = data.map((r, i) => ({
+        const processedRows = allData.map((r) => ({
           ...r,
-          licensePlate: `${r.plate || ""} ${r.region_th || ""}`,
+          licensePlate: `${r.plate || ""} ${r.region_th || ""}`.trim(),
           name: `${r.member_firstname || ""} ${r.member_lastname || ""}`.trim() || "-",
         }));
-        exportData(processedRows, "pdf", "video_result_list", columnsExport);
+        await exportData(processedRows, "pdf", "video_result_list", columnsExport);
       } else {
-        exportData(prepareExportRows(data), exportType!, "video_result_list");
+        await exportData(prepareExportRows(allData), exportType!, "video_result_list");
       }
 
+      dialog.success("ส่งออกข้อมูลสำเร็จ");
     } catch (err) {
-      dialog.close();
       console.error("❌ Export error:", err);
       dialog.error("เกิดข้อผิดพลาดในการส่งออกข้อมูล");
     } finally {
@@ -134,6 +153,7 @@ const VideoResultPage = () => {
       setOpenExportDialog(false);
     }
   };
+
 
   useEffect(() => {
     if (video_id) {

@@ -9,7 +9,7 @@ export class SseService<T = any> {
 
     constructor(url?: string) {
         this.url = url ?? import.meta.env.VITE_SSE_URL;
-        console.log("🔗 Init SSE with URL:", this.url);
+        //console.log("🔗 Init SSE with URL:", this.url);
     }
 
     connect(
@@ -19,18 +19,18 @@ export class SseService<T = any> {
         this.eventSource = new EventSource(this.url);
 
         this.eventSource.onopen = () => {
-            console.log("✅ SSE connected to", this.url);
+            //console.log("✅ SSE connected to", this.url);
         };
 
         // ฟังทั้ง message ปกติ
         this.eventSource.onmessage = (event: MessageEvent) => {
-            console.log("📥 [message] raw:", event.data);
+            //console.log("📥 [message] raw:", event.data);
             this.handleMessage(event, onMessage);
         };
 
         // ฟัง custom event "lpr"
         this.eventSource.addEventListener("lpr", (event: MessageEvent) => {
-            console.log("📥 [lpr] raw:", event.data);
+            //console.log("📥 [lpr] raw:", event.data);
             this.handleMessage(event, onMessage);
         });
 
@@ -52,7 +52,7 @@ export class SseService<T = any> {
 
     close() {
         if (this.eventSource) {
-            console.log("🛑 SSE closed");
+            //console.log("🛑 SSE closed");
             this.eventSource.close();
             this.eventSource = null;
         }

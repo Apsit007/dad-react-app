@@ -77,6 +77,72 @@ const SearchPerson = () => {
         setOpenExportDialog(true);
     };
     // ✅ เมื่อยืนยันใน popup
+    // const handleConfirmExport = async () => {
+    //     if (!exportLimit || exportLimit <= 0) {
+    //         dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
+    //         return;
+    //     }
+
+    //     try {
+    //         setLoading(true);
+
+    //         const params = {
+    //             page: 1,
+    //             limit: exportLimit,
+    //             orderBy: "id.desc",
+    //             firstname: firstname ? `${firstname}*` : undefined,
+    //             lastname: lastname ? `${lastname}*` : undefined,
+    //             member_group_id: memberGroupId || undefined,
+    //             direction: sDirection || undefined,
+    //             image_url: uploadedImageUrl || undefined,
+    //             start_date: startDate ? startDate.toISOString() : undefined,
+    //             end_date: endDate ? endDate.toISOString() : undefined,
+    //         };
+
+    //         const res = await FaceDataApi.search(params);
+    //         if (res.success) {
+    //             const data = res.data || [];
+
+    //             if (exportType === "pdf") {
+    //                 const processedRows = data.map((r: FaceData) => ({
+    //                     ...r,
+    //                     name: r.member_data
+    //                         ? `${r.member_data.title ?? ""}${r.member_data.firstname ?? ""} ${r.member_data.lastname ?? ""}`.trim()
+    //                         : "-",
+    //                     similarity:
+    //                         r.similarity != null && !isNaN(Number(r.similarity))
+    //                             ? `${(Number(r.similarity) * 100).toFixed(2)}%`
+    //                             : "-",
+    //                     department: r.member_data?.department_name ?? "-",
+    //                     licensePlate: r.plate
+    //                         ? `${r.plate}\n${r.region_name_th || "-"}`
+    //                         : "-",
+    //                     vehicle_make_name_en: r.vehicle_make_name_en ?? "-",
+    //                     vehicle_color_name_th: r.vehicle_color_name_th ?? "-",
+    //                     date_time_in: r.date_time_in
+    //                         ? ` ${dayjs(r.date_time_in).format("DD/MM/YYYY")}\n${dayjs(r.date_time_in).format("HH:mm:ss")}`
+    //                         : "-",
+    //                     date_time_out: r.date_time_out
+    //                         ? ` ${dayjs(r.date_time_out).format("DD/MM/YYYY")}\n${dayjs(r.date_time_out).format("HH:mm:ss")}`
+    //                         : "-",
+    //                 }));
+
+    //                 exportData(processedRows, "pdf", "ค้นหาบุคคล", columnsExport);
+    //             } else {
+    //                 exportData(prepareExportRows(data), exportType!, "face_data");
+    //             }
+    //         } else {
+    //             dialog.error("ไม่สามารถดึงข้อมูลสำหรับส่งออกได้");
+    //         }
+    //     } catch (err) {
+    //         console.error("❌ Export error:", err);
+    //         dialog.error("เกิดข้อผิดพลาดในการส่งออก");
+    //     } finally {
+    //         setLoading(false);
+    //         setOpenExportDialog(false);
+    //     }
+    // };
+    // ✅ export หลายรอบแบบ SearchCar
     const handleConfirmExport = async () => {
         if (!exportLimit || exportLimit <= 0) {
             dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
@@ -86,9 +152,11 @@ const SearchPerson = () => {
         try {
             setLoading(true);
 
-            const params = {
-                page: 1,
-                limit: exportLimit,
+            const BATCH_SIZE = 1000;
+            const totalRounds = Math.ceil(exportLimit / BATCH_SIZE);
+            const allData: FaceData[] = [];
+
+            const baseParams = {
                 orderBy: "id.desc",
                 firstname: firstname ? `${firstname}*` : undefined,
                 lastname: lastname ? `${lastname}*` : undefined,
@@ -99,40 +167,66 @@ const SearchPerson = () => {
                 end_date: endDate ? endDate.toISOString() : undefined,
             };
 
-            const res = await FaceDataApi.search(params);
-            if (res.success) {
-                const data = res.data || [];
+            for (let i = 0; i < totalRounds; i++) {
+                const page = i + 1;
+                const remaining = exportLimit - allData.length;
+                const limit = Math.min(BATCH_SIZE, remaining);
 
-                if (exportType === "pdf") {
-                    const processedRows = data.map((r: FaceData) => ({
-                        ...r,
-                        name: r.member_data
-                            ? `${r.member_data.title ?? ""}${r.member_data.firstname ?? ""} ${r.member_data.lastname ?? ""}`.trim()
-                            : "-",
-                        similarity:
-                            r.similarity != null && !isNaN(Number(r.similarity))
-                                ? `${(Number(r.similarity) * 100).toFixed(2)}%`
-                                : "-",
-                        department: r.member_data?.department_name ?? "-",
-                        licensePlate: r.plate
-                            ? `${r.plate}\n${r.region_name_th || "-"}`
-                            : "-",
-                        vehicle_make_name_en: r.vehicle_make_name_en ?? "-",
-                        vehicle_color_name_th: r.vehicle_color_name_th ?? "-",
-                        date_time_in: r.date_time_in
-                            ? ` ${dayjs(r.date_time_in).format("DD/MM/YYYY")}\n${dayjs(r.date_time_in).format("HH:mm:ss")}`
-                            : "-",
-                        date_time_out: r.date_time_out
-                            ? ` ${dayjs(r.date_time_out).format("DD/MM/YYYY")}\n${dayjs(r.date_time_out).format("HH:mm:ss")}`
-                            : "-",
-                    }));
+                const res = await FaceDataApi.search({
+                    ...baseParams,
+                    page,
+                    limit,
+                });
 
-                    exportData(processedRows, "pdf", "ค้นหาบุคคล", columnsExport);
-                } else {
-                    exportData(prepareExportRows(data), exportType!, "face_data");
+                if (!res.success) {
+                    dialog.error(`เกิดข้อผิดพลาดในการโหลดรอบที่ ${page}`);
+                    break;
                 }
+
+                const batch = res.data || [];
+                allData.push(...batch);
+
+                // ถ้าข้อมูลหมดก่อน limit ให้หยุดเลย
+                if (batch.length < BATCH_SIZE) break;
+            }
+
+            if (allData.length === 0) {
+                dialog.warning("ไม่มีข้อมูลให้ส่งออก");
+                return;
+            }
+
+            // ✅ เตรียมข้อมูลสำหรับ export
+            if (exportType === "pdf") {
+                const processedRows = allData.map((r) => ({
+                    ...r,
+                    name: r.member_data
+                        ? `${r.member_data.title ?? ""}${r.member_data.firstname ?? ""} ${r.member_data.lastname ?? ""}`.trim()
+                        : "-",
+                    similarity:
+                        r.similarity != null && !isNaN(Number(r.similarity))
+                            ? `${(Number(r.similarity) * 100).toFixed(2)}%`
+                            : "-",
+                    department: r.member_data?.department_name ?? "-",
+                    licensePlate: r.plate
+                        ? `${r.plate}\n${r.region_name_th || "-"}`
+                        : "-",
+                    vehicle_make_name_en: r.vehicle_make_name_en ?? "-",
+                    vehicle_color_name_th: r.vehicle_color_name_th ?? "-",
+                    date_time_in: r.date_time_in
+                        ? ` ${dayjs(r.date_time_in).format("DD/MM/YYYY")}\n${dayjs(r.date_time_in).format("HH:mm:ss")}`
+                        : "-",
+                    date_time_out: r.date_time_out
+                        ? ` ${dayjs(r.date_time_out).format("DD/MM/YYYY")}\n${dayjs(r.date_time_out).format("HH:mm:ss")}`
+                        : "-",
+                }));
+
+                await exportData(processedRows, "pdf", "ค้นหาบุคคล", columnsExport, {
+                    page: 0,
+                    pageSize: processedRows.length,
+                    rowCount: processedRows.length,
+                });
             } else {
-                dialog.error("ไม่สามารถดึงข้อมูลสำหรับส่งออกได้");
+                await exportData(prepareExportRows(allData), exportType!, "face_data");
             }
         } catch (err) {
             console.error("❌ Export error:", err);
@@ -142,6 +236,7 @@ const SearchPerson = () => {
             setOpenExportDialog(false);
         }
     };
+
 
     // ✅ ใช้ useCallback เพื่อให้ loadData อ้างอิง state ล่าสุดเสมอ
     const loadData = useCallback(
@@ -754,13 +849,14 @@ const SearchPerson = () => {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenExportDialog(false)}>ยกเลิก</Button>
+                    <Button onClick={() => setOpenExportDialog(false)} disabled={loading}>ยกเลิก</Button>
                     <Button
                         onClick={handleConfirmExport}
                         variant="contained"
                         className="!bg-primary hover:!bg-primary-dark"
+                        disabled={loading}
                     >
-                        ตกลง
+                        {loading ? "กำลังส่งออก..." : "ตกลง"}
                     </Button>
                 </DialogActions>
             </Dialog>

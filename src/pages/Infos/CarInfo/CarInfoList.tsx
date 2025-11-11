@@ -165,6 +165,49 @@ const CarInfoList = () => {
     };
 
     // ✅ เมื่อยืนยันใน popup
+    // const handleConfirmExport = async () => {
+    //     if (!exportLimit || exportLimit <= 0) {
+    //         dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
+    //         return;
+    //     }
+
+    //     try {
+    //         setExportLoading(true);
+    //         dialog.loading("กำลังดึงข้อมูลสำหรับส่งออก...");
+
+    //         const res = await VehicleApi.list(
+    //             1,
+    //             exportLimit,
+    //             "uid.asc",
+    //             lastFilter // ✅ ใช้ filter ล่าสุดที่ผู้ใช้ค้นหาไว้
+    //         );
+
+    //         dialog.close();
+
+    //         if (!res.success || !res.data?.length) {
+    //             dialog.warning("ไม่พบข้อมูลสำหรับส่งออก");
+    //             return;
+    //         }
+
+    //         const data = res.data;
+
+    //         if (exportType === "pdf") {
+    //             const exportRows = prepareExportRows(data);
+    //             const filteredRows = exportRows.map(({ ลำดับ, ...rest }) => rest);
+    //             exportData(filteredRows, "pdf", "vehicle_list");
+    //         } else {
+    //             exportData(prepareExportRows(data), exportType!, "vehicle_list");
+    //         }
+    //     } catch (err) {
+    //         dialog.close();
+    //         console.error("❌ Export error:", err);
+    //         dialog.error("เกิดข้อผิดพลาดในการส่งออกข้อมูล");
+    //     } finally {
+    //         setExportLoading(false);
+    //         setOpenExportDialog(false);
+    //     }
+    // };
+    // ✅ Export แบบ batch (เหมือน SearchCar)
     const handleConfirmExport = async () => {
         if (!exportLimit || exportLimit <= 0) {
             dialog.warning("กรุณาระบุจำนวนรายการที่ต้องการส่งออก");
@@ -175,31 +218,57 @@ const CarInfoList = () => {
             setExportLoading(true);
             dialog.loading("กำลังดึงข้อมูลสำหรับส่งออก...");
 
-            const res = await VehicleApi.list(
-                1,
-                exportLimit,
-                "uid.asc",
-                lastFilter // ✅ ใช้ filter ล่าสุดที่ผู้ใช้ค้นหาไว้
-            );
+            const BATCH_SIZE = 1000;
+            const totalRounds = Math.ceil(exportLimit / BATCH_SIZE);
+            const allData: Vehicle[] = [];
+
+            for (let i = 0; i < totalRounds; i++) {
+                const page = i + 1;
+                const remaining = exportLimit - allData.length;
+                const limit = Math.min(BATCH_SIZE, remaining);
+
+                const res = await VehicleApi.list(
+                    page,
+                    limit,
+                    "uid.asc",
+                    lastFilter // ✅ ใช้ filter ล่าสุด
+                );
+
+                if (!res.success) {
+                    dialog.error(`เกิดข้อผิดพลาดในรอบที่ ${page}`);
+                    break;
+                }
+
+                const batch = res.data || [];
+                allData.push(...batch);
+
+                // ถ้าข้อมูลหมดก่อนถึง batch size ให้หยุด
+                if (batch.length < BATCH_SIZE) break;
+            }
 
             dialog.close();
 
-            if (!res.success || !res.data?.length) {
-                dialog.warning("ไม่พบข้อมูลสำหรับส่งออก");
+            if (allData.length === 0) {
+                dialog.warning("ไม่มีข้อมูลให้ส่งออก");
                 return;
             }
 
-            const data = res.data;
-
+            // ✅ เตรียมข้อมูลก่อน export
             if (exportType === "pdf") {
-                const exportRows = prepareExportRows(data);
+                const exportRows = prepareExportRows(allData);
+                // เอาคอลัมน์ "ลำดับ" ออก (เหมือนหน้าอื่น)
                 const filteredRows = exportRows.map(({ ลำดับ, ...rest }) => rest);
-                exportData(filteredRows, "pdf", "vehicle_list");
+                await exportData(filteredRows, "pdf", "vehicle_list", undefined, {
+                    page: 0,
+                    pageSize: filteredRows.length,
+                    rowCount: filteredRows.length,
+                });
             } else {
-                exportData(prepareExportRows(data), exportType!, "vehicle_list");
+                await exportData(prepareExportRows(allData), exportType!, "vehicle_list");
             }
+
+            dialog.success("ส่งออกข้อมูลสำเร็จ");
         } catch (err) {
-            dialog.close();
             console.error("❌ Export error:", err);
             dialog.error("เกิดข้อผิดพลาดในการส่งออกข้อมูล");
         } finally {
@@ -221,7 +290,7 @@ const CarInfoList = () => {
             if (res.success) {
                 setRows(res.data);
                 setRowCount(res.pagination?.countAll ?? 0);
-                console.log('✅ list:', res.data, res.pagination);
+                //console.log('✅ list:', res.data, res.pagination);
             } else {
                 console.error('⚠️ list failed:', res.message);
             }
@@ -922,7 +991,7 @@ const CarInfoList = () => {
                 rowCount={rowCount}
                 // onPaginationModelChange={(model) => {
                 //     setPaginationModel(model); // เก็บ state
-                //     console.log('👉 page:', model.page, 'limit:', model.pageSize);
+                //     //console.log('👉 page:', model.page, 'limit:', model.pageSize);
                 //     // ถ้าต้องการไปยิง API
                 //     // loadData(model.page + 1, model.pageSize);
                 // }}
