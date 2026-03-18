@@ -29,7 +29,7 @@ export class SseService<T = any> {
         };
 
         // ฟัง custom event "lpr"
-        this.eventSource.addEventListener("lpr", (event: MessageEvent) => {
+        this.eventSource.addEventListener("gate_opened", (event: MessageEvent) => {
             //console.log("📥 [lpr] raw:", event.data);
             this.handleMessage(event, onMessage);
         });

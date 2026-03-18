@@ -30,6 +30,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 
 
+const DEFAULT_EMAIL = "example@email.com";
+
 const PersonInfoForm = () => {
     const { uid } = useParams<{ uid: string }>();
     const navigate = useNavigate();
@@ -306,6 +308,7 @@ const PersonInfoForm = () => {
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
+        const trimmedEmail = form.email.trim();
 
         if (!form.title) newErrors.title = "กรุณาเลือกคำนำหน้า";
         if (!form.firstname) newErrors.firstname = "กรุณากรอกชื่อ";
@@ -313,7 +316,7 @@ const PersonInfoForm = () => {
         if (!form.gender) newErrors.gender = "กรุณาเลือกเพศ";
         if (!form.dob) newErrors.dob = "กรุณาเลือกวันเกิด";
 
-        if (form.email && !isValidEmail(form.email)) {
+        if (trimmedEmail && !isValidEmail(trimmedEmail)) {
             newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
         }
 
@@ -392,6 +395,7 @@ const PersonInfoForm = () => {
                 const payload: MemberPayload = {
                     ...form,
                     uid: uid || form.uid, // ✅ กรณี update ต้องมี uid
+                    email: form.email.trim() || DEFAULT_EMAIL,
                     image_url: imageUrl,
                     vehicle_uid_list,
                     creator_uid: form.creator_uid || currentUid,

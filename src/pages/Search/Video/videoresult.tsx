@@ -34,7 +34,7 @@ import {
 const columnsExport = [
   { field: 'overview_image_url', headerName: 'ภาพรถ' },
   { field: 'plate_image_url', headerName: 'ภาพทะเบียน' },
-  { field: 'member_image_url', headerName: 'ภาพบุคคลที่ลงทะเบียน' },
+  { field: 'member_image_url', headerName: 'ภาพสมาชิก' },
   { field: 'plate', headerName: 'เลขทะเบียน' },
   { field: 'region_th', headerName: 'หมวดจังหวัด' },
   { field: 'vehicle_make', headerName: 'ยี่ห้อ' },
@@ -485,6 +485,7 @@ const VideoResultPage = () => {
         open={viewerOpen}
         imgUrls={viewerImages}
         title={viewerImagesType}
+        video
         onClose={() => setViewerOpen(false)}
       />
       <Dialog open={openExportDialog} onClose={() => setOpenExportDialog(false)}>

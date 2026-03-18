@@ -55,7 +55,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ open, imgUrls, title, video, 
             case 0:
                 return "รถ";
             case 1:
-                return video ? "บุคคลที่ตรวจจับ" : "ทะเบียน";
+                return video ? "ทะเบียน" : "บุคคลที่ตรวจจับ";
             case 2:
                 return "บุคคลที่ลงทะเบียน";
             default:
@@ -106,17 +106,27 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ open, imgUrls, title, video, 
                             </div>
 
                         }
-                        <Avatar
-                            variant="square"
-                            src={url}
-                            alt={`preview-${i}`}
-                            sx={{
-                                width: "100%",
-                                height: "100%",
-                                borderRadius: "8px",
-                                bgcolor: "#1e1e1e",
-                            }}
-                        />
+                        {url ?
+                            <img
+                                src={url}
+                                alt={`preview-${i}`}
+                                className="max-w-full max-h-full w-full h-auto rounded-lg"
+                            /> :
+                            <Avatar
+                                variant="square"
+                                src={url}
+                                alt={`preview-${i}`}
+                                sx={{
+                                    width: "100%",
+                                    height: "100%",
+                                    borderRadius: "8px",
+                                    bgcolor: "#1e1e1e",
+                                }}
+                            />
+                        }
+
+
+
 
                     </div>
                 ))

@@ -235,6 +235,14 @@ const DashBoardPage = () => {
 
                 const TypeList = [vehicleType, driverType, memberType]
 
+                let diverExpire;
+                if (params.row.driver_expire) {
+
+                    diverExpire =
+                        dayjs(params.row.driver_expire).isAfter(dayjs())
+                            ? "Visitor"
+                            : params.row.driver_group_en;
+                }
 
                 return (
                     <div
@@ -248,7 +256,7 @@ const DashBoardPage = () => {
                         }}
                     >
                         <ImageTag tag={params.row.vehicle_group_en} img={vehicleImg} disableViewImg />
-                        <ImageTag tag={params.row.driver_group_en} img={driverImg} disableViewImg />
+                        <ImageTag tag={diverExpire} img={driverImg} disableViewImg />
                         <ImageTag tag={params.row.member_group_en} img={memberImg} disableViewImg />
                     </div>
                 );
